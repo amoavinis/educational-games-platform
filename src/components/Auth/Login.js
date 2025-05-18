@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../services/firebase";
+import { auth, getUserRoleFromClaims } from "../../services/firebase";
 import { Form, Button, Container, Card, Alert } from "react-bootstrap";
 
 const Login = () => {
@@ -18,6 +18,8 @@ const Login = () => {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      let role = await getUserRoleFromClaims();
+      console.log(role);
       navigate("/");
     } catch (err) {
       setError("Failed to log in. Please check your credentials.");
