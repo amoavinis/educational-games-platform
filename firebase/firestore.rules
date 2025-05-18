@@ -35,9 +35,15 @@ service cloud.firestore {
                    );
 
       // READ rules
-      allow read: if isAuthenticated() && (
-                    isAdmin() || isSchoolUser()
-                  );
+      allow list: if isAuthenticated() && (
+                         isAdmin() ||
+                         (isSchoolUser() && 
+                          (resource.data.schoolId == request.auth.uid ||
+                           request.query != null && 
+                           request.query.where != null &&
+                           request.query.where[0].path[0] == 'schoolId' &&
+                           request.query.where[0].value == request.auth.uid))
+                       );
 
       // DELETE rules
       allow delete: if isAuthenticated() && (
