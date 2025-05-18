@@ -6,22 +6,25 @@ const Home = () => {
   const [schools, setSchools] = useState([]);
   const [selectedSchool, setSelectedSchool] = useState("");
   const role = localStorage.getItem("role");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (role === "1") {
+    if (role === "1" && schools.length === 0) {
       // Only load schools for admins
       const loadSchools = async () => {
         try {
+          setLoading(true);
           const schoolsData = await getSchools();
           setSchools(schoolsData);
           setSelectedSchool(localStorage.getItem("school"));
+          setLoading(false);
         } catch (err) {
           console.error("Failed to load schools", err);
         }
       };
       loadSchools();
     }
-  }, [role]);
+  }, [role, schools]);
 
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
@@ -52,8 +55,11 @@ const Home = () => {
                     {school.name}
                   </option>
                 ))}
-                {schools.length === 0 && (
+                {schools.length === 0 && !loading && (
                   <option value="">No schools available</option>
+                )}
+                {schools.length === 0 && loading && (
+                  <option value="">Loading schools...</option>
                 )}
               </Form.Select>
             </Col>
