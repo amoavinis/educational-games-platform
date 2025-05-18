@@ -17,7 +17,6 @@ export async function getUserRoleFromClaims() {
   if (!user) return null;
 
   const idTokenResult = await user.getIdTokenResult(true); // ← Force refresh
-  console.log(idTokenResult)
   const role = idTokenResult.claims.role; // 1 or 2
   return role;
 }

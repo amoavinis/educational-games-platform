@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, getUserRoleFromClaims } from "../../services/firebase";
 import { Form, Button, Container, Card, Alert } from "react-bootstrap";
+import { getSchools } from "../../services/schools";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,9 +18,22 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      let role = await getUserRoleFromClaims();
-      console.log(role);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const role = (await getUserRoleFromClaims()) || 2;
+      localStorage.setItem("role", String(role));
+
+      // For school users, store their UID as schoolId
+      if (role === 2) {
+        localStorage.setItem('school', userCredential.user.uid);
+      } else if (role === 1) {
+        // Admins - get first school and set as default
+        const schools = await getSchools();
+        
+        if (schools.length > 0) {
+          localStorage.setItem('school', schools[0].id);
+        }
+      }
+
       navigate("/");
     } catch (err) {
       setError("Failed to log in. Please check your credentials.");

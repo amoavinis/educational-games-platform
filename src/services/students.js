@@ -9,13 +9,12 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { auth } from "./firebase";
 
 // Get all students for current school (user)
 export const getStudents = async () => {
   const q = query(
     collection(db, "students"),
-    where("schoolId", "==", auth.currentUser.uid)
+    where("schoolId", "==", localStorage.getItem("school"))
   );
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -25,7 +24,7 @@ export const getStudents = async () => {
 export const addStudent = async (studentData) => {
   const docRef = await addDoc(collection(db, "students"), {
     ...studentData,
-    schoolId: auth.currentUser.uid,
+    schoolId: localStorage.getItem("school"),
   });
   return docRef.id;
 };

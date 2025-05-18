@@ -1,11 +1,67 @@
-import React from 'react';
-import { Container } from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import { Container, Form, Row, Col } from "react-bootstrap";
+import { getSchools } from "../services/schools";
 
 const Home = () => {
+  const [schools, setSchools] = useState([]);
+  const [selectedSchool, setSelectedSchool] = useState("");
+  const role = localStorage.getItem("role");
+
+  useEffect(() => {
+    if (role === "1") {
+      // Only load schools for admins
+      const loadSchools = async () => {
+        try {
+          const schoolsData = await getSchools();
+          setSchools(schoolsData);
+          setSelectedSchool(localStorage.getItem("school"));
+        } catch (err) {
+          console.error("Failed to load schools", err);
+        }
+      };
+      loadSchools();
+    }
+  }, [role]);
+
+  const handleSchoolChange = (e) => {
+    const schoolId = e.target.value;
+    setSelectedSchool(schoolId);
+    localStorage.setItem("school", schoolId);
+  };
+
   return (
     <Container>
-      <h1 className="my-4">Welcome to the Educational Games Platform</h1>
-      <p>This is the admin dashboard. Select an option from the navigation bar.</p>
+      <h1>Welcome to the Educational Platform</h1>
+
+      {localStorage.getItem("role") === "1" && (
+        <Form.Group className="mb-3">
+          <Row>
+            <Col md={2}>
+              <Form.Label className="d-flex flex-row align-items-center h-100 m-0">
+                Select School
+              </Form.Label>
+            </Col>
+            <Col md={4}>
+              <Form.Select
+                value={selectedSchool}
+                onChange={handleSchoolChange}
+                disabled={schools.length === 0}
+              >
+                {schools.map((school) => (
+                  <option key={school.id} value={school.id}>
+                    {school.name}
+                  </option>
+                ))}
+                {schools.length === 0 && (
+                  <option value="">No schools available</option>
+                )}
+              </Form.Select>
+            </Col>
+          </Row>
+        </Form.Group>
+      )}
+
+      {/* Rest of your home page content */}
     </Container>
   );
 };

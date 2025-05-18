@@ -36,8 +36,7 @@ service cloud.firestore {
 
       // READ rules
       allow read: if isAuthenticated() && (
-                    isAdmin() ||
-                    (isSchoolUser() && belongsToUsersSchool())
+                    isAdmin() || isSchoolUser()
                   );
 
       // DELETE rules
@@ -45,6 +44,10 @@ service cloud.firestore {
                       isAdmin() ||
                       (isSchoolUser() && belongsToUsersSchool())
                     );
+    }
+
+    match /schools/{schoolId} {
+      allow create, update, read, delete: if isAuthenticated() && isAdmin();
     }
   }
 }

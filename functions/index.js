@@ -7,9 +7,9 @@ exports.syncUserRoleToClaims = functions.firestore.onDocumentWritten(
       document: "userRoles/{uid}",
       region: "europe-west1",
     },
-    async (change, context) => {
-      const uid = context.params.uid;
-      const afterData = change.after.exists ? change.after.data() : null;
+    async (event) => {
+      const uid = event.params.uid;
+      const afterData = event.data?.after?.data();
 
       if (!afterData || !afterData.role) {
         console.log(`No role found for user ${uid}. Skipping claim set.`);
