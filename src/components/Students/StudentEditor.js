@@ -3,13 +3,13 @@ import { Modal, Form, Button } from "react-bootstrap";
 import { getClasses } from "../../services/classes";
 
 const StudentEditor = ({ show, student, onSave, onCancel, loading }) => {
-  const [formData, setFormData] = useState({ name: "", class: "" });
+  const [formData, setFormData] = useState({ name: "", classId: "" });
   const [classes, setClasses] = useState([]);
 
   useEffect(() => {
     const loadClasses = async () => {
       const data = await getClasses();
-      setClasses([{ id: null, class: "Select class" }, ...data]);
+      setClasses([{ id: null, name: "Select class" }, ...data]);
     };
 
     loadClasses();
@@ -17,15 +17,21 @@ const StudentEditor = ({ show, student, onSave, onCancel, loading }) => {
 
   useEffect(() => {
     if (student) {
-      setFormData({ name: student.name, classId: student.classId });
+      setFormData({ name: student.name, classId: student.classId, className: student.className });
     } else {
-      setFormData({ name: "", class: classes[0].class });
+      setFormData({ name: "", classId: "", className: "" });
     }
-  }, [student, show, classes]);
+  }, [student, show]);
+
+  const handleChangeName = (e) => {
+    const value = e.target.value;
+    setFormData({ ...formData, name: value });
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const value = e.target.value;
+    let className = classes.find((cls) => cls.id === value).name;
+    setFormData({ ...formData, classId: value, className:  className});
   };
 
   const handleSubmit = (e) => {
@@ -48,7 +54,7 @@ const StudentEditor = ({ show, student, onSave, onCancel, loading }) => {
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={handleChangeName}
               required
             />
           </Form.Group>
@@ -56,8 +62,8 @@ const StudentEditor = ({ show, student, onSave, onCancel, loading }) => {
             <Form.Label>Class</Form.Label>
             <Form.Control
               as="select"
-              name="class"
-              value={formData.class}
+              name="classId"
+              value={formData.classId}
               onChange={handleChange}
               required
             >

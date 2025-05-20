@@ -30,23 +30,23 @@ const Students = () => {
   });
   const [availableClasses, setAvailableClasses] = useState([]);
 
+  const loadStudents = async () => {
+    try {
+      const data = await getStudentsWithClasses();
+      setStudents(data);
+      setLoading(false);
+    } catch (err) {
+      setError("Failed to load students");
+      setLoading(false);
+      console.error(err);
+    }
+  };
+
   // Load students from Firestore
   useEffect(() => {
-    const loadStudents = async () => {
-      try {
-        const data = await getStudentsWithClasses();
-        setStudents(data);
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to load students");
-        setLoading(false);
-        console.error(err);
-      }
-    };
-
     const loadClasses = async () => {
       const classes = await getClasses();
-      setAvailableClasses([{ id: null, class: "All" }, ...classes]);
+      setAvailableClasses([{ id: null, name: "All" }, ...classes]);
     };
 
     if (auth.currentUser) {
@@ -86,7 +86,7 @@ const Students = () => {
           classId: student.classId,
         };
         const id = await addStudent(newStudent);
-        setStudents([...students, { ...newStudent, id }]);
+        setStudents([...students, { ...student, id }]);
       }
       setShowEditor(false);
     } catch (err) {
@@ -135,7 +135,9 @@ const Students = () => {
     return sortedData.filter((student) => {
       return (
         student.name.toLowerCase().includes(filters.name.toLowerCase()) &&
-        (student.class.toLowerCase().includes(filters.class.toLowerCase()) ||
+        (student.className
+          .toLowerCase()
+          .includes(filters.class.toLowerCase()) ||
           filters.class === "All")
       );
     });

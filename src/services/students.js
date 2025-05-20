@@ -49,15 +49,16 @@ export const getStudentsWithClasses = async () => {
     throw new Error("User not authenticated");
   }
 
+  const schoolId = localStorage.getItem("school");
+
   const response = await callFunction(
-    "https://europe-west1-educational-games-platform.cloudfunctions.net/getStudentsWithClasses",
+    `https://europe-west1-educational-games-platform.cloudfunctions.net/getStudentsWithClasses?schoolId=${schoolId}`,
     "GET",
     null
   );
   
   try {
-    const data = await response.json();
-    return data.students;
+    return response;
   } catch (error) {
     console.error("Error fetching students:", error);
     throw error;
