@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
-
-const availableClasses = [
-  "Science 202",
-  "Math 101",
-  "History 303",
-  "Geography 101",
-];
+import { getClasses } from "../../services/classes";
 
 const StudentEditor = ({ show, student, onSave, onCancel, loading }) => {
   const [formData, setFormData] = useState({ name: "", class: "" });
+  const [classes, setClasses] = useState([]);
+
+  useEffect(() => {
+    const loadClasses = async () => {
+      const data = await getClasses();
+      setClasses([{ id: null, class: "Select class" }, ...data]);
+    };
+
+    loadClasses();
+  }, []);
 
   useEffect(() => {
     if (student) {
-      setFormData({ name: student.name, class: student.class });
+      setFormData({ name: student.name, classId: student.classId });
     } else {
-      setFormData({ name: "", class: availableClasses[1] || "" }); // Default to first non-"All" class
+      setFormData({ name: "", class: classes[0].class });
     }
-  }, [student]);
+  }, [student, show, classes]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,13 +61,11 @@ const StudentEditor = ({ show, student, onSave, onCancel, loading }) => {
               onChange={handleChange}
               required
             >
-              {availableClasses
-                .filter((cls) => cls !== "All")
-                .map((cls) => (
-                  <option key={cls} value={cls}>
-                    {cls}
-                  </option>
-                ))}
+              {classes.map((cls) => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.name}
+                </option>
+              ))}
             </Form.Control>
           </Form.Group>
         </Modal.Body>

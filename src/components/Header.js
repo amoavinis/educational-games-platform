@@ -55,6 +55,13 @@ const Header = () => {
             >
               Students
             </Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/classes"
+              className={isActive("/classes") ? "active fw-bold" : ""}
+            >
+              Classes
+            </Nav.Link>
           </Nav>
           <Nav>
             <Nav.Link

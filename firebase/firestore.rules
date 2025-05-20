@@ -38,7 +38,7 @@ service cloud.firestore {
       allow list: if isAuthenticated() && (
                          isAdmin() ||
                          (isSchoolUser() && 
-                          (resource.data.schoolId == request.auth.uid ||
+                          (belongsToUsersSchool() ||
                            request.query != null && 
                            request.query.where != null &&
                            request.query.where[0].path[0] == 'schoolId' &&
@@ -54,6 +54,40 @@ service cloud.firestore {
 
     match /schools/{schoolId} {
       allow create, update, read, delete: if isAuthenticated() && isAdmin();
+    }
+    
+    match /classes/{classId} {
+      // CREATE rules
+      allow create: if isAuthenticated() && (
+                      isAdmin() || 
+                      (isSchoolUser() && 
+                       request.resource.data.schoolId == request.auth.uid)
+                    );
+
+      // UPDATE rules
+      allow update: if isAuthenticated() && (
+                     isAdmin() ||
+                     (isSchoolUser() && 
+                      belongsToUsersSchool() &&
+                      request.resource.data.schoolId == request.auth.uid)
+                   );
+
+      // READ rules
+      allow list: if isAuthenticated() && (
+                         isAdmin() ||
+                         (isSchoolUser() && 
+                          (belongsToUsersSchool() ||
+                           request.query != null && 
+                           request.query.where != null &&
+                           request.query.where[0].path[0] == 'schoolId' &&
+                           request.query.where[0].value == request.auth.uid))
+                       );
+                       
+      // DELETE rules
+      allow delete: if isAuthenticated() && (
+                      isAdmin() ||
+                      (isSchoolUser() && belongsToUsersSchool())
+                    );
     }
   }
 }

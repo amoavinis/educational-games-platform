@@ -1,17 +1,23 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { Container } from 'react-bootstrap';
-import PrivateRoute from './components/Auth/PrivateRoute';
-import Login from './components/Auth/Login';
-import Home from './components/Home';
-import Header from './components/Header';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './styles/App.css';
-import Students from './components/Students/Students';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
+import { Container } from "react-bootstrap";
+import PrivateRoute from "./components/Auth/PrivateRoute";
+import Login from "./components/Auth/Login";
+import Home from "./components/Home";
+import Header from "./components/Header";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./styles/App.css";
+import Students from "./components/Students/Students";
+import Classes from "./components/Classes/Classes";
 
 // Wrapper component to handle header display logic
 const AppWrapper = () => {
   const location = useLocation();
-  const showHeader = !['/login'].includes(location.pathname);
+  const showHeader = !["/login"].includes(location.pathname);
 
   return (
     <>
@@ -41,6 +47,14 @@ const AppWrapper = () => {
             element={
               <PrivateRoute>
                 <Students />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/classes"
+            element={
+              <PrivateRoute>
+                <Classes />
               </PrivateRoute>
             }
           />

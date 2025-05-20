@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Form, Row, Col, Pagination } from "react-bootstrap";
 import {
-  getStudents,
   addStudent,
   updateStudent,
   deleteStudent,
+  getStudentsWithClasses,
 } from "../../services/students";
 import { auth } from "../../services/firebase";
 import StudentEditor from "./StudentEditor";
 import DeleteConfirmation from "./DeleteConfirmation";
 import "../../styles/Students.css";
+import { getClasses } from "../../services/classes";
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -27,23 +28,13 @@ const Students = () => {
     currentPage: 1,
     itemsPerPage: 5,
   });
-  const [availableClasses, setAvailableClasses] = useState(["All"]);
-
-  useEffect(() => {
-    const classes = ["All"];
-    students.forEach((student) => {
-      if (!classes.includes(student.class)) {
-        classes.push(student.class);
-      }
-    });
-    setAvailableClasses(classes);
-  }, [students]);
+  const [availableClasses, setAvailableClasses] = useState([]);
 
   // Load students from Firestore
   useEffect(() => {
     const loadStudents = async () => {
       try {
-        const data = await getStudents();
+        const data = await getStudentsWithClasses();
         setStudents(data);
         setLoading(false);
       } catch (err) {
@@ -53,8 +44,14 @@ const Students = () => {
       }
     };
 
+    const loadClasses = async () => {
+      const classes = await getClasses();
+      setAvailableClasses([{ id: null, class: "All" }, ...classes]);
+    };
+
     if (auth.currentUser) {
       loadStudents();
+      loadClasses();
     }
   }, []);
 
@@ -79,14 +76,14 @@ const Students = () => {
         // Update existing student
         await updateStudent(student.id, {
           name: student.name,
-          class: student.class,
+          classId: student.classId,
         });
         setStudents(students.map((s) => (s.id === student.id ? student : s)));
       } else {
         // Add new student
         const newStudent = {
           name: student.name,
-          class: student.class,
+          classId: student.classId,
         };
         const id = await addStudent(newStudent);
         setStudents([...students, { ...newStudent, id }]);
@@ -190,8 +187,8 @@ const Students = () => {
                 }
               >
                 {availableClasses.map((cls) => (
-                  <option key={cls} value={cls}>
-                    {cls}
+                  <option key={cls.id} value={cls.name}>
+                    {cls.name}
                   </option>
                 ))}
               </Form.Control>
@@ -226,7 +223,7 @@ const Students = () => {
             currentItems.map((student) => (
               <tr key={student.id}>
                 <td>{student.name}</td>
-                <td>{student.class}</td>
+                <td>{student.className}</td>
                 <td>
                   <Button
                     variant="info"
