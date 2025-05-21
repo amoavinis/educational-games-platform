@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, getUserRoleFromClaims } from "../../services/firebase";
 import { Form, Button, Container, Card, Alert } from "react-bootstrap";
-import { getSchools } from "../../services/schools";
+import { getUsers } from "../../services/users";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -27,7 +27,7 @@ const Login = () => {
         localStorage.setItem('school', userCredential.user.uid);
       } else if (role === 1) {
         // Admins - get first school and set as default
-        const schools = await getSchools();
+        const schools = await getUsers();
         
         if (schools.length > 0) {
           localStorage.setItem('school', schools[0].id);

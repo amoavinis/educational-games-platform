@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Form, Row, Col } from "react-bootstrap";
-import { getSchools } from "../services/schools";
+import { getUsers } from "../services/users";
 
 const Home = () => {
   const [schools, setSchools] = useState([]);
@@ -14,7 +14,7 @@ const Home = () => {
       const loadSchools = async () => {
         try {
           setLoading(true);
-          const schoolsData = await getSchools();
+          const schoolsData = await getUsers();
           setSchools(schoolsData);
           setSelectedSchool(localStorage.getItem("school"));
           setLoading(false);
