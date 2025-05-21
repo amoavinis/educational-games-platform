@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, getUserRoleFromClaims } from "../../services/firebase";
 import { Form, Button, Container, Card, Alert } from "react-bootstrap";
-import { getUsers } from "../../services/users";
+import { getUsers, setDisplayName } from "../../services/users";
+import { getSchoolById } from "../../services/schools";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,21 +19,29 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const role = (await getUserRoleFromClaims()) || 2;
       localStorage.setItem("role", String(role));
 
-      // For school users, store their UID as schoolId
-      if (role === 2) {
-        localStorage.setItem('school', userCredential.user.uid);
-      } else if (role === 1) {
-        // Admins - get first school and set as default
+      let displayName;
+      if (role === 1) {
+        displayName = email;
+
         const schools = await getUsers();
-        
+
         if (schools.length > 0) {
-          localStorage.setItem('school', schools[0].id);
+          localStorage.setItem("school", schools[0].id);
         }
+      } else if (role === 2) {
+        localStorage.setItem("school", userCredential.user.uid);
+        const schoolDoc = await getSchoolById(userCredential.user.uid);
+        displayName = schoolDoc.data().name;
       }
+      setDisplayName(displayName);
 
       navigate("/");
     } catch (err) {

@@ -2,6 +2,14 @@ import { getAuth } from "firebase/auth";
 
 const API_BASE = "https://europe-west1-educational-games-platform.cloudfunctions.net";
 
+export function setDisplayName(name) {
+  return localStorage.setItem("userDisplayName", name);
+}
+
+export function getDisplayName() {
+  return localStorage.getItem("userDisplayName");
+}
+
 export const getUsers = async () => {
   const auth = getAuth();
   const user = auth.currentUser;

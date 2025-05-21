@@ -53,7 +53,9 @@ service cloud.firestore {
     }
 
     match /schools/{schoolId} {
-      allow create, update, list, read, delete: if isAuthenticated() && isAdmin();
+      allow create, update, list, delete: if isAuthenticated() && isAdmin();
+
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == schoolId);
     }
     
     match /classes/{classId} {

@@ -3,6 +3,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   deleteDoc,
@@ -17,6 +18,12 @@ export const getSchools = async () => {
   const querySnapshot = await getDocs(q);
   
   return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+};
+
+// Get school by id
+export const getSchoolById = async (id) => {
+  const schoolDoc = await getDoc(doc(db, 'schools', id));
+  return schoolDoc;
 };
 
 // Add new school

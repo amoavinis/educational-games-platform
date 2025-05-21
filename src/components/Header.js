@@ -1,18 +1,21 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link, useLocation } from "react-router-dom";
 import { auth, getUserRoleFromClaims } from "../services/firebase";
 import { signOut } from "firebase/auth";
 import "../styles/Header.css";
+import { getDisplayName } from "../services/users";
 
 const Header = () => {
   const location = useLocation();
   const [role, setRole] = useState(null);
+  const [name, setName] = useState("");
 
   useEffect(() => {
     getUserRoleFromClaims().then((r) => {
       setRole(r);
     });
+    setName(getDisplayName());
   }, []);
 
   const handleLogout = async () => {
@@ -72,13 +75,12 @@ const Header = () => {
             </Nav.Link>
           </Nav>
           <Nav>
-            <Nav.Link
-              as={Link}
-              to="/profile"
-              className={isActive("/profile") ? "active fw-bold" : ""}
+            <Nav.Item
+              className="bold d-flex flex-row align-items-center"
+              style={{ marginRight: 20 }}
             >
-              Profile
-            </Nav.Link>
+              { name }
+            </Nav.Item>
             <Nav.Link onClick={handleLogout} className="logout-link">
               Log Out
             </Nav.Link>
