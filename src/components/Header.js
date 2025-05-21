@@ -1,13 +1,19 @@
-// src/components/Header.js
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link, useLocation } from "react-router-dom";
-import { auth } from "../services/firebase";
+import { auth, getUserRoleFromClaims } from "../services/firebase";
 import { signOut } from "firebase/auth";
 import "../styles/Header.css";
 
 const Header = () => {
   const location = useLocation();
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    getUserRoleFromClaims().then((r) => {
+      setRole(r);
+    });
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -41,13 +47,15 @@ const Header = () => {
             >
               Home
             </Nav.Link>
-            <Nav.Link
-              as={Link}
-              to="/users"
-              className={isActive("/users") ? "active fw-bold" : ""}
-            >
-              Users
-            </Nav.Link>
+            {role === 1 && (
+              <Nav.Link
+                as={Link}
+                to="/users"
+                className={isActive("/users") ? "active fw-bold" : ""}
+              >
+                Users
+              </Nav.Link>
+            )}
             <Nav.Link
               as={Link}
               to="/students"
