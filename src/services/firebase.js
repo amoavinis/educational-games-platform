@@ -13,8 +13,9 @@ export const db = getFirestore(app);
 
 export async function getUserRoleFromClaims() {
   const user = auth.currentUser;
-
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   await user.getIdToken(true);
   const idTokenResult = await user.getIdTokenResult(true); // ← Force refresh

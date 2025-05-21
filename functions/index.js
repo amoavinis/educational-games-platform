@@ -188,6 +188,7 @@ async (req, res) => {
         role: 2,
       }),
       admin.firestore().collection("schools").doc(userRecord.uid).set({
+        email,
         name,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       }),

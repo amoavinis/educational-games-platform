@@ -14,20 +14,11 @@ import "./styles/App.css";
 import Students from "./components/Students/Students";
 import Classes from "./components/Classes/Classes";
 import Users from "./components/Users/Users";
-import { getUserRoleFromClaims } from "./services/firebase";
-import { useEffect, useState } from "react";
 
 // Wrapper component to handle header display logic
 const AppWrapper = () => {
   const location = useLocation();
   const showHeader = !["/login"].includes(location.pathname);
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    getUserRoleFromClaims().then((r) => {
-      setRole(r);
-    });
-  }, []);
 
   return (
     <>
@@ -43,8 +34,7 @@ const AppWrapper = () => {
               </PrivateRoute>
             }
           />
-          {role === 1 && (
-            <Route
+          <Route
               path="/users"
               element={
                 <PrivateRoute>
@@ -52,7 +42,6 @@ const AppWrapper = () => {
                 </PrivateRoute>
               }
             />
-          )}
           <Route
             path="/students"
             element={

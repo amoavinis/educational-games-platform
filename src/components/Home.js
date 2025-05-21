@@ -14,7 +14,8 @@ const Home = () => {
       const loadSchools = async () => {
         try {
           setLoading(true);
-          const schoolsData = await getUsers();
+          let schoolsData = await getUsers();
+          schoolsData = schoolsData.map(s => ({id: s.uid, name: s.name}));
           setSchools(schoolsData);
           setSelectedSchool(localStorage.getItem("school"));
           setLoading(false);
