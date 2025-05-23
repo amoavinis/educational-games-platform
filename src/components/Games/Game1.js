@@ -112,7 +112,7 @@ const WordHighlightGame = ({ reportFn }) => {
           className="w-100 mb-4"
         />
 
-        <div className="mb-4" style={{ fontSize: "2rem", userSelect: "text" }} id="word">
+        <div className="mb-4" style={{ fontSize: "2rem", userSelect: "text" }}>
           {currentWord}
         </div>
 
