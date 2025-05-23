@@ -14,6 +14,7 @@ import "./styles/App.css";
 import Students from "./components/Students/Students";
 import Classes from "./components/Classes/Classes";
 import Users from "./components/Users/Users";
+import GameScreen from "./components/Games/GameScreen";
 
 // Wrapper component to handle header display logic
 const AppWrapper = () => {
@@ -23,7 +24,7 @@ const AppWrapper = () => {
   return (
     <>
       {showHeader && <Header />}
-      <Container>
+      <Container style={{height: "calc(100vh - 56px - 1.5rem)"}}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -35,13 +36,13 @@ const AppWrapper = () => {
             }
           />
           <Route
-              path="/users"
-              element={
-                <PrivateRoute>
-                  <Users />
-                </PrivateRoute>
-              }
-            />
+            path="/users"
+            element={
+              <PrivateRoute>
+                <Users />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/students"
             element={
@@ -55,6 +56,14 @@ const AppWrapper = () => {
             element={
               <PrivateRoute>
                 <Classes />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/games/:gameId"
+            element={
+              <PrivateRoute>
+                <GameScreen />
               </PrivateRoute>
             }
           />

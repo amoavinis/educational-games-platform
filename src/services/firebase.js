@@ -22,16 +22,3 @@ export async function getUserRoleFromClaims() {
   const role = idTokenResult.claims.role; // 1 or 2
   return role;
 }
-
-export async function getUserName() {
-  const auth1 = getAuth(app);
-  const user = auth1.currentUser;
-  console.log(user)
-  if (!user) {
-    return null;
-  } else {
-    console.log(user);
-
-    return user;
-  }
-}

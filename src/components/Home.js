@@ -1,21 +1,40 @@
 import React, { useState, useEffect } from "react";
-import { Container, Form, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import {
+  Container,
+  Form,
+  Row,
+  Col,
+  Card,
+  Modal,
+  Button,
+} from "react-bootstrap";
 import { getUsers } from "../services/users";
+import { getStudents } from "../services/students";
+import "../styles/Home.css";
+import { games as allGames } from "./games";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [schools, setSchools] = useState([]);
   const [selectedSchool, setSelectedSchool] = useState("");
-  const role = localStorage.getItem("role");
+  const role = parseInt(localStorage.getItem("role"));
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+
+  const games = allGames;
 
   useEffect(() => {
-    if (role === "1" && schools.length === 0) {
+    if (role === 1 && schools.length === 0) {
       // Only load schools for admins
       const loadSchools = async () => {
         try {
           setLoading(true);
           let schoolsData = await getUsers();
-          schoolsData = schoolsData.map(s => ({id: s.uid, name: s.name}));
+          schoolsData = schoolsData.map((s) => ({ id: s.uid, name: s.name }));
           setSchools(schoolsData);
           setSelectedSchool(localStorage.getItem("school"));
           setLoading(false);
@@ -25,7 +44,19 @@ const Home = () => {
       };
       loadSchools();
     }
-  }, [role, schools]);
+
+    if ((schools.length > 0 || role === 2) && students.length === 0) {
+      const loadStudents = async () => {
+        try {
+          let studentsData = await getStudents();
+          setStudents(studentsData);
+        } catch (error) {
+          console.error("Failed to load students", error);
+        }
+      };
+      loadStudents();
+    }
+  }, [role, schools, students]);
 
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
@@ -33,11 +64,23 @@ const Home = () => {
     localStorage.setItem("school", schoolId);
   };
 
+  const handleCardClick = (game) => {
+    setSelectedGame(game);
+    setShowModal(true);
+  };
+
+  const handlePlay = () => {
+    let name = students.find((s) => s.id === selectedStudentId)?.name || "";
+    navigate(
+      `/games/game${selectedGame.id}?studentId=${selectedStudentId}&studentName=${name}`
+    );
+  };
+
   return (
     <Container>
       <h1>Welcome to the Educational Platform</h1>
 
-      {localStorage.getItem("role") === "1" && (
+      {localStorage.getItem("role") === 1 && (
         <Form.Group className="mb-3">
           <Row>
             <Col md={2}>
@@ -68,7 +111,63 @@ const Home = () => {
         </Form.Group>
       )}
 
-      {/* Rest of your home page content */}
+      <Row xs={1} md={2} lg={4} className="g-4">
+        {games.map((game) => (
+          <Col key={game.id}>
+            <Card
+              onClick={() => handleCardClick(game)}
+              className="game-card h-100"
+              style={{ backgroundColor: game.color }}
+            >
+              <Card.Body className="d-flex align-items-center justify-content-center">
+                <Card.Title className="text-center">{game.name}</Card.Title>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      {/* Game Modal */}
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{selectedGame?.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="lead">{selectedGame?.description}</p>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Select Student</Form.Label>
+            <Form.Select
+              value={selectedStudentId}
+              onChange={(e) => setSelectedStudentId(e.target.value)}
+            >
+              <option value="">Choose a student</option>
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.name}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Close
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handlePlay}
+            disabled={!selectedStudentId}
+          >
+            Play Game
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };
