@@ -22,6 +22,12 @@ const GameScreen = () => {
       studentName: studentName,
       gameData: data,
     };
+    
+    /* const uploadRecording = async (blob) => {
+      const storageRef = ref(storage, `recordings/${Date.now()}.webm`);
+      await uploadBytes(storageRef, blob, { contentType: "audio/webm" });
+      return getDownloadURL(storageRef);
+    }; */
 
     sendReport(payload);
   };
