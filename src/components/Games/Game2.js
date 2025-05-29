@@ -46,89 +46,7 @@ const RootSuffixGame = ({ reportFn }) => {
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
   const audioRef = useRef(null);
-
-  // Start recording when first word appears
-  useEffect(() => {
-    // Audio recording functions
-    const startRecording = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            sampleRate: 44100,
-          },
-        });
-
-        mediaRecorder.current = new MediaRecorder(stream, {
-          mimeType: "audio/webm;codecs=opus",
-        });
-
-        audioChunks.current = [];
-
-        mediaRecorder.current.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            audioChunks.current.push(e.data);
-          }
-        };
-
-        mediaRecorder.current.onstop = () => {
-          const audioBlob = new Blob(audioChunks.current, {
-            type: "audio/webm",
-          });
-          const url = URL.createObjectURL(audioBlob);
-          setAudioUrl(url);
-        };
-
-        mediaRecorder.current.start(200); // Collect data every 200ms
-      } catch (err) {
-        console.error("Recording failed:", err);
-      }
-    };
-
-    // Audio compression function
-    const compressAudio = async (blob) => {
-      try {
-        // Simple compression - convert to lower bitrate
-        const audioContext = new (window.AudioContext ||
-          window.webkitAudioContext)();
-        const arrayBuffer = await blob.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-        // Create offline context for processing
-        const offlineContext = new OfflineAudioContext(
-          audioBuffer.numberOfChannels,
-          audioBuffer.length,
-          audioBuffer.sampleRate / 2 // Half sample rate
-        );
-
-        // Create buffer source
-        const source = offlineContext.createBufferSource();
-        source.buffer = audioBuffer;
-
-        // Connect to destination
-        source.connect(offlineContext.destination);
-        source.start();
-
-        // Render compressed audio
-        const renderedBuffer = await offlineContext.startRendering();
-
-        // Convert back to blob
-        const wavBlob = await bufferToWave(
-          renderedBuffer,
-          renderedBuffer.length
-        );
-        return wavBlob;
-      } catch (error) {
-        console.error("Audio compression failed:", error);
-        return blob; // Fallback to original if compression fails
-      }
-    };
-
-    if (currentRound === 0 && gameState === "firstPass") {
-      startRecording();
-    }
-  }, [currentRound, gameState]);
+  const [isRecording, setIsRecording] = useState(false);
 
   // Timer logic - just tracks time without auto-advancing
   useEffect(() => {
@@ -147,76 +65,56 @@ const RootSuffixGame = ({ reportFn }) => {
     }
   }, [currentRound, gameState]);
 
-  // Helper to convert audio buffer to WAV blob
-  const bufferToWave = (abuffer, len) => {
-    return new Promise((resolve) => {
-      const numOfChan = abuffer.numberOfChannels;
-      const length = len * numOfChan * 2 + 44;
-      const buffer = new ArrayBuffer(length);
-      const view = new DataView(buffer);
-      const channels = [];
-      let offset = 0;
-      let pos = 0;
+  // Modified startRecording function
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100,
+        },
+      });
 
-      // Write WAV header
-      setUint32(0x46464952); // "RIFF"
-      setUint32(length - 8); // file length - 8
-      setUint32(0x45564157); // "WAVE"
+      mediaRecorder.current = new MediaRecorder(stream, {
+        mimeType: "audio/webm;codecs=opus",
+      });
 
-      setUint32(0x20746d66); // "fmt " chunk
-      setUint32(16); // length = 16
-      setUint16(1); // PCM (uncompressed)
-      setUint16(numOfChan);
-      setUint32(abuffer.sampleRate);
-      setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-      setUint16(numOfChan * 2); // block-align
-      setUint16(16); // 16-bit (hardcoded)
+      audioChunks.current = [];
 
-      setUint32(0x61746164); // "data" - chunk
-      setUint32(length - pos - 4); // chunk length
-
-      // Write interleaved data
-      for (let i = 0; i < abuffer.numberOfChannels; i++) {
-        channels.push(abuffer.getChannelData(i));
-      }
-
-      while (pos < length) {
-        for (let i = 0; i < numOfChan; i++) {
-          const sample = Math.max(-1, Math.min(1, channels[i][offset]));
-          const val = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
-          view.setInt16(pos, val, true);
-          pos += 2;
+      mediaRecorder.current.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunks.current.push(e.data);
         }
-        offset++;
-      }
+      };
 
-      // Create blob
-      resolve(new Blob([buffer], { type: "audio/wav" }));
+      mediaRecorder.current.onstop = () => {
+        const audioBlob = new Blob(audioChunks.current, {
+          type: "audio/webm",
+        });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        setIsRecording(false);
+      };
 
-      function setUint16(data) {
-        view.setUint16(pos, data, true);
-        pos += 2;
-      }
+      mediaRecorder.current.start(200);
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Recording failed:", err);
+    }
+  };
 
-      function setUint32(data) {
-        view.setUint32(pos, data, true);
-        pos += 4;
-      }
-    });
+  // New stopRecording function
+  const stopRecording = () => {
+    if (mediaRecorder.current?.state === "recording") {
+      mediaRecorder.current.stop();
+      mediaRecorder.current.stream.getTracks().forEach((track) => track.stop());
+    }
   };
 
   // Handle evaluation
   const handleEvaluation = useCallback(
     (correct) => {
-      const stopRecording = () => {
-        if (mediaRecorder.current?.state === "recording") {
-          mediaRecorder.current.stop();
-          mediaRecorder.current.stream
-            .getTracks()
-            .forEach((track) => track.stop());
-        }
-      };
-
       // Update game data
       const roundType = gameState === "firstPass" ? "firstPass" : "timedPass";
 
@@ -259,6 +157,7 @@ const RootSuffixGame = ({ reportFn }) => {
         } else {
           stopRecording();
           setGameState("completed");
+          stopRecording();
           reportFn({
             ...gameData,
             audioRecording: audioUrl,
@@ -293,63 +192,8 @@ const RootSuffixGame = ({ reportFn }) => {
       timedPass: [],
     });
     setAudioUrl("");
+    setIsRecording(false);
   };
-
-  // Render game screen
-  if (gameState !== "completed") {
-    return (
-      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-        <h2 className="mb-4">
-          {gameState === "firstPass"
-            ? "Read the word aloud"
-            : "Read the word before time runs out"}
-        </h2>
-
-        <ProgressBar
-          now={
-            ((currentRound +
-              (gameState === "timedPass" ? wordList.length : 0)) /
-              (wordList.length * 2)) *
-            100
-          }
-          label={`${
-            currentRound + (gameState === "timedPass" ? wordList.length : 0)
-          }/${wordList.length * 2}`}
-          className="w-100 mb-4"
-        />
-
-        {gameState === "timedPass" && (
-          <div className="mb-3">
-            <h3 className={timer > 0 ? "text-primary" : "text-danger"}>
-              {timer}s
-            </h3>
-          </div>
-        )}
-
-        <div className="mb-4" style={{ fontSize: "2rem" }}>
-          {currentWord}
-        </div>
-
-        <div className="mb-4">
-          <p>
-            Root: <strong>{currentRoot}</strong>
-          </p>
-          <p>
-            Suffix: <strong>{currentSuffix}</strong>
-          </p>
-        </div>
-
-        <div className="d-flex gap-3">
-          <Button variant="success" onClick={() => handleEvaluation(true)}>
-            Correct
-          </Button>
-          <Button variant="danger" onClick={() => handleEvaluation(false)}>
-            Incorrect
-          </Button>
-        </div>
-      </Container>
-    );
-  }
 
   // Audio player component
   const AudioPlayer = () => {
@@ -385,64 +229,140 @@ const RootSuffixGame = ({ reportFn }) => {
     );
   };
 
-  // Render results screen
-  return (
-    <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-      <Card className="w-100">
-        <Card.Header as="h3">Game Results</Card.Header>
-        <Card.Body>
-          <p className="h4 text-center mb-4">
-            Score: {gameData.totalCorrect} / {gameData.totalRounds}
-          </p>
-          <div className="mb-4">
-            <h5>First Pass:</h5>
-            <ul className="list-group">
-              {gameData.firstPass.map((round, index) => (
-                <li key={`first-${index}`} className="list-group-item">
-                  Word: <strong>{round.word}</strong> |{" "}
-                  {round.correct ? (
-                    <span className="text-success">Correct</span>
-                  ) : (
-                    <span className="text-danger">Incorrect</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="mb-4">
-            <h5>Timed Pass:</h5>
-            <ul className="list-group">
-              {gameData.timedPass.map((round, index) => (
-                <li key={`timed-${index}`} className="list-group-item">
-                  Word: <strong>{round.word}</strong> |{" "}
-                  {round.correct ? (
-                    <span className="text-success">
-                      Correct ({round.timeLeft}s left)
-                    </span>
-                  ) : (
-                    <span className="text-danger">
-                      Incorrect ({round.timeLeft || 0}s left)
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          {audioUrl && <AudioPlayer />}
+  // Render game screen
+  if (gameState !== "completed") {
+    return (
+      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
+        <h2 className="mb-4">
+          {gameState === "firstPass"
+            ? "Read the word aloud"
+            : "Read the word before time runs out"}
+        </h2>
 
-          <div className="d-flex justify-content-between">
-            <Button variant="secondary" href="/">
-              Back to Home
-            </Button>
-            <Button variant="primary" onClick={resetGame}>
-              Play Again
-            </Button>
+        <ProgressBar
+          now={
+            ((currentRound +
+              (gameState === "timedPass" ? wordList.length : 0)) /
+              (wordList.length * 2)) *
+            100
+          }
+          label={`${
+            currentRound + (gameState === "timedPass" ? wordList.length : 0)
+          }/${wordList.length * 2}`}
+          className="w-100 mb-4"
+        />
+
+        {gameState === "timedPass" ? (
+          <div className="mb-3">
+            <h3 className={timer > 0 ? "text-primary" : "text-danger"}>
+              {timer}s
+            </h3>
           </div>
-        </Card.Body>
-      </Card>
-    </Container>
-  );
+        ) : (
+          <div style={{ height: 41.6, marginBottom: "1rem" }}></div>
+        )}
+
+        <div className="mb-4" style={{ fontSize: "2rem" }}>
+          {currentWord}
+        </div>
+
+        <div className="mb-4">
+          <p>
+            Root: <strong>{currentRoot}</strong>
+          </p>
+          <p>
+            Suffix: <strong>{currentSuffix}</strong>
+          </p>
+        </div>
+
+        <div className="d-flex gap-3">
+          <Button variant="success" onClick={() => handleEvaluation(true)}>
+            Correct
+          </Button>
+          <Button variant="danger" onClick={() => handleEvaluation(false)}>
+            Incorrect
+          </Button>
+        </div>
+
+        <div className="d-flex mt-5 gap-3" style={{ minHeight: 60 }}>
+          {!isRecording && (
+            <Button variant="primary" onClick={startRecording} className="mb-3">
+              Start Recording
+            </Button>
+          )}
+          {isRecording && (
+            <div className="mb-3 text-danger d-flex flex-row align-items-center">
+              <strong>Recording...</strong>
+            </div>
+          )}
+          {isRecording && (
+            <Button variant="warning" onClick={stopRecording} className="mb-3">
+              Stop Recording
+            </Button>
+          )}
+        </div>
+      </Container>
+    );
+  } else {
+    // Render results screen
+    return (
+      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
+        <Card className="w-100">
+          <Card.Header as="h3">Game Results</Card.Header>
+          <Card.Body>
+            <p className="h4 text-center mb-4">
+              Score: {gameData.totalCorrect} / {gameData.totalRounds}
+            </p>
+            <div className="mb-4">
+              <h5>First Pass:</h5>
+              <ul className="list-group">
+                {gameData.firstPass.map((round, index) => (
+                  <li key={`first-${index}`} className="list-group-item">
+                    Word: <strong>{round.word}</strong> |{" "}
+                    {round.correct ? (
+                      <span className="text-success">Correct</span>
+                    ) : (
+                      <span className="text-danger">Incorrect</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mb-4">
+              <h5>Timed Pass:</h5>
+              <ul className="list-group">
+                {gameData.timedPass.map((round, index) => (
+                  <li key={`timed-${index}`} className="list-group-item">
+                    Word: <strong>{round.word}</strong> |{" "}
+                    {round.correct ? (
+                      <span className="text-success">
+                        Correct ({round.timeLeft}s left)
+                      </span>
+                    ) : (
+                      <span className="text-danger">
+                        Incorrect ({round.timeLeft || 0}s left)
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {audioUrl && <AudioPlayer />}
+
+            <div className="d-flex justify-content-between">
+              <Button variant="secondary" href="/">
+                Back to Home
+              </Button>
+              <Button variant="primary" onClick={resetGame}>
+                Play Again
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+      </Container>
+    );
+  }
 };
 
 export default RootSuffixGame;
