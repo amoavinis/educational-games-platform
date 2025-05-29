@@ -43,6 +43,7 @@ const RootSuffixGame = ({ reportFn }) => {
 
   // Audio recording state
   const [audioUrl, setAudioUrl] = useState(null);
+  const [finalAudioUrl, setFinalAudioUrl] = useState(null);
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
   const audioRef = useRef(null);
@@ -65,7 +66,7 @@ const RootSuffixGame = ({ reportFn }) => {
     }
   }, [currentRound, gameState]);
 
-  // Modified startRecording function
+  // startRecording function
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -104,11 +105,16 @@ const RootSuffixGame = ({ reportFn }) => {
     }
   };
 
-  // New stopRecording function
+  // In your stopRecording function, modify to:
   const stopRecording = () => {
     if (mediaRecorder.current?.state === "recording") {
       mediaRecorder.current.stop();
       mediaRecorder.current.stream.getTracks().forEach((track) => track.stop());
+
+      // Create a new blob URL specifically for reporting
+      const reportBlob = new Blob(audioChunks.current, { type: "audio/webm" });
+      const reportUrl = URL.createObjectURL(reportBlob);
+      setFinalAudioUrl(reportUrl); // Store this for reporting
     }
   };
 
@@ -157,16 +163,16 @@ const RootSuffixGame = ({ reportFn }) => {
         } else {
           stopRecording();
           setGameState("completed");
-          stopRecording();
           reportFn({
             ...gameData,
-            audioRecording: audioUrl,
+            audioRecording: finalAudioUrl,
           });
+          stopRecording();
         }
       }
     },
     [
-      audioUrl,
+      finalAudioUrl,
       currentRoot,
       currentRound,
       currentSuffix,
@@ -197,10 +203,20 @@ const RootSuffixGame = ({ reportFn }) => {
 
   // Audio player component
   const AudioPlayer = () => {
+    const [playbackUrl, setPlaybackUrl] = useState(null);
+
     useEffect(() => {
+      // Create a fresh URL for playback
+      if (audioChunks.current.length > 0) {
+        const playbackBlob = new Blob(audioChunks.current, {
+          type: "audio/webm",
+        });
+        setPlaybackUrl(URL.createObjectURL(playbackBlob));
+      }
+
       return () => {
-        if (audioUrl) {
-          URL.revokeObjectURL(audioUrl); // Clean up memory
+        if (playbackUrl) {
+          URL.revokeObjectURL(playbackUrl);
         }
       };
     }, []);
@@ -208,23 +224,18 @@ const RootSuffixGame = ({ reportFn }) => {
     return (
       <div className="mt-3">
         <h5>Your Recording:</h5>
-        <audio
-          ref={audioRef}
-          controls
-          src={audioUrl}
-          onLoadedMetadata={() => {
-            // Force duration update when metadata loads
-            if (audioRef.current) {
-              audioRef.current.currentTime = 0;
+        {playbackUrl && (
+          <audio
+            ref={audioRef}
+            controls
+            src={playbackUrl}
+            onLoadedMetadata={() =>
+              audioRef.current?.currentTime !== null &&
+              (audioRef.current.currentTime = 0)
             }
-          }}
-          onEnded={() => {
-            if (audioRef.current) {
-              audioRef.current.currentTime = 0;
-            }
-          }}
-          className="w-100"
-        />
+            className="w-100"
+          />
+        )}
       </div>
     );
   };
