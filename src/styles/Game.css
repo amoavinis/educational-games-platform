@@ -11,3 +11,47 @@
 .full-height {
   height: 100%;
 }
+
+.phrase-container {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.letter {
+  position: relative;
+  width: 3rem; /* fixed width to allow centering */
+  text-align: center;
+  cursor: initial;
+}
+
+.space {
+  display: inline-block;
+  width: 1rem; /* narrow space between letters */
+  height: 2rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.space::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.selected {
+  background-color: rgba(0, 123, 255, 0.2);
+  border-radius: 4px;
+}
+
+.selected-space::after {
+  background-color: #007bff;
+  width: 4px;
+}
