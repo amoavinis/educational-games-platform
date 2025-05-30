@@ -5,6 +5,7 @@ import { games as allGames } from "../games";
 import "../../styles/Game.css";
 import WordHighlightGame from "./Game1";
 import RootSuffixGame from "./Game2";
+import WordEndingGame from "./Game3";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -42,6 +43,7 @@ const GameScreen = () => {
       <div className="game-body">
         {gameId === 1 && <WordHighlightGame reportFn={reportFn} />}
         {gameId === 2 && <RootSuffixGame reportFn={reportFn} />}
+        {gameId === 3 && <WordEndingGame reportFn={reportFn} />}
       </div>
     </div>
   );
