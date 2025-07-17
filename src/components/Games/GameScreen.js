@@ -10,6 +10,7 @@ import WordSeparationGame from "./Game4";
 import PrefixMatchingGame from "./Game5";
 import GreekPrefixGame from "./Game6";
 import GreekMorphologyGame from "./Game7";
+import PrefixSuffixHighlightGame from "./Game8";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -52,6 +53,7 @@ const GameScreen = () => {
         {gameId === 5 && <PrefixMatchingGame reportFn={reportFn} />}
         {gameId === 6 && <GreekPrefixGame reportFn={reportFn} />}
         {gameId === 7 && <GreekMorphologyGame reportFn={reportFn} />}
+        {gameId === 8 && <PrefixSuffixHighlightGame reportFn={reportFn} />}
         {/* Add more games as needed */}
       </div>
     </div>
