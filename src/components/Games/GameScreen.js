@@ -7,6 +7,8 @@ import WordHighlightGame from "./Game1";
 import RootSuffixGame from "./Game2";
 import WordEndingGame from "./Game3";
 import WordSeparationGame from "./Game4";
+import PrefixMatchingGame from "./Game5";
+import GreekPrefixGame from "./Game6";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -46,6 +48,8 @@ const GameScreen = () => {
         {gameId === 2 && <RootSuffixGame reportFn={reportFn} />}
         {gameId === 3 && <WordEndingGame reportFn={reportFn} />}
         {gameId === 4 && <WordSeparationGame reportFn={reportFn} />}
+        {gameId === 5 && <PrefixMatchingGame reportFn={reportFn} />}
+        {gameId === 6 && <GreekPrefixGame reportFn={reportFn} />}
       </div>
     </div>
   );

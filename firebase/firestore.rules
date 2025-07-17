@@ -15,15 +15,18 @@ service cloud.firestore {
     }
     
     function belongsToUsersSchool() {
-      return resource.data.schoolId == request.auth.uid;
+      return resource.data.schoolId == request.auth.token.schoolId;
+    }
+    
+    function belongsToUsersSchoolInRequest() {
+      return request.resource.data.schoolId == request.auth.token.schoolId;
     }
 
     match /students/{studentId} {
       // CREATE rules
       allow create: if isAuthenticated() && (
                       isAdmin() || 
-                      (isSchoolUser() && 
-                       request.resource.data.schoolId == request.auth.uid)
+                      (isSchoolUser() && belongsToUsersSchoolInRequest())
                     );
 
       // UPDATE rules
@@ -31,19 +34,19 @@ service cloud.firestore {
                      isAdmin() ||
                      (isSchoolUser() && 
                       belongsToUsersSchool() &&
-                      request.resource.data.schoolId == request.auth.uid)
+                      belongsToUsersSchoolInRequest())
                    );
 
       // READ rules
+      allow get: if isAuthenticated() && (
+                   isAdmin() ||
+                   (isSchoolUser() && belongsToUsersSchool())
+                 );
+                 
       allow list: if isAuthenticated() && (
-                         isAdmin() ||
-                         (isSchoolUser() && 
-                          (belongsToUsersSchool() ||
-                           request.query != null && 
-                           request.query.where != null &&
-                           request.query.where[0].path[0] == 'schoolId' &&
-                           request.query.where[0].value == request.auth.uid))
-                       );
+                    isAdmin() ||
+                    (isSchoolUser() && request.auth.token.schoolId != null)
+                  );
 
       // DELETE rules
       allow delete: if isAuthenticated() && (
@@ -53,39 +56,37 @@ service cloud.firestore {
     }
 
     match /schools/{schoolId} {
-      allow create, update, list, delete: if isAuthenticated() && isAdmin();
-
-      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == schoolId);
+      allow create, update, delete: if isAuthenticated() && isAdmin();
+      allow read: if isAuthenticated() && (
+                     isAdmin() || 
+                     schoolId == request.auth.token.schoolId
+                   );
     }
     
     match /classes/{classId} {
-      // CREATE rules
+      // Same pattern as students
       allow create: if isAuthenticated() && (
                       isAdmin() || 
-                      (isSchoolUser() && 
-                       request.resource.data.schoolId == request.auth.uid)
+                      (isSchoolUser() && belongsToUsersSchoolInRequest())
                     );
 
-      // UPDATE rules
       allow update: if isAuthenticated() && (
                      isAdmin() ||
                      (isSchoolUser() && 
                       belongsToUsersSchool() &&
-                      request.resource.data.schoolId == request.auth.uid)
+                      belongsToUsersSchoolInRequest())
                    );
 
-      // READ rules
+      allow get: if isAuthenticated() && (
+                   isAdmin() ||
+                   (isSchoolUser() && belongsToUsersSchool())
+                 );
+                 
       allow list: if isAuthenticated() && (
-                         isAdmin() ||
-                         (isSchoolUser() && 
-                          (belongsToUsersSchool() ||
-                           request.query != null && 
-                           request.query.where != null &&
-                           request.query.where[0].path[0] == 'schoolId' &&
-                           request.query.where[0].value == request.auth.uid))
-                       );
+                    isAdmin() ||
+                    (isSchoolUser() && request.auth.token.schoolId != null)
+                  );
                        
-      // DELETE rules
       allow delete: if isAuthenticated() && (
                       isAdmin() ||
                       (isSchoolUser() && belongsToUsersSchool())

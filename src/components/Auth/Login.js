@@ -34,7 +34,7 @@ const Login = () => {
         const schools = await getUsers();
 
         if (schools.length > 0) {
-          localStorage.setItem("school", schools[0].id);
+          localStorage.setItem("school", schools[0].uid);
         }
       } else if (role === 2) {
         localStorage.setItem("school", userCredential.user.uid);

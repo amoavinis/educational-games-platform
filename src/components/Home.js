@@ -39,7 +39,7 @@ const Home = () => {
           setSelectedSchool(localStorage.getItem("school"));
           setLoading(false);
         } catch (err) {
-          console.error("Failed to load schools", err);
+          console.error("Failed to load schools:", err);
         }
       };
       loadSchools();
@@ -51,7 +51,7 @@ const Home = () => {
           let studentsData = await getStudents();
           setStudents(studentsData);
         } catch (error) {
-          console.error("Failed to load students", error);
+          console.error("Failed to load students:", error);
         }
       };
       loadStudents();
@@ -80,7 +80,7 @@ const Home = () => {
     <Container>
       <h1>Welcome to the Educational Platform</h1>
 
-      {localStorage.getItem("role") === 1 && (
+      {role === 1 && (
         <Form.Group className="mb-3">
           <Row>
             <Col md={2}>
