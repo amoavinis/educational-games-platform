@@ -1,28 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Card, Alert } from "react-bootstrap";
 import "../../styles/Game.css";
+import "../../styles/Game6.css";
 
 const GreekWordSortingGame = () => {
   const words = React.useMemo(
     () => [
-      { word: "καταδικάζω", prefix: "κατα" },
-      { word: "παρατείνω", prefix: "παρα" },
-      { word: "διαφέρω", prefix: "δια" },
-      { word: "αναγέννηση", prefix: "ανα" },
-      { word: "παράνοια", prefix: "παρα" },
-      { word: "καταβυθίζω", prefix: "κατα" },
-      { word: "διαφωνώ", prefix: "δια" },
-      { word: "παραμένω", prefix: "παρα" },
-      { word: "καταδίωξη", prefix: "κατα" },
-      { word: "διαγωνίζομαι", prefix: "δια" },
-      { word: "αναθεώρηση", prefix: "ανα" },
-      { word: "καταγγέλλω", prefix: "κατα" },
-      { word: "διαπληκτίζομαι", prefix: "δια" },
-      { word: "διανυκτερεύω", prefix: "δια" },
-      { word: "κατασπαταλώ", prefix: "κατα" },
-      { word: "αναρωτιέμαι", prefix: "ανα" },
-      { word: "αναστροφή", prefix: "ανα" },
-      { word: "παραφροσύνη", prefix: "παρα" },
+      { id: "1", word: "καταδικάζω", prefix: "κατα" },
+      { id: "2", word: "παρατείνω", prefix: "παρα" },
+      { id: "3", word: "διαφέρω", prefix: "δια" },
+      { id: "4", word: "αναγέννηση", prefix: "ανα" },
+      { id: "5", word: "παράνοια", prefix: "παρα" },
+      { id: "6", word: "καταβυθίζω", prefix: "κατα" },
+      { id: "7", word: "διαφωνώ", prefix: "δια" },
+      { id: "8", word: "παραμένω", prefix: "παρα" },
+      { id: "9", word: "καταδίωξη", prefix: "κατα" },
+      { id: "10", word: "διαγωνίζομαι", prefix: "δια" },
+      { id: "11", word: "αναθεώρηση", prefix: "ανα" },
+      { id: "12", word: "καταγγέλλω", prefix: "κατα" },
+      { id: "13", word: "διαπληκτίζομαι", prefix: "δια" },
+      { id: "14", word: "διανυκτερεύω", prefix: "δια" },
+      { id: "15", word: "κατασπαταλώ", prefix: "κατα" },
+      { id: "16", word: "αναρωτιέμαι", prefix: "ανα" },
+      { id: "17", word: "αναστροφή", prefix: "ανα" },
+      { id: "18", word: "παραφροσύνη", prefix: "παρα" },
     ],
     []
   );
@@ -34,7 +35,6 @@ const GreekWordSortingGame = () => {
     παρα: [],
     δια: [],
   });
-  const [draggedWord, setDraggedWord] = useState(null);
   const [score, setScore] = useState({ correct: 0, total: 0, message: "" });
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -51,13 +51,12 @@ const GreekWordSortingGame = () => {
   }, [initializeGame]);
 
   const handleDragStart = (e, wordData) => {
-    setDraggedWord(wordData);
+    e.dataTransfer.setData("text/plain", JSON.stringify(wordData));
     e.target.style.opacity = "0.5";
   };
 
   const handleDragEnd = (e) => {
     e.target.style.opacity = "1";
-    setDraggedWord(null);
   };
 
   const handleDragOver = (e) => {
@@ -66,35 +65,49 @@ const GreekWordSortingGame = () => {
 
   const handleDrop = (e, targetPrefix) => {
     e.preventDefault();
-    if (!draggedWord) return;
+    
+    const wordData = JSON.parse(e.dataTransfer.getData("text/plain"));
+    if (!wordData) return;
 
-    // Remove from word pool
-    setWordPool((prev) => prev.filter((w) => w.word !== draggedWord.word));
-
-    // Add to target column
-    setColumns((prev) => ({
-      ...prev,
-      [targetPrefix]: [
-        ...prev[targetPrefix],
-        { ...draggedWord, placedPrefix: targetPrefix },
-      ],
-    }));
-
-    setDraggedWord(null);
+    // Check if word is already in a column
+    const isWordInColumns = Object.values(columns).some(column => 
+      column.some(w => w.id === wordData.id)
+    );
+    
+    // If word is not in any column, remove it from pool
+    if (!isWordInColumns) {
+      setWordPool(prev => prev.filter(w => w.id !== wordData.id));
+    }
+    
+    // Remove word from any existing column
+    const newColumns = { ...columns };
+    Object.keys(newColumns).forEach(prefix => {
+      newColumns[prefix] = newColumns[prefix].filter(w => w.id !== wordData.id);
+    });
+    
+    // Add word to target column
+    newColumns[targetPrefix] = [
+      ...newColumns[targetPrefix],
+      { ...wordData, placedPrefix: targetPrefix }
+    ];
+    
+    setColumns(newColumns);
     setShowFeedback(false);
   };
 
   const returnToPool = (wordData, fromColumn) => {
-    // Remove from column
-    setColumns((prev) => ({
+    setColumns(prev => ({
       ...prev,
-      [fromColumn]: prev[fromColumn].filter((w) => w.word !== wordData.word),
+      [fromColumn]: prev[fromColumn].filter(w => w.id !== wordData.id),
     }));
 
-    // Add back to pool
-    setWordPool((prev) => [
+    setWordPool(prev => [
       ...prev,
-      { word: wordData.word, prefix: wordData.prefix },
+      { 
+        id: wordData.id, 
+        word: wordData.word, 
+        prefix: wordData.prefix
+      }
     ]);
     setShowFeedback(false);
   };
@@ -103,20 +116,12 @@ const GreekWordSortingGame = () => {
     let correct = 0;
     let total = 0;
 
-    const updatedColumns = { ...columns };
-
-    Object.keys(columns).forEach((prefix) => {
-      columns[prefix].forEach((wordData) => {
+    Object.keys(columns).forEach(prefix => {
+      columns[prefix].forEach(wordData => {
         total++;
-        const isCorrect = wordData.prefix === wordData.placedPrefix;
-        if (isCorrect) correct++;
-
-        // Update the word with feedback class
-        updatedColumns[prefix] = updatedColumns[prefix].map((w) =>
-          w.word === wordData.word
-            ? { ...w, feedback: isCorrect ? "correct" : "incorrect" }
-            : w
-        );
+        if (wordData.prefix === prefix) {
+          correct++;
+        }
       });
     });
 
@@ -131,7 +136,6 @@ const GreekWordSortingGame = () => {
       message = "💪 Καλή προσπάθεια! Προσπάθησε ξανά.";
     }
 
-    setColumns(updatedColumns);
     setScore({ correct, total, message });
     setShowFeedback(true);
   };
@@ -143,16 +147,12 @@ const GreekWordSortingGame = () => {
   const WordCard = ({ wordData, isDraggable = true }) => (
     <div
       className={`word-card ${isDraggable ? "draggable" : ""} ${
-        wordData.feedback === "correct"
-          ? "correct"
-          : wordData.feedback === "incorrect"
-          ? "incorrect"
+        showFeedback ? 
+          (wordData.prefix === wordData.placedPrefix ? "correct" : "incorrect") 
           : ""
       }`}
       draggable={isDraggable}
-      onDragStart={
-        isDraggable ? (e) => handleDragStart(e, wordData) : undefined
-      }
+      onDragStart={isDraggable ? (e) => handleDragStart(e, wordData) : undefined}
       onDragEnd={isDraggable ? handleDragEnd : undefined}
       onClick={
         !isDraggable
@@ -191,10 +191,13 @@ const GreekWordSortingGame = () => {
       >
         {prefix}-
       </Card.Header>
-      <Card.Body className="column-body">
-        {words.map((wordData, index) => (
+      <Card.Body 
+        className="column-body"
+        onDragOver={handleDragOver}
+      >
+        {words.map((wordData) => (
           <WordCard
-            key={`${wordData.word}-${index}`}
+            key={`${wordData.id}-${prefix}`}
             wordData={wordData}
             isDraggable={false}
           />
@@ -206,7 +209,7 @@ const GreekWordSortingGame = () => {
   return (
     <Container fluid className="game-container">
       <Row className="justify-content-center">
-        <Col md={10} lg={8}>
+        <Col md={12} lg={12}>
           <Card className="main-card">
             <Card.Header className="text-center">
               <h2>Παιχνίδι Ταξινόμησης λέξεων</h2>
@@ -218,16 +221,16 @@ const GreekWordSortingGame = () => {
             <Card.Body>
               <Row>
                 {/* Word Pool */}
-                <Col md={12} lg={4} className="mb-4">
+                <Col md={2} lg={2} className="mb-4">
                   <Card className="word-pool-card">
                     <Card.Header className="text-center">
                       Λέξεις προς ταξινόμηση
                     </Card.Header>
                     <Card.Body className="word-pool-body">
                       <div className="word-pool-grid">
-                        {wordPool.map((wordData, index) => (
+                        {wordPool.map((wordData) => (
                           <WordCard
-                            key={`pool-${wordData.word}-${index}`}
+                            key={`pool-${wordData.id}`}
                             wordData={wordData}
                           />
                         ))}
@@ -236,11 +239,11 @@ const GreekWordSortingGame = () => {
                   </Card>
                 </Col>
 
-                {/* Sorting Area */}
-                <Col md={12} lg={8}>
-                  <Row>
+                {/* Sorting Area - UPDATED LAYOUT */}
+                <Col md={10} lg={10}>
+                  <Row className="flex-nowrap overflow-auto  mb-4">
                     {Object.entries(columns).map(([prefix, words]) => (
-                      <Col key={prefix} sm={6} className="mb-4">
+                      <Col key={prefix} xs={6} sm={3} md={3}  style={{ minWidth: '250px' }}>
                         <PrefixColumn prefix={prefix} words={words} />
                       </Col>
                     ))}

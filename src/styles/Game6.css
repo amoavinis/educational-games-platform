@@ -1,0 +1,131 @@
+.game-container {
+  min-height: 100vh;
+}
+
+.main-card {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.word-pool-card {
+  height: 100%;
+  border-radius: 15px;
+  background-color: #f8f9fa;
+}
+
+.word-pool-body {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.word-pool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.word-card {
+  padding: 0.75rem 1rem;
+  height: fit-content;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.word-card.draggable {
+  background: linear-gradient(135deg, #4a6bff, #6a5bff);
+  color: white;
+  border: none;
+  cursor: grab;
+}
+
+.word-card.draggable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.word-card.draggable:active {
+  cursor: grabbing;
+}
+
+.word-card.correct {
+  background-color: #d4edda;
+  border: 2px solid #28a745;
+  animation: pulse 1.5s infinite;
+}
+
+.word-card.incorrect {
+  background-color: #f8d7da;
+  border: 2px solid #dc3545;
+}
+
+.prefix-column {
+  height: 100%;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  background-color: white;
+}
+
+.kataborder {
+  border: 3px solid #ff6b6b;
+}
+
+.anaborder {
+  border: 3px solid #ffa502;
+}
+
+.paraborder {
+  border: 3px solid #9c88ff;
+}
+
+.diaborder {
+  border: 3px solid #4cd137;
+}
+
+.kataheader {
+  background-color: #ff6b6b;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.anaheader {
+  background-color: #ffa502;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.paraheader {
+  background-color: #9c88ff;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.diaheader {
+  background-color: #4cd137;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.column-body {
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 0 0 12px 12px;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
