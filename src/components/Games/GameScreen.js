@@ -12,6 +12,7 @@ import GreekPrefixGame from "./Game6";
 import GreekMorphologyGame from "./Game7";
 import PrefixSuffixHighlightGame from "./Game8";
 import SyllableReadingGame from "./Game9";
+import GreekCliticSuffixGame from "./Game10And11";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -56,6 +57,8 @@ const GameScreen = () => {
         {gameId === 7 && <GreekMorphologyGame reportFn={reportFn} />}
         {gameId === 8 && <PrefixSuffixHighlightGame reportFn={reportFn} />}
         {gameId === 9 && <SyllableReadingGame reportFn={reportFn} />}
+        {gameId === 10 && <GreekCliticSuffixGame level={10} reportFn={reportFn} />}
+        {gameId === 11 && <GreekCliticSuffixGame level={11} reportFn={reportFn} />}
         {/* Add more games as needed */}
       </div>
     </div>

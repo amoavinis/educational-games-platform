@@ -1,0 +1,224 @@
+.game-container {
+  height: min-content;
+}
+
+.main-card {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.word-pool-card {
+  height: 100%;
+  border-radius: 15px;
+  background-color: #f8f9fa;
+}
+
+.word-pool-body {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.word-pool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.word-card {
+  padding: 0.75rem 1rem;
+  height: fit-content;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.word-card.draggable {
+  background: linear-gradient(135deg, #4a6bff, #6a5bff);
+  color: white;
+  border: none;
+  cursor: grab;
+}
+
+.word-card.draggable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.word-card.draggable:active {
+  cursor: grabbing;
+}
+
+.word-card.correct {
+  background-color: #d4edda;
+  border: 2px solid #28a745;
+  animation: pulse 1.5s infinite;
+}
+
+.word-card.incorrect {
+  background-color: #f8d7da;
+  border: 2px solid #dc3545;
+}
+
+.prefix-column {
+  height: 100%;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  background-color: white;
+}
+
+.column-body {
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 0 0 12px 12px;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Add to Game6.css */
+
+.columns-container {
+  overflow-x: auto;
+}
+
+.suffix-column {
+  height: 550px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.suffix-column.drag-over {
+  background-color: rgba(0, 123, 255, 0.1);
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+}
+
+.column-body {
+  min-height: 450px;
+  max-height: 450px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px;
+  border-radius: 0 0 12px 12px;
+}
+
+.word-pool-body {
+  min-height: 450px;
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+.word-card {
+  padding: 0.75rem 1rem;
+  font-size: 14px !important;
+  height: fit-content;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.word-card.draggable {
+  background: linear-gradient(135deg, #4a6bff, #6a5bff);
+  color: white;
+  border: none;
+  cursor: grab;
+}
+
+.word-card.draggable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.word-card.draggable:active {
+  cursor: grabbing;
+}
+
+.word-card.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.word-card.correct {
+  background-color: #d4edda;
+  border: 2px solid #28a745;
+  animation: pulse 1.5s infinite;
+}
+
+.word-card.incorrect {
+  background-color: #f8d7da;
+  border: 2px solid #dc3545;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .columns-container .flex-lg-nowrap {
+    flex-wrap: wrap !important;
+  }
+
+  .suffix-column {
+    min-width: 180px;
+    height: 650px;
+  }
+
+  .column-body {
+    min-height: 330px;
+    max-height: 330px;
+  }
+}
+
+@media (max-width: 768px) {
+  .suffix-column {
+    min-width: 160px;
+    height: 350px;
+  }
+
+  .column-body {
+    min-height: 280px;
+    max-height: 280px;
+  }
+}
+
+@media (max-width: 576px) {
+  .suffix-column {
+    min-width: 140px;
+    height: 320px;
+  }
+
+  .column-body {
+    min-height: 250px;
+    max-height: 250px;
+  }
+}
