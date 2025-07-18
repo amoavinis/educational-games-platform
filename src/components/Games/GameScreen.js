@@ -11,6 +11,7 @@ import PrefixMatchingGame from "./Game5";
 import GreekPrefixGame from "./Game6";
 import GreekMorphologyGame from "./Game7";
 import PrefixSuffixHighlightGame from "./Game8";
+import SyllableReadingGame from "./Game9";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -54,6 +55,7 @@ const GameScreen = () => {
         {gameId === 6 && <GreekPrefixGame reportFn={reportFn} />}
         {gameId === 7 && <GreekMorphologyGame reportFn={reportFn} />}
         {gameId === 8 && <PrefixSuffixHighlightGame reportFn={reportFn} />}
+        {gameId === 9 && <SyllableReadingGame reportFn={reportFn} />}
         {/* Add more games as needed */}
       </div>
     </div>
