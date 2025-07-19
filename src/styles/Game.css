@@ -55,3 +55,19 @@
   background-color: #007bff;
   width: 4px;
 }
+
+/* Marquee styles */
+.marquee-container {
+  width: 100%;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  height: fit-content;
+  padding: 20px;
+}
+
+.marquee-text {
+  white-space: nowrap;
+  padding: 0 20px;
+}

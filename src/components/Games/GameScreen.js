@@ -13,6 +13,10 @@ import GreekMorphologyGame from "./Game7";
 import PrefixSuffixHighlightGame from "./Game8";
 import SyllableReadingGame from "./Game9";
 import GreekCliticSuffixGame from "./Game10And11";
+import GreekVerbEndingGame from "./Game12";
+import GreekWordFormationGame from "./Game13";
+import GreekAdjectiveEndingGame from "./Game14";
+import GreekSuffixMarqueeGame from "./Game15";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -30,7 +34,7 @@ const GameScreen = () => {
       studentName: studentName,
       gameData: data,
     };
-    
+
     /* const uploadRecording = async (blob) => {
       const storageRef = ref(storage, `recordings/${Date.now()}.webm`);
       await uploadBytes(storageRef, blob, { contentType: "audio/webm" });
@@ -57,9 +61,16 @@ const GameScreen = () => {
         {gameId === 7 && <GreekMorphologyGame reportFn={reportFn} />}
         {gameId === 8 && <PrefixSuffixHighlightGame reportFn={reportFn} />}
         {gameId === 9 && <SyllableReadingGame reportFn={reportFn} />}
-        {gameId === 10 && <GreekCliticSuffixGame level={10} reportFn={reportFn} />}
-        {gameId === 11 && <GreekCliticSuffixGame level={11} reportFn={reportFn} />}
-        {/* Add more games as needed */}
+        {gameId === 10 && (
+          <GreekCliticSuffixGame level={10} reportFn={reportFn} />
+        )}
+        {gameId === 11 && (
+          <GreekCliticSuffixGame level={11} reportFn={reportFn} />
+        )}
+        {gameId === 12 && <GreekVerbEndingGame reportFn={reportFn} />}
+        {gameId === 13 && <GreekWordFormationGame reportFn={reportFn} />}
+        {gameId === 14 && <GreekAdjectiveEndingGame reportFn={reportFn} />}
+        {gameId === 15 && <GreekSuffixMarqueeGame reportFn={reportFn} />}
       </div>
     </div>
   );
