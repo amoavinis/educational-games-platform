@@ -7,6 +7,7 @@ import {
   Col,
   Alert,
   ProgressBar,
+  ListGroup,
 } from "react-bootstrap";
 import "../../styles/Game.css";
 
@@ -17,6 +18,7 @@ const GreekSuffixMarqueeGame = () => {
   const [score, setScore] = useState(0);
   const [gameState, setGameState] = useState("playing");
   const [isMarqueeActive, setIsMarqueeActive] = useState(true);
+  const [gameData, setGameData] = useState([]);
   const marqueeRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -28,6 +30,8 @@ const GreekSuffixMarqueeGame = () => {
       correct: "-ός",
       explanation:
         "Το επίθετο 'ζεστός' στο αρσενικό γένος παίρνει την κατάληξη -ός",
+      context: "Αρσενικό γένος, ενικός αριθμός",
+      type: "επίθετο",
     },
     {
       sentence: "Η θάλασσα φαίνεται πολύ γαλην___",
@@ -36,6 +40,8 @@ const GreekSuffixMarqueeGame = () => {
       correct: "-ια",
       explanation:
         "Το επίθετο 'γαλήνια' στο θηλυκό γένος παίρνει την κατάληξη -ια",
+      context: "Θηλυκό γένος, ενικός αριθμός",
+      type: "επίθετο",
     },
     {
       sentence: "Το παιδί κοιμήθηκε ήσυχ___",
@@ -44,6 +50,8 @@ const GreekSuffixMarqueeGame = () => {
       correct: "-ό",
       explanation:
         "Το επίθετο 'ήσυχο' στο ουδέτερο γένος παίρνει την κατάληξη -ο",
+      context: "Ουδέτερο γένος, ενικός αριθμός",
+      type: "επίθετο",
     },
   ];
 
@@ -93,6 +101,19 @@ const GreekSuffixMarqueeGame = () => {
 
     setSelectedAnswer(answer);
 
+    // Record the attempt
+    const attempt = {
+      question: question.sentence,
+      context: question.context,
+      type: question.type,
+      selected: answer,
+      correct: question.correct,
+      isCorrect,
+      explanation: question.explanation,
+    };
+
+    setGameData((prev) => [...prev, attempt]);
+
     if (isCorrect) {
       setFeedback(`Σωστό! 🎉 ${question.explanation}`);
       setScore((prev) => prev + 1);
@@ -117,8 +138,16 @@ const GreekSuffixMarqueeGame = () => {
     setSelectedAnswer(null);
     setFeedback("");
     setScore(0);
+    setGameData([]);
     setGameState("playing");
     setIsMarqueeActive(true);
+  };
+
+  const getGenderColor = (context) => {
+    if (context.includes("Αρσενικό")) return "text-primary";
+    if (context.includes("Θηλυκό")) return "text-danger";
+    if (context.includes("Ουδέτερο")) return "text-success";
+    return "text-secondary";
   };
 
   const question = questions[currentQuestion];
@@ -126,19 +155,67 @@ const GreekSuffixMarqueeGame = () => {
 
   if (gameState === "results") {
     return (
-      <Container
-        className="d-flex flex-column align-items-center justify-content-center full-height"
-        style={{ overflowY: "auto" }}
-      >
-        <Card className="w-100" style={{ maxWidth: "800px" }}>
+      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
+        <Card
+          className="w-100"
+          style={{ maxWidth: "800px", overflowY: "auto" }}
+        >
           <Card.Header className="text-center bg-primary text-white">
             <h2 className="mb-0">Αποτελέσματα</h2>
           </Card.Header>
-          <Card.Body className="text-center">
-            <h3 className="text-primary">
-              Τελικό Σκορ: {score}/{questions.length}
-            </h3>
-            <div className="d-flex justify-content-center gap-3 mt-4">
+
+          <Card.Body>
+            <div className="text-center mb-4">
+              <h3 className="text-primary">
+                Τελικό Σκορ: {score}/{questions.length}
+              </h3>
+              <p className="h4 mt-3">
+                {score === questions.length
+                  ? "🎉 Τέλεια! Όλα σωστά!"
+                  : score >= questions.length * 0.8
+                  ? "👍 Πολύ καλά!"
+                  : score >= questions.length * 0.6
+                  ? "😊 Καλά!"
+                  : "💪 Συνέχισε την προσπάθεια!"}
+              </p>
+            </div>
+
+            <ListGroup className="mb-4">
+              {gameData.map((item, index) => (
+                <ListGroup.Item
+                  key={index}
+                  variant={item.isCorrect ? "success" : "danger"}
+                >
+                  <div className="d-flex justify-content-between">
+                    <strong>{item.question}</strong>
+                    <span>{item.isCorrect ? "✓" : "✗"}</span>
+                  </div>
+                  <div className="mt-2">
+                    <small
+                      className={`font-italic ${getGenderColor(item.context)}`}
+                    >
+                      {item.context} ({item.type})
+                    </small>
+                  </div>
+                  <div className="mt-2">
+                    <strong>Επιλογή σας:</strong> {item.selected}
+                    {!item.isCorrect && (
+                      <span className="text-danger"> (Λάθος)</span>
+                    )}
+                  </div>
+                  {!item.isCorrect && (
+                    <div>
+                      <strong>Σωστή απάντηση:</strong> {item.correct}
+                    </div>
+                  )}
+                  <div className="mt-2">
+                    <em>{item.explanation}</em>
+                  </div>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+
+            <div className="d-flex justify-content-center gap-3">
               <Button variant="primary" onClick={resetGame}>
                 Παίξτε Ξανά
               </Button>
@@ -193,6 +270,14 @@ const GreekSuffixMarqueeGame = () => {
 
           {!isMarqueeActive && (
             <>
+              <div className="text-center mb-4">
+                <p
+                  className={`font-italic ${getGenderColor(question.context)}`}
+                >
+                  {question.context} ({question.type})
+                </p>
+              </div>
+
               <Row className="justify-content-center mb-4">
                 {question.options.map((option, index) => (
                   <Col
