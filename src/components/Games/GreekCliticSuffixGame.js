@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Card, Alert } from "react-bootstrap";
 import "../../styles/Game.css";
 import "../../styles/Game10And11.css";
-import { level10Words, level12Words } from "../Data/Game10And11";
+import { level10Words, 
+  // level12Words 
+} from "../Data/Game10And11";
 
-const GreekCliticSuffixGame = ({level}) => {
+const GreekCliticSuffixGame = ({ level }) => {
   // Select words based on level prop
   const words = React.useMemo(() => {
-    return level === 10 ? level10Words : level12Words;
-  }, [level]);
+    return level10Words;
+  }, []);
 
   const [wordPool, setWordPool] = useState([]);
   const [columns, setColumns] = useState({

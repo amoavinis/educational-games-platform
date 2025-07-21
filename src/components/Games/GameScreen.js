@@ -1,22 +1,22 @@
-import React from "react";
 import { useLocation } from "react-router-dom";
 import { sendReport } from "../../services/reports";
 import { games as allGames } from "../games";
 import "../../styles/Game.css";
-import WordHighlightGame from "./Game1";
-import RootSuffixGame from "./Game2";
-import WordEndingGame from "./Game3";
-import WordSeparationGame from "./Game4";
-import PrefixMatchingGame from "./Game5";
-import GreekPrefixGame from "./Game6";
-import GreekMorphologyGame from "./Game7";
-import PrefixSuffixHighlightGame from "./Game8";
-import SyllableReadingGame from "./Game9";
-import GreekCliticSuffixGame from "./Game10And11";
-import GreekVerbEndingGame from "./Game12";
-import GreekWordFormationGame from "./Game13";
-import GreekAdjectiveEndingGame from "./Game14";
-import GreekSuffixMarqueeGame from "./Game15";
+import WordHighlightGame from "./WordHighlightGame";
+import RootSuffixGame from "./RootSuffixGame";
+import GreekReadingExercise from "./GreekReadingExercise";
+import WordEndingGame from "./WordEndingGame";
+import WordSeparationGame from "./WordSeparationGame";
+import PrefixMatchingGame from "./PrefixMatchingGame";
+import GreekPrefixGame from "./GreekPrefixGame";
+import GreekMorphologyGame from "./GreekMorphologyGame";
+import PrefixSuffixHighlightGame from "./PrefixSuffixHighlightGame";
+import SyllableReadingGame from "./SyllableReadingGame";
+import GreekCliticSuffixGame from "./GreekCliticSuffixGame";
+import GreekVerbEndingGame from "./GreekVerbEndingGame";
+import GreekWordFormationGame from "./GreekWordFormationGame";
+import GreekAdjectiveEndingGame from "./GreekAdjectiveEndingGame";
+import GreekSuffixMarqueeGame from "./GreekSuffixMarqueeGame";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -53,20 +53,18 @@ const GameScreen = () => {
 
       <div className="game-body">
         {gameId === 1 && <WordHighlightGame reportFn={reportFn} />}
-        {gameId === 2 && <RootSuffixGame reportFn={reportFn} />}
-        {gameId === 3 && <WordEndingGame reportFn={reportFn} />}
-        {gameId === 4 && <WordSeparationGame reportFn={reportFn} />}
-        {gameId === 5 && <PrefixMatchingGame reportFn={reportFn} />}
-        {gameId === 6 && <GreekPrefixGame reportFn={reportFn} />}
-        {gameId === 7 && <GreekMorphologyGame reportFn={reportFn} />}
-        {gameId === 8 && <PrefixSuffixHighlightGame reportFn={reportFn} />}
-        {gameId === 9 && <SyllableReadingGame reportFn={reportFn} />}
-        {gameId === 10 && (
-          <GreekCliticSuffixGame level={10} reportFn={reportFn} />
-        )}
-        {gameId === 11 && (
-          <GreekCliticSuffixGame level={11} reportFn={reportFn} />
-        )}
+        {gameId === 2 && <RootSuffixGame />}
+        {gameId === 3 && <GreekReadingExercise reportFn={reportFn} />}
+        {gameId === 4 && <WordEndingGame reportFn={reportFn} />}
+        {gameId === 5 && <WordSeparationGame reportFn={reportFn} />}
+        {gameId === 6 && <PrefixMatchingGame reportFn={reportFn} />}
+        {gameId === 7 && <GreekPrefixGame reportFn={reportFn} />}
+        {gameId === 8 && <GreekMorphologyGame reportFn={reportFn} />}
+        {gameId === 9 && <PrefixSuffixHighlightGame reportFn={reportFn} />}
+        {gameId === 10 && <SyllableReadingGame reportFn={reportFn} />}
+        {gameId === 11 && 
+          <GreekCliticSuffixGame  reportFn={reportFn} />
+        }
         {gameId === 12 && <GreekVerbEndingGame reportFn={reportFn} />}
         {gameId === 13 && <GreekWordFormationGame reportFn={reportFn} />}
         {gameId === 14 && <GreekAdjectiveEndingGame reportFn={reportFn} />}
