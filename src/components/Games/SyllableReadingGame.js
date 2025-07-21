@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button, Card, Container, ProgressBar } from "react-bootstrap";
 import "../../styles/Game.css";
 
-const SyllableReadingGame = ({ reportFn }) => {
+const SyllableReadingGame = () => {
   // Greek words with syllables
   const words = [
     {
@@ -129,11 +129,11 @@ const SyllableReadingGame = ({ reportFn }) => {
     } else {
       stopRecording();
       setGameState("completed");
-      reportFn({
+      /* reportFn({
         words,
         evaluation: newEvaluation,
         audioBlob
-      });
+      }); */
     }
   };
 

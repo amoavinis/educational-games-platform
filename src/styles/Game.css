@@ -3,7 +3,7 @@
 }
 
 .game-body {
-  height: calc(100% - 80px);
+  height: 100%; /* calc(100% - 80px); */
   overflow: auto;
   padding-bottom: 20px;
 }

@@ -16,7 +16,6 @@ const GreekReadingExercise = () => {
   const [round, setRound] = useState(1);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
-  const [currentEvaluation, setCurrentEvaluation] = useState(null);
   const [gameStats, setGameStats] = useState({
     rounds: [],
     totalWords: 0,
@@ -68,21 +67,44 @@ const GreekReadingExercise = () => {
   }, [isRunning, speed, currentWordIndex]);
 
   const handleEvaluation = (correct) => {
-    const roundType = round === 1 ? "slowRound" : "fastRound";
+    // const roundType = round === 1 ? "slowRound" : "fastRound";
+
+    // Create evaluation object with all needed info
     const evaluation = {
       word: allWords[currentWordIndex].word,
       correct,
       round,
+      speed,
       timestamp: new Date().toISOString(),
     };
 
-    setGameStats((prev) => ({
-      ...prev,
-      rounds: [...prev.rounds, evaluation],
-      [roundType]: [...prev[roundType], evaluation],
-    }));
+    setGameStats((prev) => {
+      // Create copies of the rounds to avoid mutation
+      const slowRound = [...prev.slowRound];
+      const fastRound = [...prev.fastRound];
 
-    setCurrentEvaluation(evaluation);
+      // Update the appropriate round
+      if (round === 1) {
+        slowRound[currentWordIndex] = evaluation;
+      } else {
+        fastRound[currentWordIndex] = evaluation;
+      }
+
+      // Calculate total correct answers
+      const totalCorrect = [
+        ...slowRound.filter((r) => r?.correct),
+        ...fastRound.filter((r) => r?.correct),
+      ].length;
+
+      return {
+        ...prev,
+        slowRound,
+        fastRound,
+        totalCorrect,
+        totalWords: allWords.length * 2, // 2 rounds
+      };
+    });
+
     setShowApprovalModal(false);
 
     // Move to next word or round
@@ -93,14 +115,11 @@ const GreekReadingExercise = () => {
       // Start fast round
       setRound(2);
       setCurrentWordIndex(0);
-      setSpeed(1000); // Faster speed for round 2
+      setSpeed(1000);
       setIsRunning(true);
     } else {
-      // Game completed
       setGameCompleted(true);
-      if (isRecording) {
-        stopRecording();
-      }
+      if (isRecording) stopRecording();
     }
   };
 
@@ -138,14 +157,14 @@ const GreekReadingExercise = () => {
   const startExercise = () => {
     setCurrentWordIndex(0);
     setRound(1);
-    setSpeed(2000); // Slow speed for round 1
+    setSpeed(2000);
     setIsRunning(true);
     setGameCompleted(false);
     setGameStats({
-      rounds: [],
-      totalWords: allWords.length,
-      slowRound: [],
-      fastRound: [],
+      slowRound: Array(allWords.length).fill(null),
+      fastRound: Array(allWords.length).fill(null),
+      totalCorrect: 0,
+      totalWords: allWords.length * 2,
     });
   };
 
@@ -214,38 +233,57 @@ const GreekReadingExercise = () => {
           </Card.Header>
           <Card.Body>
             <Alert variant="info" className="text-center">
-              <h4 className="alert-heading">Ολοκληρώσατε την άσκηση!</h4>
-              <p className="mb-0">
-                Διαβάσατε {allWords.length} λέξεις με επιτυχία
-              </p>
+              <h4 className="alert-heading">
+                Βαθμολογία: {gameStats.totalCorrect} / {gameStats.totalWords}
+              </h4>
             </Alert>
 
-            <h5 className="mb-3">Λέξεις που διαβάσατε:</h5>
+            <h4 className="mb-3">1ος Γύρος (Αργά):</h4>
             <ListGroup className="mb-4">
               {allWords.map((word, index) => (
-                <ListGroup.Item key={index}>
+                <ListGroup.Item key={`slow-${index}`}>
                   <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong>{word.word}</strong>
-                      <div className="small text-muted">
-                        Βάση: {word.stem.replace("-", "")} | Επίθημα:{" "}
-                        {word.suffix}
-                      </div>
-                    </div>
-                    <span className="text-success">✓</span>
+                    <span>{word.word}</span>
+                    {gameStats.slowRound[index] ? (
+                      gameStats.slowRound[index].correct ? (
+                        <span className="text-success">✓ Σωστό</span>
+                      ) : (
+                        <span className="text-danger">✗ Λάθος</span>
+                      )
+                    ) : (
+                      <span className="text-muted">-</span>
+                    )}
                   </div>
                 </ListGroup.Item>
               ))}
             </ListGroup>
 
-            <div className="mb-4">
-              <h5>Ηχογράφηση:</h5>
-              {audioBlob ? (
+            <h4 className="mb-3">2ος Γύρος (Γρήγορα):</h4>
+            <ListGroup className="mb-4">
+              {allWords.map((word, index) => (
+                <ListGroup.Item key={`fast-${index}`}>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span>{word.word}</span>
+                    {gameStats.fastRound[index] ? (
+                      gameStats.fastRound[index].correct ? (
+                        <span className="text-success">✓ Σωστό</span>
+                      ) : (
+                        <span className="text-danger">✗ Λάθος</span>
+                      )
+                    ) : (
+                      <span className="text-muted">-</span>
+                    )}
+                  </div>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+
+            {audioBlob && (
+              <div className="mb-4">
+                <h5>Ηχογράφηση:</h5>
                 <AudioPlayer />
-              ) : (
-                <p className="text-muted">Δεν υπάρχει διαθέσιμη ηχογράφηση</p>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="d-flex justify-content-between">
               <Button variant="outline-secondary" href="/">
@@ -289,7 +327,7 @@ const GreekReadingExercise = () => {
               justifyContent: "center",
             }}
           >
-            {isRunning ? (
+            {isRunning || showApprovalModal ? (
               <div className="text-center">
                 <div className="display-4 font-weight-bold mb-2">
                   {getDisplayWord(

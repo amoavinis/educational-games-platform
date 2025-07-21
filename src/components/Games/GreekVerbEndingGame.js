@@ -255,9 +255,9 @@ const GreekVerbEndingGame = () => {
               </Button>
             )}
 
-            <Button variant="secondary" onClick={resetGame}>
+            {/* <Button variant="secondary" onClick={resetGame}>
               Επανάληψη
-            </Button>
+            </Button> */}
           </div>
         </Card.Body>
       </Card>

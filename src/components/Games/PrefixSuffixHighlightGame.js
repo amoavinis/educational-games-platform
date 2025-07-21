@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Card, Modal, Container, ProgressBar } from "react-bootstrap";
 import "../../styles/Game.css";
 
-const PrefixSuffixHighlightGame = ({ reportFn }) => {
+const PrefixSuffixHighlightGame = () => {
   const words = [
     { word: 'καταστρέφω', prefix: 'κατα', stem: 'στρεφ', suffix: 'ω', task: 'prefix' },
     { word: 'επιχρωματισμένος', prefix: 'επι', stem: 'χρωματισμεν', suffix: 'ος', task: 'suffix' },
@@ -58,7 +58,7 @@ const PrefixSuffixHighlightGame = ({ reportFn }) => {
       setCurrentRound(currentRound + 1);
     } else {
       setGameCompleted(true);
-      reportFn(gameData);
+      /* reportFn(gameData); */
     }
   };
 

@@ -9,7 +9,7 @@ import {
 } from "react-bootstrap";
 import "../../styles/Game.css";
 
-const GreekMorphologyGame = ({ reportFn }) => {
+const GreekMorphologyGame = () => {
   const questions = [
     {
       word: "καταπονώ",
@@ -128,7 +128,7 @@ const GreekMorphologyGame = ({ reportFn }) => {
       setAnswered(false);
     } else {
       setGameState("completed");
-      reportFn(gameData);
+      /* reportFn(gameData); */
     }
   };
 

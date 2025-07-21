@@ -324,9 +324,9 @@ const GreekSuffixMarqueeGame = () => {
                       : "Τέλος"}
                   </Button>
                 )}
-                <Button variant="secondary" onClick={resetGame}>
+                {/* <Button variant="secondary" onClick={resetGame}>
                   Επανάληψη
-                </Button>
+                </Button> */}
               </div>
             </>
           )}
