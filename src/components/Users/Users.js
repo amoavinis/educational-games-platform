@@ -54,7 +54,7 @@ const Users = () => {
     }
   };
 
-  if (loading) return <div>Loading users...</div>;
+  if (loading) return <div>Φόρτωση χρηστών...</div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
 
   return (
@@ -65,16 +65,16 @@ const Users = () => {
           setShowEditor(true);
         }}
       >
-        Add New User
+        Προσθήκη χρήστη
       </Button>
 
       <Table striped bordered hover className="mt-3">
         <thead>
           <tr>
             <th>Email</th>
-            <th>Name</th>
-            <th>Role</th>
-            <th>Actions</th>
+            <th>Όνομα</th>
+            <th>Ρόλος</th>
+            <th>Ενέργειες</th>
           </tr>
         </thead>
         <tbody>
@@ -82,7 +82,7 @@ const Users = () => {
             <tr key={user.uid}>
               <td>{user.email}</td>
               <td>{user.name}</td>
-              <td>{user.role === 1 ? "Admin" : "User"}</td>
+              <td>{user.role === 1 ? "Διαχειριστής" : "Χρήστης"}</td>
               <td>
                 <Button
                   variant="info"
@@ -93,14 +93,14 @@ const Users = () => {
                     setShowEditor(true);
                   }}
                 >
-                  Edit
+                  Επεξεργασία
                 </Button>
                 <Button
                   variant="danger"
                   size="sm"
                   onClick={() => handleDelete(user.id)}
                 >
-                  Delete
+                  Διαγραφή
                 </Button>
               </td>
             </tr>

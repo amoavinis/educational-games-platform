@@ -8,6 +8,7 @@ const UserEditor = ({ show, user, onSave, onCancel }) => {
     password: "",
   });
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -32,10 +33,12 @@ const UserEditor = ({ show, user, onSave, onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
 
     // Validate password for new users
     if (!user && !formData.password) {
       setError("Password is required for new users");
+      setLoading(false);
       return;
     }
 
@@ -43,13 +46,15 @@ const UserEditor = ({ show, user, onSave, onCancel }) => {
       email: formData.email,
       name: formData.name,
       password: formData.password,
-    });
+    }).then(() => setLoading(false));
   };
 
   return (
     <Modal show={show} onHide={onCancel}>
       <Modal.Header closeButton>
-        <Modal.Title>{user ? "Edit User" : "Create User"}</Modal.Title>
+        <Modal.Title>
+          {user ? "Επεξεργααία χρήστη" : "Δημιουργία χρήστη"}
+        </Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
@@ -68,7 +73,7 @@ const UserEditor = ({ show, user, onSave, onCancel }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Name</Form.Label>
+            <Form.Label>Όνομα</Form.Label>
             <Form.Control
               type="text"
               name="name"
@@ -79,23 +84,28 @@ const UserEditor = ({ show, user, onSave, onCancel }) => {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Password</Form.Label>
+            <Form.Label>
+              Κωδικός πρόσβασης (Αφήστε το κενό για να παραμείνει ο υπάρχων
+              κωδικός)
+            </Form.Label>
             <Form.Control
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               required={!user}
-              placeholder={user ? "Leave blank to keep current" : ""}
+              placeholder={
+                user ? "Αφήστε το κενό για να παραμείνει ο υπάρχων κωδικός" : ""
+              }
             />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={onCancel}>
-            Cancel
+          <Button variant="secondary" onClick={onCancel} disabled={loading}>
+            Ακύρωση
           </Button>
-          <Button variant="primary" type="submit">
-            Save
+          <Button variant="primary" type="submit" disabled={loading}>
+            {loading ? "Αποθηκεύεται..." : "Αποθήκευση"}
           </Button>
         </Modal.Footer>
       </Form>

@@ -52,7 +52,7 @@ export const getStudentsWithClasses = async () => {
   const schoolId = localStorage.getItem("school");
 
   const response = await callFunction(
-    `https://europe-west1-educational-games-platform.cloudfunctions.net/getStudentsWithClasses?schoolId=${schoolId}`,
+    `https://getstudentswithclasses-v5j5fe6n2q-ew.a.run.app?schoolId=${schoolId}`,
     "GET",
     null
   );

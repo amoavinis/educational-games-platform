@@ -13,17 +13,6 @@
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run lint"
       ]
-    },
-    {
-      "source": "educational-functions",
-      "codebase": "educational-functions",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
     }
   ],
   "emulators": {
@@ -35,8 +24,8 @@
     "source": "dataconnect"
   },
   "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
+    "rules": "firebase/firestore.rules",
+    "indexes": "firebase/firestore.indexes.json"
   },
   "hosting": {
     "public": "build",
@@ -56,6 +45,7 @@
     "rules": "firebase/database.rules.json"
   },
   "storage": {
-    "rules": "storage.rules"
-  }
+    "rules": "firebase/storage.rules"
+  },
+  "extensions": {}
 }

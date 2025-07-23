@@ -78,14 +78,14 @@ const Home = () => {
 
   return (
     <Container>
-      <h1>Welcome to the Educational Platform</h1>
+      <h1>Παιχνίδια</h1>
 
       {role === 1 && (
         <Form.Group className="mb-3">
           <Row>
             <Col md={2}>
               <Form.Label className="d-flex flex-row align-items-center h-100 m-0">
-                Select School
+                Επιλογή σχολείου
               </Form.Label>
             </Col>
             <Col md={4}>
@@ -141,12 +141,12 @@ const Home = () => {
           <p className="lead">{selectedGame?.description}</p>
 
           <Form.Group className="mb-3">
-            <Form.Label>Select Student</Form.Label>
+            <Form.Label>Επιλογή μαθητή</Form.Label>
             <Form.Select
               value={selectedStudentId}
               onChange={(e) => setSelectedStudentId(e.target.value)}
             >
-              <option value="">Choose a student</option>
+              <option value="">Επιλογή μαθητή</option>
               {students.map((student) => (
                 <option key={student.id} value={student.id}>
                   {student.name}
@@ -157,14 +157,14 @@ const Home = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
+            Κλείσιμο
           </Button>
           <Button
             variant="primary"
             onClick={handlePlay}
             disabled={!selectedStudentId}
           >
-            Play Game
+            Παίξε
           </Button>
         </Modal.Footer>
       </Modal>

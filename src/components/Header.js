@@ -38,7 +38,7 @@ const Header = () => {
     <Navbar expand="lg" className="header-navbar mb-4">
       <Container>
         <Navbar.Brand as={Link} to="/">
-          Educational Platform
+          Εκπαιδευτική πλατφόρμα παιχνιδιών
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
@@ -48,7 +48,7 @@ const Header = () => {
               to="/"
               className={isActive("/") ? "active fw-bold" : ""}
             >
-              Home
+              Παιχνίδια
             </Nav.Link>
             {role === 1 && (
               <Nav.Link
@@ -56,7 +56,7 @@ const Header = () => {
                 to="/users"
                 className={isActive("/users") ? "active fw-bold" : ""}
               >
-                Users
+                Χρήστες
               </Nav.Link>
             )}
             <Nav.Link
@@ -64,14 +64,14 @@ const Header = () => {
               to="/students"
               className={isActive("/students") ? "active fw-bold" : ""}
             >
-              Students
+              Μαθητές
             </Nav.Link>
             <Nav.Link
               as={Link}
               to="/classes"
               className={isActive("/classes") ? "active fw-bold" : ""}
             >
-              Classes
+              Τάξεις
             </Nav.Link>
           </Nav>
           <Nav>
@@ -82,7 +82,7 @@ const Header = () => {
               { name }
             </Nav.Item>
             <Nav.Link onClick={handleLogout} className="logout-link">
-              Log Out
+              Αποσύνδεση
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>

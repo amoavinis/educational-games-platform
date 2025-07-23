@@ -34,7 +34,7 @@ exports.getStudentsWithClasses = functions.https.onRequest(
       // Handle CORS preflight
       if (req.method === "OPTIONS") {
         res.set("Access-Control-Allow-Origin", "*");
-        res.set("Access-Control-Allow-Methods", "GET");
+        res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
         res.set("Access-Control-Allow-Headers",
             "Authorization, Content-Type");
         res.status(204).send("");
@@ -119,7 +119,7 @@ async (req, res) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     res.set("Access-Control-Allow-Origin", "*");
-    res.set("Access-Control-Allow-Methods", "GET");
+    res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
     res.set("Access-Control-Allow-Headers",
         "Authorization, Content-Type");
     res.status(204).send("");
@@ -155,7 +155,7 @@ async (req, res) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     res.set("Access-Control-Allow-Origin", "*");
-    res.set("Access-Control-Allow-Methods", "GET");
+    res.set("Access-Control-Allow-Methods", "GET, OPTIONS, POST");
     res.set("Access-Control-Allow-Headers",
         "Authorization, Content-Type");
     res.status(204).send("");
@@ -209,7 +209,7 @@ async (req, res) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     res.set("Access-Control-Allow-Origin", "*");
-    res.set("Access-Control-Allow-Methods", "GET");
+    res.set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT");
     res.set("Access-Control-Allow-Headers",
         "Authorization, Content-Type");
     res.status(204).send("");
@@ -273,7 +273,7 @@ async (req, res) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     res.set("Access-Control-Allow-Origin", "*");
-    res.set("Access-Control-Allow-Methods", "GET");
+    res.set("Access-Control-Allow-Methods", "GET, OPTIONS, DELETE");
     res.set("Access-Control-Allow-Headers",
         "Authorization, Content-Type");
     res.status(204).send("");

@@ -1,7 +1,5 @@
 import { getAuth } from "firebase/auth";
 
-const API_BASE = "https://europe-west1-educational-games-platform.cloudfunctions.net";
-
 export function setDisplayName(name) {
   return localStorage.setItem("userDisplayName", name);
 }
@@ -18,7 +16,7 @@ export const getUsers = async () => {
 
   try {
     const idToken = await user.getIdToken();
-    const response = await fetch(`${API_BASE}/getUsers`, {
+    const response = await fetch(`https://getusers-v5j5fe6n2q-ew.a.run.app`, {
       headers: {
         Authorization: `Bearer ${idToken}`,
       },
@@ -44,7 +42,7 @@ export const createUser = async (userData) => {
 
   try {
     const idToken = await user.getIdToken();
-    const response = await fetch(`${API_BASE}/createUser`, {
+    const response = await fetch(`https://createuser-v5j5fe6n2q-ew.a.run.app`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${idToken}`,
@@ -72,7 +70,7 @@ export const updateUser = async (userId, userData) => {
 
   try {
     const idToken = await user.getIdToken();
-    const response = await fetch(`${API_BASE}/updateUser/${userId}`, {
+    const response = await fetch(`https://updateuser-v5j5fe6n2q-ew.a.run.app/${userId}`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${idToken}`,
@@ -100,7 +98,7 @@ export const deleteUser = async (userId, userData) => {
 
   try {
     const idToken = await user.getIdToken();
-    const response = await fetch(`${API_BASE}/deleteUser/${userId}`, {
+    const response = await fetch(`https://deleteuser-v5j5fe6n2q-ew.a.run.app/${userId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${idToken}`,

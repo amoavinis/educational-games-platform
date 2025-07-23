@@ -9,7 +9,7 @@ const StudentEditor = ({ show, student, onSave, onCancel, loading }) => {
   useEffect(() => {
     const loadClasses = async () => {
       const data = await getClasses();
-      setClasses([{ id: null, name: "Select class" }, ...data]);
+      setClasses([{ id: null, name: "Επιλογή τάξης" }, ...data]);
     };
 
     loadClasses();

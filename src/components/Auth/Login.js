@@ -59,7 +59,7 @@ const Login = () => {
       <div className="w-100" style={{ maxWidth: "400px" }}>
         <Card>
           <Card.Body>
-            <h2 className="text-center mb-4">Log In</h2>
+            <h2 className="text-center mb-4">Σύνδεση</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form onSubmit={handleSubmit}>
               <Form.Group id="email" className="mb-3">
@@ -72,7 +72,7 @@ const Login = () => {
                 />
               </Form.Group>
               <Form.Group id="password" className="mb-3">
-                <Form.Label>Password</Form.Label>
+                <Form.Label>Κωδικός πρόσβασης</Form.Label>
                 <Form.Control
                   type="password"
                   value={password}
@@ -81,7 +81,7 @@ const Login = () => {
                 />
               </Form.Group>
               <Button disabled={loading} className="w-100" type="submit">
-                {loading ? "Logging in..." : "Log In"}
+                {loading ? "Συνδέεστε..." : "Σύνδεση"}
               </Button>
             </Form>
           </Card.Body>
