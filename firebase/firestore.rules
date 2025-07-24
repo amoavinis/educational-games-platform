@@ -15,11 +15,11 @@ service cloud.firestore {
     }
     
     function belongsToUsersSchool() {
-      return resource.data.schoolId == request.auth.token.schoolId;
+      return resource.data.schoolId == request.auth.uid;
     }
     
     function belongsToUsersSchoolInRequest() {
-      return request.resource.data.schoolId == request.auth.token.schoolId;
+      return request.resource.data.schoolId == request.auth.uid;
     }
 
     match /students/{studentId} {
@@ -45,7 +45,7 @@ service cloud.firestore {
                  
       allow list: if isAuthenticated() && (
                     isAdmin() ||
-                    (isSchoolUser() && request.auth.token.schoolId != null)
+                    (isSchoolUser() && request.auth.uid != null)
                   );
 
       // DELETE rules
@@ -59,7 +59,7 @@ service cloud.firestore {
       allow create, update, delete: if isAuthenticated() && isAdmin();
       allow read: if isAuthenticated() && (
                      isAdmin() || 
-                     schoolId == request.auth.token.schoolId
+                     (schoolId == request.auth.uid && request.auth.token.role == 2)
                    );
     }
     
@@ -84,7 +84,7 @@ service cloud.firestore {
                  
       allow list: if isAuthenticated() && (
                     isAdmin() ||
-                    (isSchoolUser() && request.auth.token.schoolId != null)
+                    (isSchoolUser() && request.auth.uid != null)
                   );
                        
       allow delete: if isAuthenticated() && (

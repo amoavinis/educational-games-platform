@@ -24,10 +24,11 @@ const Login = () => {
         email,
         password
       );
+
       const role = (await getUserRoleFromClaims()) || 2;
       localStorage.setItem("role", String(role));
 
-      let displayName;
+      let displayName = "";
       if (role === 1) {
         displayName = email;
 
@@ -38,7 +39,9 @@ const Login = () => {
         }
       } else if (role === 2) {
         localStorage.setItem("school", userCredential.user.uid);
+        
         const schoolDoc = await getSchoolById(userCredential.user.uid);
+        
         displayName = schoolDoc.data().name;
       }
       setDisplayName(displayName);

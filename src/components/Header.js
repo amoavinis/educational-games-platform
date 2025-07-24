@@ -13,6 +13,9 @@ const Header = () => {
 
   useEffect(() => {
     getUserRoleFromClaims().then((r) => {
+      if (!r) {
+        r = parseInt(localStorage.getItem("role"))
+      }
       setRole(r);
     });
     setName(getDisplayName());
@@ -72,6 +75,13 @@ const Header = () => {
               className={isActive("/classes") ? "active fw-bold" : ""}
             >
               Τάξεις
+            </Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/reports"
+              className={isActive("/reports") ? "active fw-bold" : ""}
+            >
+              Αναφορές
             </Nav.Link>
           </Nav>
           <Nav>

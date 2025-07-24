@@ -22,6 +22,7 @@ export const getSchools = async () => {
 
 // Get school by id
 export const getSchoolById = async (id) => {
+  console.log(id)
   const schoolDoc = await getDoc(doc(db, 'schools', id));
   return schoolDoc;
 };
