@@ -2,6 +2,9 @@
 
 *config.js
 
+# Firebase
+.firebase
+
 # dependencies
 /node_modules
 /.pnp
