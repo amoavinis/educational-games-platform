@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button, Card, Alert } from "react-bootstrap";
+import { Container, Row, Col, Button, Card } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import "../../styles/Game10And11.css";
-import {
-  level10Words,
-  // level12Words
-} from "../Data/Game10And11";
+import { level11Words } from "../Data/Game11";
 
 const GreekCliticSuffixGame = () => {
-  // Select words based on level prop
-  const words = React.useMemo(() => {
-    return level10Words;
-  }, []);
+  const navigate = useNavigate();
+  const words = level11Words;
 
   const [wordPool, setWordPool] = useState([]);
   const [columns, setColumns] = useState({
@@ -22,12 +18,21 @@ const GreekCliticSuffixGame = () => {
     ηκαμε: [],
     ηκατε: [],
   });
-  const [score, setScore] = useState({ correct: 0, total: 0, message: "" });
-  const [showFeedback, setShowFeedback] = useState(false);
+  const [wordAttempts, setWordAttempts] = useState({}); // Track attempts per word
+  const [gameStartTime, setGameStartTime] = useState(null);
+  const [gameResults, setGameResults] = useState([]);
+  const [gameCompleted, setGameCompleted] = useState(false);
+
+  const shuffle = (arr) =>
+    arr
+      .map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
 
   const initializeGame = React.useCallback(() => {
-    const shuffledWords = [...words].sort(() => Math.random() - 0.5);
-    setWordPool(shuffledWords);
+    const exampleWord = words.find((w) => w.isExample);
+    // Show only the example word initially
+    setWordPool([exampleWord]);
     setColumns({
       ων: [],
       ω: [],
@@ -36,8 +41,10 @@ const GreekCliticSuffixGame = () => {
       ηκαμε: [],
       ηκατε: [],
     });
-    setScore({ correct: 0, total: 0, message: "" });
-    setShowFeedback(false);
+    setWordAttempts({});
+    setGameStartTime(Date.now());
+    setGameResults([]);
+    setGameCompleted(false);
   }, [words]);
 
   useEffect(() => {
@@ -71,32 +78,122 @@ const GreekCliticSuffixGame = () => {
     const wordData = JSON.parse(e.dataTransfer.getData("text/plain"));
     if (!wordData) return;
 
-    // Check if word is already in a column
-    const isWordInColumns = Object.values(columns).some((column) =>
-      column.some((w) => w.id === wordData.id)
-    );
+    const isCorrect = wordData.suffix === targetSuffix;
+    const currentAttempts = wordAttempts[wordData.id] || 0;
+    const newAttempts = currentAttempts + 1;
 
-    // If word is not in any column, remove it from pool
-    if (!isWordInColumns) {
+    // Update attempts count
+    setWordAttempts((prev) => ({
+      ...prev,
+      [wordData.id]: newAttempts,
+    }));
+
+    if (isCorrect) {
+      // Correct placement - move to column and add to results
+      const score = newAttempts; // 1 for first try, 2 for second, 3 for third+
+
+      if (!wordData.isExample) {
+        setGameResults((prev) => [...prev, { word: wordData.word, score }]);
+      }
+
+      // Remove from pool
       setWordPool((prev) => prev.filter((w) => w.id !== wordData.id));
+
+      // Remove from any existing column
+      const newColumns = { ...columns };
+      Object.keys(newColumns).forEach((suffix) => {
+        newColumns[suffix] = newColumns[suffix].filter(
+          (w) => w.id !== wordData.id
+        );
+      });
+
+      // Add to correct column
+      newColumns[targetSuffix] = [
+        ...newColumns[targetSuffix],
+        { ...wordData, placedSuffix: targetSuffix },
+      ];
+
+      setColumns(newColumns);
+
+      // If this was the example word, add all remaining words to the pool
+      if (wordData.isExample) {
+        const regularWords = shuffle(words.filter((w) => !w.isExample));
+        setWordPool((prev) => [...prev, ...regularWords]);
+      } else {
+        // Check if all regular words are placed
+        const regularWords = words.filter((w) => !w.isExample);
+        const placedRegularWords = Object.values(newColumns)
+          .flat()
+          .filter((w) => !w.isExample);
+
+        if (placedRegularWords.length === regularWords.length) {
+          // All regular words placed - game completed
+          setTimeout(() => {
+            setGameCompleted(true);
+            logGameResults();
+          }, 500);
+        }
+      }
+    } else {
+      // Wrong placement
+      if (newAttempts >= 2) {
+        // After 2 wrong attempts, place automatically in correct column
+        const score = 3;
+
+        if (!wordData.isExample) {
+          setGameResults((prev) => [...prev, { word: wordData.word, score }]);
+        }
+
+        // Remove from pool
+        setWordPool((prev) => prev.filter((w) => w.id !== wordData.id));
+
+        // Remove from any existing column
+        const newColumns = { ...columns };
+        Object.keys(newColumns).forEach((suffix) => {
+          newColumns[suffix] = newColumns[suffix].filter(
+            (w) => w.id !== wordData.id
+          );
+        });
+
+        // Add to correct column
+        newColumns[wordData.suffix] = [
+          ...newColumns[wordData.suffix],
+          { ...wordData, placedSuffix: wordData.suffix },
+        ];
+
+        setColumns(newColumns);
+
+        // If this was the example word, add all remaining words to the pool
+        if (wordData.isExample) {
+          const regularWords = shuffle(words.filter((w) => !w.isExample));
+          setWordPool((prev) => [...prev, ...regularWords]);
+        } else {
+          // Check if all regular words are placed
+          const regularWords = words.filter((w) => !w.isExample);
+          const placedRegularWords = Object.values(newColumns)
+            .flat()
+            .filter((w) => !w.isExample);
+
+          if (placedRegularWords.length === regularWords.length) {
+            // All regular words placed - game completed
+            setTimeout(() => {
+              setGameCompleted(true);
+              logGameResults();
+            }, 500);
+          }
+        }
+      } else {
+        // Put word back in pool for another attempt
+        // Word is already in pool, just need to remove from any column
+        const newColumns = { ...columns };
+        Object.keys(newColumns).forEach((suffix) => {
+          newColumns[suffix] = newColumns[suffix].filter(
+            (w) => w.id !== wordData.id
+          );
+        });
+        setColumns(newColumns);
+      }
     }
-
-    // Remove word from any existing column
-    const newColumns = { ...columns };
-    Object.keys(newColumns).forEach((suffix) => {
-      newColumns[suffix] = newColumns[suffix].filter(
-        (w) => w.id !== wordData.id
-      );
-    });
-
-    // Add word to target column
-    newColumns[targetSuffix] = [
-      ...newColumns[targetSuffix],
-      { ...wordData, placedSuffix: targetSuffix },
-    ];
-
-    setColumns(newColumns);
-    setShowFeedback(false);
   };
 
   const returnToPool = (wordData, fromColumn) => {
@@ -113,39 +210,35 @@ const GreekCliticSuffixGame = () => {
         suffix: wordData.suffix,
       },
     ]);
-    setShowFeedback(false);
   };
 
-  const checkAnswers = () => {
-    let correct = 0;
-    let total = 0;
+  // Log game results function
+  const logGameResults = () => {
+    const now = new Date();
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
 
-    Object.keys(columns).forEach((suffix) => {
-      columns[suffix].forEach((wordData) => {
-        total++;
-        if (wordData.suffix === suffix) {
-          correct++;
-        }
-      });
-    });
+    const totalTime = gameStartTime
+      ? Math.round((Date.now() - gameStartTime) / 1000)
+      : 0;
 
-    let message;
-    if (correct === total && total > 0) {
-      message = "🎉 Τέλεια! Όλα σωστά!";
-    } else if (correct >= total * 0.8) {
-      message = "👍 Πολύ καλά!";
-    } else if (correct >= total * 0.6) {
-      message = "😊 Καλά!";
-    } else {
-      message = "💪 Καλή προσπάθεια! Προσπάθησε ξανά.";
-    }
+    const results = {
+      studentId: "student123",
+      datetime: datetime,
+      gameName: "GreekCliticSuffixGame",
+      questions: gameResults,
+      totalTime: totalTime,
+    };
 
-    setScore({ correct, total, message });
-    setShowFeedback(true);
-  };
-
-  const resetGame = () => {
-    initializeGame();
+    console.log(results);
   };
 
   const getSuffixTitle = (suffix) => {
@@ -163,11 +256,7 @@ const GreekCliticSuffixGame = () => {
   const WordCard = ({ wordData, isDraggable = true }) => (
     <div
       className={`word-card ${isDraggable ? "draggable" : ""} ${
-        showFeedback
-          ? wordData.suffix === wordData.placedSuffix
-            ? "correct"
-            : "incorrect"
-          : ""
+        wordData.isExample ? "example-word" : ""
       }`}
       draggable={isDraggable}
       onDragStart={
@@ -180,6 +269,9 @@ const GreekCliticSuffixGame = () => {
           : undefined
       }
     >
+      {wordData.isExample && (
+        <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>
+      )}
       {wordData.word}
     </div>
   );
@@ -191,7 +283,7 @@ const GreekCliticSuffixGame = () => {
       onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, suffix)}
     >
-      <Card.Header className={`text-center`}>
+      <Card.Header className={`text-center text-dark`}>
         {getSuffixTitle(suffix)}
       </Card.Header>
       <Card.Body
@@ -210,18 +302,40 @@ const GreekCliticSuffixGame = () => {
     </Card>
   );
 
+  if (gameCompleted) {
+    return (
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <Card className="main-card">
+              <Card.Header className="text-center bg-success text-white">
+                <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => navigate("/")}
+                  className="mt-4"
+                >
+                  Τέλος Άσκησης
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+
   return (
     <Container fluid className="game-container">
       <Row className="justify-content-center">
         <Col md={12} lg={12}>
           <Card className="main-card">
-            <Card.Header className="text-center">
-              <h2>Ταξινόμηση κατά Παραλήγοντα</h2>
-              <p className="mb-0">
-                Σύρε τις λέξεις στη σωστή στήλη ανάλογα με την κατάληξή τους
-              </p>
+            <Card.Header className="text-center bg-primary text-white">
+              <h4 className="mb-0">Βάλε τις λέξεις στη σωστή θέση</h4>
             </Card.Header>
-
             <Card.Body>
               <Row>
                 {/* Word Pool */}
@@ -264,42 +378,6 @@ const GreekCliticSuffixGame = () => {
                   </div>
                 </Col>
               </Row>
-
-              {/* Controls */}
-              <Row className="mt-4">
-                <Col className="text-center">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    onClick={checkAnswers}
-                    className="me-3"
-                  >
-                    Έλεγχος Απαντήσεων
-                  </Button>
-                  <Button variant="secondary" size="lg" onClick={resetGame}>
-                    Επανεκκίνηση
-                  </Button>
-                </Col>
-              </Row>
-
-              {/* Score Display */}
-              {showFeedback && (
-                <Row className="mt-4">
-                  <Col>
-                    <Alert
-                      variant={
-                        score.correct === score.total ? "success" : "info"
-                      }
-                      className="text-center"
-                    >
-                      <h4>
-                        Σκορ: {score.correct}/{score.total}
-                      </h4>
-                      <p className="mb-0">{score.message}</p>
-                    </Alert>
-                  </Col>
-                </Row>
-              )}
             </Card.Body>
           </Card>
         </Col>
