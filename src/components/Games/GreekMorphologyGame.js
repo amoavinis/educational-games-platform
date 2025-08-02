@@ -1,16 +1,18 @@
-import React, { useState } from "react";
-import {
-  Button,
-  Card,
-  Container,
-  Row,
-  Col,
-  ProgressBar,
-} from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Button, Card, Container, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 
 const GreekMorphologyGame = () => {
+  const navigate = useNavigate();
   const questions = [
+    {
+      word: "λόγος",
+      choices: ["λόγ|ος", "λό|γος", "λογ|ος"],
+      correct: 0,
+      isExample: true,
+    },
     {
       word: "καταπονώ",
       choices: ["κατ|απον|ώ", "κατα|πον|ώ", "κα|ταπο|νώ"],
@@ -53,35 +55,13 @@ const GreekMorphologyGame = () => {
     },
   ];
 
-  const scoreThresholds = [
-    {
-      min: 90,
-      message: "🎉 Τέλεια! Είσαι εξπέρ στη μορφολογία!",
-      color: "#4ecdc4",
-    },
-    {
-      min: 70,
-      message: "👍 Πολύ καλά! Καταλαβαίνεις τη μορφημική ανάλυση!",
-      color: "#4ecdc4",
-    },
-    { min: 50, message: "😊 Καλά! Συνέχισε να εξασκείσαι!", color: "#f39c12" },
-    {
-      min: 0,
-      message: "💪 Μη το βάζεις κάτω! Δοκίμασε ξανά!",
-      color: "#ff6b6b",
-    },
-  ];
 
   const [gameState, setGameState] = useState("playing");
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState(null);
-  const [answered, setAnswered] = useState(false);
-  const [gameData, setGameData] = useState({
-    rounds: [],
-    totalCorrect: 0,
-    totalRounds: questions.length,
-  });
+  const [gameResults, setGameResults] = useState([]);
+  const [questionStartTime, setQuestionStartTime] = useState(null);
 
   const formatMorphemes = (text) => {
     const parts = text.split("|");
@@ -94,186 +74,180 @@ const GreekMorphologyGame = () => {
   };
 
   const handleChoiceSelect = (choiceIndex) => {
-    if (answered) return;
-
+    if (selectedChoice !== null) return; // Prevent multiple selections
+    
     setSelectedChoice(choiceIndex);
-    setAnswered(true);
-
     const isCorrect = choiceIndex === questions[currentQuestion].correct;
+    const currentQ = questions[currentQuestion];
+    const questionEndTime = Date.now();
+    const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
 
-    setGameData((prev) => ({
-      ...prev,
-      rounds: [
-        ...prev.rounds,
+    // Track the result only for non-example questions
+    if (!currentQ.isExample) {
+      setGameResults((prev) => [
+        ...prev,
         {
-          word: questions[currentQuestion].word,
-          choices: questions[currentQuestion].choices,
-          selectedChoice: choiceIndex,
-          correctChoice: questions[currentQuestion].correct,
-          correct: isCorrect,
+          question: currentQ.word,
+          result: currentQ.choices[choiceIndex],
+          target: currentQ.choices[currentQ.correct],
+          isCorrect: isCorrect,
+          seconds: secondsForQuestion
         },
-      ],
-      totalCorrect: isCorrect ? prev.totalCorrect + 1 : prev.totalCorrect,
-    }));
+      ]);
 
-    if (isCorrect) {
-      setScore(score + 1);
+      if (isCorrect) {
+        setScore(score + 1);
+      }
     }
+
+    // Auto advance after 1 second
+    setTimeout(() => {
+      handleNext();
+    }, 1000);
   };
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedChoice(null);
-      setAnswered(false);
+      setQuestionStartTime(null); // Reset timing for next question
     } else {
       setGameState("completed");
-      /* reportFn(gameData); */
+      logGameResults();
     }
   };
 
-  const resetGame = () => {
-    setGameState("playing");
-    setCurrentQuestion(0);
-    setScore(0);
-    setSelectedChoice(null);
-    setAnswered(false);
-    setGameData({
-      rounds: [],
-      totalCorrect: 0,
-      totalRounds: questions.length,
-    });
+
+  // Log game results function
+  const logGameResults = () => {
+    const now = new Date();
+    const datetime = now.getFullYear() + '-' + 
+                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                     String(now.getDate()).padStart(2, '0') + ' ' + 
+                     String(now.getHours()).padStart(2, '0') + ':' + 
+                     String(now.getMinutes()).padStart(2, '0');
+    
+    const results = {
+      studentId: "student123",
+      datetime: datetime,
+      gameName: "GreekMorphologyGame",
+      questions: gameResults
+    };
+    
+    console.log(results);
   };
 
-  const getScoreInfo = () => {
-    const percentage = Math.round(
-      (gameData.totalCorrect / questions.length) * 100
-    );
-    return scoreThresholds.find((threshold) => percentage >= threshold.min);
-  };
+  // Start timing when question loads
+  useEffect(() => {
+    if (gameState === "playing") {
+      setQuestionStartTime(Date.now());
+    }
+  }, [currentQuestion, gameState]);
 
   if (gameState !== "completed") {
     const currentQ = questions[currentQuestion];
-    const progress = ((currentQuestion + 1) / questions.length) * 100;
 
     return (
-      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-        <h2 className="mb-4">Μορφολογική Ανάλυση</h2>
-
-        <ProgressBar
-          now={progress}
-          label={`${currentQuestion + 1}/${questions.length}`}
-          className="w-100 mb-4"
-        />
-
-        <div className="mb-4 text-center">
-          <div className="display-4 font-weight-bold mb-3">{currentQ.word}</div>
-          <p className="text-muted">Επίλεξε τη σωστή μορφολογική ανάλυση</p>
-        </div>
-
-        <Row className="mb-4 w-100">
-          {currentQ.choices.map((choice, index) => {
-            let variant = "outline-secondary";
-            if (answered) {
-              if (index === currentQ.correct) {
-                variant = "success";
-              } else if (index === selectedChoice) {
-                variant = "danger";
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <QuestionProgressLights
+              totalQuestions={questions.filter((q) => !q.isExample).length}
+              currentQuestion={
+                questions[currentQuestion].isExample
+                  ? -1
+                  : questions
+                      .slice(0, currentQuestion)
+                      .filter((q) => !q.isExample).length
               }
-            } else if (index === selectedChoice) {
-              variant = "primary";
-            }
-
-            return (
-              <Col key={index} md={6} className="mb-3">
-                <Button
-                  className="w-100 py-3"
-                  variant={variant}
-                  onClick={() => handleChoiceSelect(index)}
-                  disabled={answered}
-                >
-                  <div className="d-flex align-items-center justify-content-center">
-                    <span className="mr-2 badge bg-dark">{index + 1}</span>
-                    {formatMorphemes(choice)}
+              answeredQuestions={gameResults.map((r) => r.isCorrect)}
+            />
+            <Card className="main-card">
+              <Card.Header
+                className={`text-center ${
+                  questions[currentQuestion].isExample
+                    ? "bg-warning"
+                    : "bg-primary"
+                } text-white`}
+              >
+                <h4 className="mb-0">
+                  Διάλεξε τη σωστή απάντηση
+                  {questions[currentQuestion].isExample && (
+                    <span className="badge bg-dark ms-2">Παράδειγμα</span>
+                  )}
+                </h4>
+              </Card.Header>
+              <Card.Body>
+                <div className="mb-4 text-center">
+                  <div className="display-4 font-weight-bold mb-3">
+                    {currentQ.word}
                   </div>
-                </Button>
-              </Col>
-            );
-          })}
-        </Row>
+                  <p className="text-muted">
+                    Επίλεξε τη σωστή μορφολογική ανάλυση
+                  </p>
+                </div>
 
-        {answered && (
-          <Button
-            variant={
-              selectedChoice === currentQ.correct ? "success" : "primary"
-            }
-            onClick={handleNext}
-            className="mt-3"
-          >
-            {currentQuestion < questions.length - 1 ? "Επόμενη" : "Τέλος"}
-          </Button>
-        )}
+                <Row className="mb-4 w-100">
+                  {currentQ.choices.map((choice, index) => {
+                    let variant = "outline-primary";
+                    if (selectedChoice !== null) {
+                      if (index === currentQ.correct) {
+                        variant = "success";
+                      } else if (index === selectedChoice) {
+                        variant = "danger";
+                      }
+                    }
+
+                    return (
+                      <Col key={index} xs={4} className="mb-3">
+                        <Button
+                          className="w-100 py-3"
+                          variant={variant}
+                          onClick={() => handleChoiceSelect(index)}
+                          disabled={selectedChoice !== null}
+                        >
+                          <div className="d-flex align-items-center justify-content-center">
+                            {formatMorphemes(choice)}
+                          </div>
+                        </Button>
+                      </Col>
+                    );
+                  })}
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     );
   } else {
-    const scoreInfo = getScoreInfo();
 
     return (
-      <Container className="d-flex flex-column align-items-center justify-content-center">
-        <Card className="w-100">
-          <Card.Header as="h3">Αποτελέσματα</Card.Header>
-          <Card.Body>
-            <p
-              className="h4 text-center mb-4"
-              style={{ color: scoreInfo.color }}
-            >
-              {scoreInfo.message}
-            </p>
-
-            <p className="text-center h2 mb-4">
-              {gameData.totalCorrect} / {gameData.totalRounds}
-            </p>
-
-            <div className="mb-4">
-              <h5>Αναλυτικά Αποτελέσματα:</h5>
-              <ul className="list-group">
-                {gameData.rounds.map((round, index) => (
-                  <li
-                    key={index}
-                    className={`list-group-item ${
-                      round.correct
-                        ? "list-group-item-success"
-                        : "list-group-item-danger"
-                    }`}
-                  >
-                    <div>
-                      <strong>Λέξη:</strong> {round.word}
-                    </div>
-                    <div>
-                      <strong>Επιλογή σου:</strong>{" "}
-                      {formatMorphemes(round.choices[round.selectedChoice])}
-                    </div>
-                    {!round.correct && (
-                      <div>
-                        <strong>Σωστή απάντηση:</strong>{" "}
-                        {formatMorphemes(round.choices[round.correctChoice])}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="d-flex justify-content-between">
-              <Button variant="secondary" href="/">
-                Αρχική Σελίδα
-              </Button>
-              <Button variant="primary" onClick={resetGame}>
-                Παίξτε Ξανά
-              </Button>
-            </div>
-          </Card.Body>
-        </Card>
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <QuestionProgressLights
+              totalQuestions={questions.filter((q) => !q.isExample).length}
+              currentQuestion={questions.filter((q) => !q.isExample).length}
+              answeredQuestions={gameResults.map((r) => r.isCorrect)}
+            />
+            <Card className="main-card">
+              <Card.Header className="text-center bg-success text-white">
+                <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => navigate("/")}
+                  className="mt-4"
+                >
+                  Τέλος Άσκησης
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     );
   }

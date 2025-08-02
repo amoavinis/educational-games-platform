@@ -56,6 +56,57 @@
   width: 4px;
 }
 
+/* Fullscreen Game Styles */
+.game-screen-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #f8f9fa;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.game-body-fullscreen {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 20px;
+  padding-top: 80px;
+}
+
+/* Kid-friendly Home Button */
+.home-button-kids {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-button-kids:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #ff5252, #ffeb3b);
+}
+
+.home-button-kids:active {
+  transform: scale(0.95);
+}
+
 /* Marquee styles */
 .marquee-container {
   width: 100%;
