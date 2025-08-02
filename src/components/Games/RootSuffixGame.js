@@ -1,37 +1,46 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Card, Container, Row, Col } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import QuestionProgressLights from '../QuestionProgressLights';
+import React, { useState, useEffect, useMemo } from "react";
+import { Button, Card, Container, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import QuestionProgressLights from "../QuestionProgressLights";
 
 const RootSuffixGame = () => {
   const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [selectedText, setSelectedText] = useState('');
+  const [selectedText, setSelectedText] = useState("");
   const [feedback, setFeedback] = useState(null);
-  const [highlightedText, setHighlightedText] = useState('');
-  const [highlightPosition, setHighlightPosition] = useState({ start: -1, end: -1 });
+  const [highlightedText, setHighlightedText] = useState("");
+  const [highlightPosition, setHighlightPosition] = useState({
+    start: -1,
+    end: -1,
+  });
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameStats, setGameStats] = useState({
     rounds: [],
     correctAnswers: 0,
-    totalRounds: 0
+    totalRounds: 0,
   });
   const [questionStartTime, setQuestionStartTime] = useState(null);
 
-  const words = useMemo(() => [
-    { word: 'παίζω', stem: 'παίζ', suffix: 'ω', isExample: true }, // Example question
-    { word: 'τυχαίνω', stem: 'τυχ', suffix: 'αίνω' },
-    { word: 'Γράφω', stem: 'Γράφ', suffix: 'ω' },
-    { word: 'Διαβάζω', stem: 'Διαβάζ', suffix: 'ω' },
-    { word: 'Τρέχω', stem: 'Τρέχ', suffix: 'ω' },
-    { word: 'Σχολείο', stem: 'Σχολεί', suffix: 'ο' },
-    { word: 'μαθητής', stem: 'μαθητ', suffix: 'ής' }
-  ], []);
+  const words = useMemo(
+    () => [
+      { word: "παίζω", stem: "παίζ", suffix: "ω", isExample: true }, // Example question
+      { word: "τυχαίνω", stem: "τυχ", suffix: "αίνω" },
+      { word: "Γράφω", stem: "Γράφ", suffix: "ω" },
+      { word: "Διαβάζω", stem: "Διαβάζ", suffix: "ω" },
+      { word: "Τρέχω", stem: "Τρέχ", suffix: "ω" },
+      { word: "Σχολείο", stem: "Σχολεί", suffix: "ο" },
+      { word: "μαθητής", stem: "μαθητ", suffix: "ής" },
+    ],
+    []
+  );
 
   // Initialize game stats and start time
   useEffect(() => {
     if (gameStats.totalRounds === 0) {
-      setGameStats(prev => ({ ...prev, totalRounds: words.filter(w => !w.isExample).length }));
+      setGameStats((prev) => ({
+        ...prev,
+        totalRounds: words.filter((w) => !w.isExample).length,
+      }));
       setQuestionStartTime(Date.now());
     }
   }, [gameStats.totalRounds, words]);
@@ -39,21 +48,21 @@ const RootSuffixGame = () => {
   const currentWord = words[currentWordIndex];
 
   const resetWord = () => {
-    setSelectedText('');
+    setSelectedText("");
     setFeedback(null);
-    setHighlightedText('');
+    setHighlightedText("");
     setHighlightPosition({ start: -1, end: -1 });
   };
 
   const submitAnswer = () => {
     if (!selectedText) return;
-    
+
     const isCorrect = selectedText === currentWord.suffix;
-    
+
     setFeedback({
       isCorrect,
       targetPart: currentWord.suffix,
-      selectedText
+      selectedText,
     });
 
     // If answer is wrong, highlight the correct answer instead
@@ -62,16 +71,21 @@ const RootSuffixGame = () => {
       const suffix = currentWord.suffix;
       const correctIndex = word.lastIndexOf(suffix); // Use lastIndexOf for suffix
       setHighlightedText(suffix);
-      setHighlightPosition({ start: correctIndex, end: correctIndex + suffix.length });
+      setHighlightPosition({
+        start: correctIndex,
+        end: correctIndex + suffix.length,
+      });
     }
     // If correct, keep the user's selection highlighted
 
     // Update game stats only for non-example questions
     if (!currentWord.isExample) {
       const questionEndTime = Date.now();
-      const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
-      
-      setGameStats(prev => ({
+      const secondsForQuestion = questionStartTime
+        ? Math.round((questionEndTime - questionStartTime) / 1000)
+        : 0;
+
+      setGameStats((prev) => ({
         ...prev,
         rounds: [
           ...prev.rounds,
@@ -80,17 +94,19 @@ const RootSuffixGame = () => {
             target: currentWord.suffix,
             result: selectedText,
             isCorrect: isCorrect,
-            seconds: secondsForQuestion
-          }
+            seconds: secondsForQuestion,
+          },
         ],
-        correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers
+        correctAnswers: isCorrect
+          ? prev.correctAnswers + 1
+          : prev.correctAnswers,
       }));
     }
   };
 
   const nextWord = () => {
     if (currentWordIndex < words.length - 1) {
-      setCurrentWordIndex(prev => prev + 1);
+      setCurrentWordIndex((prev) => prev + 1);
       resetWord();
       setQuestionStartTime(Date.now());
     } else {
@@ -102,35 +118,25 @@ const RootSuffixGame = () => {
   // Log game results function
   const logGameResults = (gameData) => {
     const now = new Date();
-    const datetime = now.getFullYear() + '-' + 
-                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                     String(now.getDate()).padStart(2, '0') + ' ' + 
-                     String(now.getHours()).padStart(2, '0') + ':' + 
-                     String(now.getMinutes()).padStart(2, '0');
-    
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
     const results = {
       studentId: "student123", // TODO: Replace with actual student ID
       datetime: datetime,
       gameName: "RootSuffixGame",
-      questions: gameData.gameStats.rounds
+      questions: gameData.gameStats.rounds,
     };
-    
-    console.log(results);
-  };
 
-  const restartGame = () => {
-    setCurrentWordIndex(0);
-    setSelectedText('');
-    setFeedback(null);
-    setHighlightedText('');
-    setHighlightPosition({ start: -1, end: -1 });
-    setGameCompleted(false);
-    setQuestionStartTime(Date.now());
-    setGameStats({
-      rounds: [],
-      correctAnswers: 0,
-      totalRounds: words.filter(w => !w.isExample).length
-    });
+    console.log(results);
   };
 
   const handleTextSelection = () => {
@@ -138,7 +144,7 @@ const RootSuffixGame = () => {
     if (selection.toString() && selection.rangeCount > 0) {
       const selectedText = selection.toString();
       const word = currentWord.word;
-      
+
       // For now, let's use a simpler approach: find ALL occurrences and highlight the selected one
       // We'll store both the text and which occurrence it is
       const occurrences = [];
@@ -147,33 +153,43 @@ const RootSuffixGame = () => {
         occurrences.push(index);
         index++;
       }
-      
+
       // For simplicity, let's highlight the last occurrence for suffixes
       // This works well for most cases
       const targetIndex = occurrences[occurrences.length - 1];
-      
+
       if (targetIndex !== -1) {
         setSelectedText(selectedText);
         setHighlightedText(selectedText);
-        setHighlightPosition({ start: targetIndex, end: targetIndex + selectedText.length });
+        setHighlightPosition({
+          start: targetIndex,
+          end: targetIndex + selectedText.length,
+        });
         setFeedback(null);
       }
-      
+
       selection.removeAllRanges();
     }
   };
 
   const highlightText = (text, highlight, position) => {
     if (!highlight || position.start === -1) return text;
-    
+
     // Ensure position is within bounds
     const start = Math.max(0, Math.min(position.start, text.length));
     const end = Math.max(start, Math.min(position.end, text.length));
-    
+
     return (
       <>
         {text.substring(0, start)}
-        <span style={{ backgroundColor: '#8e44ad', color: 'white', padding: '2px 4px', borderRadius: '3px' }}>
+        <span
+          style={{
+            backgroundColor: "#8e44ad",
+            color: "white",
+            padding: "2px 4px",
+            borderRadius: "3px",
+          }}
+        >
           {text.substring(start, end)}
         </span>
         {text.substring(end)}
@@ -189,17 +205,17 @@ const RootSuffixGame = () => {
             <QuestionProgressLights
               totalQuestions={gameStats.totalRounds}
               currentQuestion={gameStats.totalRounds}
-              answeredQuestions={gameStats.rounds.map(r => r.isCorrect)}
+              answeredQuestions={gameStats.rounds.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
               <Card.Header className="text-center bg-success text-white">
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button 
-                  variant="primary" 
-                  size="lg" 
-                  onClick={() => navigate('/')}
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => navigate("/")}
                   className="mt-4"
                 >
                   Τέλος Άσκησης
@@ -218,60 +234,72 @@ const RootSuffixGame = () => {
         <Col md={12} lg={10}>
           {!currentWord.isExample && (
             <QuestionProgressLights
-              totalQuestions={words.filter(w => !w.isExample).length}
+              totalQuestions={words.filter((w) => !w.isExample).length}
               currentQuestion={currentWordIndex - 1} // Subtract 1 for example question
-              answeredQuestions={gameStats.rounds.map(r => r.isCorrect)}
+              answeredQuestions={gameStats.rounds.map((r) => r.isCorrect)}
             />
           )}
           <Card className="main-card">
-            <Card.Header className={`text-center ${currentWord.isExample ? 'bg-warning text-dark' : 'bg-primary text-white'}`}>
+            <Card.Header
+              className={`text-center ${
+                currentWord.isExample
+                  ? "bg-warning text-dark"
+                  : "bg-primary text-white"
+              }`}
+            >
               <h4 className="mb-0">
-                {currentWord.isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                {currentWord.isExample && (
+                  <span className="badge badge-dark me-2">Παράδειγμα</span>
+                )}
                 Υπογράμμισε το επίθημα
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
-          <div 
-            className="display-4 font-weight-bold mb-4 p-4"
-            style={{ cursor: 'pointer', userSelect: 'text' }}
-            onMouseUp={handleTextSelection}
-          >
-            {highlightedText ? highlightText(currentWord.word, highlightedText, highlightPosition) : currentWord.word}
-          </div>
-          
-          
-          {feedback && (
-            <div className="mb-4 text-center">
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-                {feedback.isCorrect ? '✅' : '❌'}
+              <div
+                className="display-4 font-weight-bold mb-4 p-4"
+                style={{ cursor: "pointer", userSelect: "text" }}
+                onMouseUp={handleTextSelection}
+              >
+                {highlightedText
+                  ? highlightText(
+                      currentWord.word,
+                      highlightedText,
+                      highlightPosition
+                    )
+                  : currentWord.word}
               </div>
-            </div>
-          )}
+
+              {feedback && (
+                <div className="mb-4 text-center">
+                  <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>
+                    {feedback.isCorrect ? "✅" : "❌"}
+                  </div>
+                </div>
+              )}
             </Card.Body>
           </Card>
 
           {/* Action Buttons */}
-          {!feedback && <div className="d-flex gap-3 mt-4 mb-4 justify-content-center">
-            <Button
-              variant={selectedText ? "primary" : "secondary"}
-              size="lg"
-              onClick={submitAnswer}
-              disabled={!selectedText || feedback}
-            >
-              Υποβολή
-            </Button>
-            
-          </div>}
+          {!feedback && (
+            <div className="d-flex gap-3 mt-4 mb-4 justify-content-center">
+              <Button
+                variant={selectedText ? "primary" : "secondary"}
+                size="lg"
+                onClick={submitAnswer}
+                disabled={!selectedText || feedback}
+              >
+                Υποβολή
+              </Button>
+            </div>
+          )}
 
           {/* Next Word Button (only show after feedback) */}
           {feedback && (
             <div className="text-center mt-4">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={nextWord}
-              >
-                {currentWordIndex < words.length - 1 ? 'Επόμενη Λέξη' : 'Ολοκλήρωση'}
+              <Button variant="primary" size="lg" onClick={nextWord}>
+                {currentWordIndex < words.length - 1
+                  ? "Επόμενη Λέξη"
+                  : "Ολοκλήρωση"}
               </Button>
             </div>
           )}
