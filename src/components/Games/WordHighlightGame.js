@@ -1,36 +1,48 @@
-import React, { useState } from 'react';
-import { Button, Card, ProgressBar, Container, ListGroup, Alert } from 'react-bootstrap';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Button, Card, Container, Row, Col } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import QuestionProgressLights from '../QuestionProgressLights';
 
 const WordHighlightGame = () => {
+  const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [selectedText, setSelectedText] = useState('');
   const [feedback, setFeedback] = useState(null);
+  const [highlightedText, setHighlightedText] = useState('');
+  const [highlightPosition, setHighlightPosition] = useState({ start: -1, end: -1 });
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameStats, setGameStats] = useState({
     rounds: [],
     correctAnswers: 0,
     totalRounds: 0
   });
+  const [questionStartTime, setQuestionStartTime] = useState(null);
 
-  const words = [
+  const words = useMemo(() => [
+    { word: 'παίζω', stem: 'παίζ', suffix: 'ω', isExample: true }, // Example question
     { word: 'τυχαίνω', stem: 'τυχ', suffix: 'αίνω' },
     { word: 'Γράφω', stem: 'Γράφ', suffix: 'ω' },
     { word: 'Διαβάζω', stem: 'Διαβάζ', suffix: 'ω' },
     { word: 'Τρέχω', stem: 'Τρέχ', suffix: 'ω' },
     { word: 'Σχολείο', stem: 'Σχολεί', suffix: 'ο' },
     { word: 'μαθητής', stem: 'μαθητ', suffix: 'ής' }
-  ];
+  ], []);
 
   // Initialize game stats
-  if (gameStats.totalRounds === 0) {
-    setGameStats(prev => ({ ...prev, totalRounds: words.length }));
-  }
+  useEffect(() => {
+    if (gameStats.totalRounds === 0) {
+      setGameStats(prev => ({ ...prev, totalRounds: words.filter(w => !w.isExample).length }));
+      setQuestionStartTime(Date.now());
+    }
+  }, [gameStats.totalRounds, words]);
 
   const currentWord = words[currentWordIndex];
 
   const resetWord = () => {
     setSelectedText('');
     setFeedback(null);
+    setHighlightedText('');
+    setHighlightPosition({ start: -1, end: -1 });
   };
 
   const submitAnswer = () => {
@@ -44,206 +56,203 @@ const WordHighlightGame = () => {
       selectedText
     });
 
-    // Update game stats
-    setGameStats(prev => ({
-      ...prev,
-      rounds: [
-        ...prev.rounds,
-        {
-          word: currentWord.word,
-          target: currentWord.stem,
-          selected: selectedText,
-          correct: isCorrect,
-          round: currentWordIndex + 1
-        }
-      ],
-      correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers
-    }));
+    // If answer is wrong, highlight the correct answer instead
+    if (!isCorrect) {
+      const word = currentWord.word;
+      const stem = currentWord.stem;
+      const correctIndex = word.indexOf(stem); // Use indexOf for stem (usually at beginning)
+      setHighlightedText(stem);
+      setHighlightPosition({ start: correctIndex, end: correctIndex + stem.length });
+    }
+    // If correct, keep the user's selection highlighted
+
+    // Update game stats only for non-example questions
+    if (!currentWord.isExample) {
+      const questionEndTime = Date.now();
+      const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
+      
+      setGameStats(prev => ({
+        ...prev,
+        rounds: [
+          ...prev.rounds,
+          {
+            question: currentWord.word,
+            target: currentWord.stem,
+            result: selectedText,
+            isCorrect: isCorrect,
+            seconds: secondsForQuestion
+          }
+        ],
+        correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers
+      }));
+    }
   };
 
   const nextWord = () => {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(prev => prev + 1);
       resetWord();
+      setQuestionStartTime(Date.now());
     } else {
       setGameCompleted(true);
+      logGameResults({ gameStats });
     }
   };
 
-  const restartGame = () => {
-    setCurrentWordIndex(0);
-    setSelectedText('');
-    setFeedback(null);
-    setGameCompleted(false);
-    setGameStats({
-      rounds: [],
-      correctAnswers: 0,
-      totalRounds: words.length
-    });
+  // Log game results function
+  const logGameResults = (gameData) => {
+    const now = new Date();
+    const datetime = now.getFullYear() + '-' + 
+                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                     String(now.getDate()).padStart(2, '0') + ' ' + 
+                     String(now.getHours()).padStart(2, '0') + ':' + 
+                     String(now.getMinutes()).padStart(2, '0');
+    
+    const results = {
+      studentId: "student123", // TODO: Replace with actual student ID
+      datetime: datetime,
+      gameName: "WordHighlightGame",
+      questions: gameData.gameStats.rounds
+    };
+    
+    console.log(results);
   };
+
 
   const handleTextSelection = () => {
     const selection = window.getSelection();
-    if (selection.toString()) {
-      setSelectedText(selection.toString());
-      setFeedback(null);
+    if (selection.toString() && selection.rangeCount > 0) {
+      const selectedText = selection.toString();
+      const word = currentWord.word;
+      
+      // For stems, we usually want the first occurrence
+      const targetIndex = word.indexOf(selectedText);
+      
+      if (targetIndex !== -1) {
+        setSelectedText(selectedText);
+        setHighlightedText(selectedText);
+        setHighlightPosition({ start: targetIndex, end: targetIndex + selectedText.length });
+        setFeedback(null);
+      }
+      
       selection.removeAllRanges();
     }
   };
 
+  const highlightText = (text, highlight, position) => {
+    if (!highlight || position.start === -1) return text;
+    
+    // Ensure position is within bounds
+    const start = Math.max(0, Math.min(position.start, text.length));
+    const end = Math.max(start, Math.min(position.end, text.length));
+    
+    return (
+      <>
+        {text.substring(0, start)}
+        <span style={{ backgroundColor: '#28a745', color: 'white', padding: '2px 4px', borderRadius: '3px' }}>
+          {text.substring(start, end)}
+        </span>
+        {text.substring(end)}
+      </>
+    );
+  };
+
   if (gameCompleted) {
     return (
-      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-        <Card className="w-100" style={{ maxWidth: '600px' }}>
-          <Card.Header as="h3" className="text-center bg-primary text-white">
-            Αποτελέσματα
-          </Card.Header>
-          <Card.Body>
-            <Alert variant="info" className="text-center">
-              <h4 className="alert-heading">
-                Βαθμολογία: {gameStats.correctAnswers} / {gameStats.totalRounds}
-              </h4>
-              <p className="mb-0">
-                {gameStats.correctAnswers === gameStats.totalRounds 
-                  ? 'Τέλεια! Όλα σωστά!'
-                  : gameStats.correctAnswers > gameStats.totalRounds / 2
-                  ? 'Καλή προσπάθεια!'
-                  : 'Μπορείς να τα πας καλύτερα!'}
-              </p>
-            </Alert>
-
-            <h5 className="mb-3">Λεπτομέρειες:</h5>
-            <ListGroup className="mb-4">
-              {gameStats.rounds.map((round, index) => (
-                <ListGroup.Item key={index}>
-                  <div className="d-flex justify-content-between">
-                    <span>
-                      <strong>{round.word}</strong>
-                    </span>
-                    <span>
-                      {round.correct ? (
-                        <span className="text-success">✓ Σωστό</span>
-                      ) : (
-                        <span className="text-danger">✗ Λάθος</span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="small text-muted">
-                    Βάση: <strong>{round.target}</strong> | Επιλογή: <strong>{round.selected}</strong>
-                  </div>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-
-            <div className="d-flex justify-content-between">
-              <Button variant="outline-secondary" href="/">
-                Πίσω στην αρχική
-              </Button>
-              <Button variant="primary" onClick={restartGame}>
-                Νέο Παιχνίδι
-              </Button>
-            </div>
-          </Card.Body>
-        </Card>
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <QuestionProgressLights
+              totalQuestions={gameStats.totalRounds}
+              currentQuestion={gameStats.totalRounds}
+              answeredQuestions={gameStats.rounds.map(r => r.isCorrect)}
+            />
+            <Card className="main-card">
+              <Card.Header className="text-center bg-success text-white">
+                <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  onClick={() => navigate('/')}
+                  className="mt-4"
+                >
+                  Τέλος Άσκησης
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     );
   }
 
   return (
-    <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-      {/* Exercise Title */}
-      <Card className="w-100 mb-4 border-0 bg-transparent">
-        <Card.Body className="text-center">
-          <Card.Title as="h1" className="text-primary mb-3">
-            1 δραστηριότητα: Εξάσκηση στις βάσεις
-          </Card.Title>
-          <Card.Text className="lead">
-            Επίλεξε τη βάση των παρακάτω λέξεων
-          </Card.Text>
-        </Card.Body>
-      </Card>
-
-      {/* Word Counter */}
-      <div className="text-center mb-4">
-        <span className="text-muted">
-          Λέξη {currentWordIndex + 1} από {words.length}
-        </span>
-      </div>
-
-      {/* Progress Bar */}
-      <ProgressBar 
-        now={(currentWordIndex / words.length) * 100} 
-        className="w-100 mb-4" 
-        label={`${currentWordIndex + 1}/${words.length}`}
-      />
-
-      {/* Current Word */}
-      <Card className="mb-4 w-100" style={{ maxWidth: '600px' }}>
-        <Card.Body className="text-center">
+    <Container fluid className="game-container">
+      <Row className="justify-content-center">
+        <Col md={12} lg={10}>
+          {!currentWord.isExample && (
+            <QuestionProgressLights
+              totalQuestions={words.filter(w => !w.isExample).length}
+              currentQuestion={currentWordIndex - 1}
+              answeredQuestions={gameStats.rounds.map(r => r.isCorrect)}
+            />
+          )}
+          <Card className="main-card">
+            <Card.Header className={`text-center ${currentWord.isExample ? 'bg-warning text-dark' : 'bg-primary text-white'}`}>
+              <h4 className="mb-0">
+                {currentWord.isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                Υπογράμμισε τη βάση
+              </h4>
+            </Card.Header>
+            <Card.Body className="text-center">
           <div 
             className="display-4 font-weight-bold mb-4 p-4"
             style={{ cursor: 'pointer', userSelect: 'text' }}
             onMouseUp={handleTextSelection}
           >
-            {currentWord.word}
+            {highlightedText ? highlightText(currentWord.word, highlightedText, highlightPosition) : currentWord.word}
           </div>
           
-          {selectedText && (
-            <div className="mb-4">
-              <p className="h5">
-                Επιλέξατε: <span className="font-weight-bold text-primary">{selectedText}</span>
-              </p>
-            </div>
-          )}
           
           {feedback && (
-            <div className="mb-4">
-              <Alert variant={feedback.isCorrect ? "success" : "danger"}>
-                <h4 className="mb-0">
-                  {feedback.isCorrect ? '✓ Σωστό!' : '✗ Λάθος'}
-                </h4>
-              </Alert>
-              {!feedback.isCorrect && (
-                <p className="h5 mt-3">
-                  Σωστή απάντηση: <span className="font-weight-bold text-success">{feedback.targetPart}</span>
-                </p>
-              )}
+            <div className="mb-4 text-center">
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+                {feedback.isCorrect ? '✅' : '❌'}
+              </div>
             </div>
           )}
-        </Card.Body>
-      </Card>
+            </Card.Body>
+          </Card>
 
-      {/* Action Buttons */}
-      <div className="d-flex gap-3 mb-4">
-        <Button
-          variant={selectedText ? "primary" : "secondary"}
-          size="lg"
-          onClick={submitAnswer}
-          disabled={!selectedText || feedback}
-        >
-          Υποβολή
-        </Button>
-        
-        <Button
-          variant="outline-secondary"
-          size="lg"
-          onClick={resetWord}
-          disabled={!selectedText}
-        >
-          Επαναφορά
-        </Button>
-      </div>
+          {/* Action Buttons */}
+          {!feedback && <div className="d-flex gap-3 mt-4 mb-4 justify-content-center">
+            <Button
+              variant={selectedText ? "primary" : "secondary"}
+              size="lg"
+              onClick={submitAnswer}
+              disabled={!selectedText || feedback}
+            >
+              Υποβολή
+            </Button>
+            
+          </div>}
 
-      {/* Next Word Button (only show after feedback) */}
-      {feedback && (
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={nextWord}
-        >
-          {currentWordIndex < words.length - 1 ? 'Επόμενη Λέξη' : 'Ολοκλήρωση'}
-        </Button>
-      )}
+          {/* Next Word Button (only show after feedback) */}
+          {feedback && (
+            <div className="text-center mt-4">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={nextWord}
+              >
+                {currentWordIndex < words.length - 1 ? 'Επόμενη Λέξη' : 'Ολοκλήρωση'}
+              </Button>
+            </div>
+          )}
+        </Col>
+      </Row>
     </Container>
   );
 };

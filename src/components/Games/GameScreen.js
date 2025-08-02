@@ -1,4 +1,5 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 // import { sendReport } from "../../services/reports";
 // import { games as allGames } from "../games";
 import "../../styles/Game.css";
@@ -20,6 +21,7 @@ import GreekSuffixMarqueeGame from "./GreekSuffixMarqueeGame";
 
 const GameScreen = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // const searchParams = new URLSearchParams(location.search);
   // const studentId = searchParams.get("studentId");
@@ -27,6 +29,59 @@ const GameScreen = () => {
   const gameId = parseInt(location.pathname.split("/").pop().split("game")[1]);
   // const games = allGames;
   // const game = games.find((g) => g.id === gameId);
+
+  const enterFullscreen = async () => {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        await document.documentElement.webkitRequestFullscreen();
+      } else if (document.documentElement.msRequestFullscreen) {
+        await document.documentElement.msRequestFullscreen();
+      }
+    } catch (error) {
+      console.log("Fullscreen request failed:", error);
+    }
+  };
+
+  const exitFullscreen = () => {
+    const isFullscreen = document.fullscreenElement || 
+                         document.webkitFullscreenElement || 
+                         document.msFullscreenElement;
+    
+    if (!isFullscreen) {
+      return;
+    }
+    
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+  };
+
+  const handleGoHome = () => {
+    exitFullscreen();
+    navigate('/');
+  };
+
+  useEffect(() => {
+    let timeoutId;
+    
+    // Delay the fullscreen request slightly to avoid issues with React StrictMode
+    timeoutId = setTimeout(() => {
+      enterFullscreen();
+    }, 100);
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      exitFullscreen();
+    };
+  }, []);
 
   /* const reportFn = async (data) => {
     let payload = {
@@ -45,13 +100,16 @@ const GameScreen = () => {
   }; */
 
   return (
-    <div className="container h-100">
-      {/* <div className="game-header">
-        <h2>Playing {game.name}</h2>
-        <p>Student: {studentName}</p>
-      </div> */}
-
-      <div className="game-body">
+    <div className="game-screen-fullscreen">
+      <button 
+        className="home-button-kids" 
+        onClick={handleGoHome}
+        title="Πίσω στην αρχική"
+      >
+        🏠
+      </button>
+      
+      <div className="game-body-fullscreen">
         {gameId === 1 && <WordHighlightGame />}
         {gameId === 2 && <RootSuffixGame />}
         {gameId === 3 && <GreekReadingExercise />}

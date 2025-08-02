@@ -111,7 +111,7 @@ const Home = () => {
         </Form.Group>
       )}
 
-      <Row xs={1} md={2} lg={4} className="g-4">
+      <Row xs={5} sm={5} md={5} lg={5} xl={5} className="g-4">
         {games.map((game) => (
           <Col key={game.id}>
             <Card
