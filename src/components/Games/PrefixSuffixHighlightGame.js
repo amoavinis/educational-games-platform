@@ -1,229 +1,340 @@
-import React, { useState, useEffect } from "react";
-import { Button, Card, Modal, Container, ProgressBar } from "react-bootstrap";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Button, Card, Container, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 
 const PrefixSuffixHighlightGame = () => {
-  const words = [
-    { word: 'καταστρέφω', prefix: 'κατα', stem: 'στρεφ', suffix: 'ω', task: 'prefix' },
-    { word: 'επιχρωματισμένος', prefix: 'επι', stem: 'χρωματισμεν', suffix: 'ος', task: 'suffix' },
-    { word: 'επιλέγω', prefix: 'επι', stem: 'λεγ', suffix: 'ω', task: 'prefix' },
-    { word: 'δυσλεξικός', prefix: 'δυσ', stem: 'λεξικ', suffix: 'ός', task: 'suffix' }
-  ];
+  const navigate = useNavigate();
+  const words = useMemo(
+    () => [
+      {
+        word: "λόγος",
+        prefix: "λογ",
+        stem: "ο",
+        suffix: "ς",
+        isExample: true,
+      },
+      {
+        word: "καταστρέφω",
+        prefix: "κατα",
+        stem: "στρεφ",
+        suffix: "ω",
+      },
+      {
+        word: "επιχρωματισμένος",
+        prefix: "επι",
+        stem: "χρωματισμεν",
+        suffix: "ος",
+      },
+      {
+        word: "επιλέγω",
+        prefix: "επι",
+        stem: "λεγ",
+        suffix: "ω",
+      },
+      {
+        word: "δυσλεξικός",
+        prefix: "δυσ",
+        stem: "λεξικ",
+        suffix: "ός",
+      },
+    ],
+    []
+  );
 
   // Game state
-  const [currentRound, setCurrentRound] = useState(0);
-  const [selectedText, setSelectedText] = useState("");
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'prefix', 'stem', 'suffix', 'full'
+  const [isSlowPhase, setIsSlowPhase] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [gameData, setGameData] = useState({
+  const [gameStats, setGameStats] = useState({
     rounds: [],
-    totalCorrect: 0,
-    totalRounds: words.length,
+    totalRounds: 0,
   });
 
-  // Current word data
-  const currentWord = words[currentRound];
-  const targetPart = currentWord.task === 'prefix' ? currentWord.prefix : currentWord.suffix;
+  const currentWord = words[currentWordIndex];
 
-  // Check selection
-  const checkSelection = () => {
-    const correct = selectedText === targetPart;
-    setIsCorrect(correct);
-    setShowFeedback(true);
+  // Initialize game stats
+  useEffect(() => {
+    if (gameStats.totalRounds === 0) {
+      setGameStats((prev) => ({
+        ...prev,
+        totalRounds: words.filter((w) => !w.isExample).length,
+      }));
+    }
+  }, [gameStats.totalRounds, words]);
 
-    // Update game data
-    setGameData((prev) => ({
-      ...prev,
-      rounds: [
-        ...prev.rounds,
-        {
-          word: currentWord.word,
-          target: targetPart,
-          selected: selectedText,
-          correct: correct,
-          task: currentWord.task,
-        },
-      ],
-      totalCorrect: correct ? prev.totalCorrect + 1 : prev.totalCorrect,
-    }));
-  };
+  // Log game results function
+  const logGameResults = useCallback(() => {
+    const now = new Date();
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
 
-  // Move to next round
-  const nextRound = () => {
-    setSelectedText("");
-    setShowFeedback(false);
+    const results = {
+      studentId: "student123",
+      datetime: datetime,
+      gameName: "PrefixSuffixHighlightGame",
+      questions: gameStats.rounds,
+    };
 
-    if (currentRound < words.length - 1) {
-      setCurrentRound(currentRound + 1);
-    } else {
-      setGameCompleted(true);
-      /* reportFn(gameData); */
+    console.log(results);
+  }, [gameStats.rounds]);
+
+  // Log final results when game completes
+  useEffect(() => {
+    if (gameCompleted && gameStats.rounds.length > 0) {
+      logGameResults();
+    }
+  }, [gameCompleted, gameStats.rounds, logGameResults]);
+
+  // Audio recording setup
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      setMediaRecorder(recorder);
+      recorder.start();
+      setIsRecording(true);
+      console.log("Recording started");
+    } catch (err) {
+      console.log("Microphone permission denied or not available");
     }
   };
 
-  // Reset game
-  const resetGame = () => {
-    setCurrentRound(0);
-    setSelectedText("");
-    setShowFeedback(false);
-    setIsCorrect(false);
-    setGameCompleted(false);
-    setGameData({
-      rounds: [],
-      totalCorrect: 0,
-      totalRounds: words.length,
-    });
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+      setIsRecording(false);
+      console.log("Recording stopped");
+    }
   };
 
-  // Text selection handler
-  useEffect(() => {
-    const handleSelection = () => {
-      if (!showFeedback) {
-        const selection = window.getSelection();
-        const selected = selection.toString().toLowerCase();
-        if (selected) {
-          setSelectedText(selected);
-        }
-      }
-    };
-
-    document.addEventListener("selectionchange", handleSelection);
-    return () => {
-      document.removeEventListener("selectionchange", handleSelection);
-    };
-  }, [showFeedback]);
-
-  // Render task-specific styles
-  const getTaskColor = () => {
-    return currentWord.task === 'prefix' ? 'primary' : 'warning';
+  // Start game
+  const startGame = async () => {
+    await startRecording();
+    setGameStarted(true);
+    startWordHighlighting(0, true); // Start with first word in slow phase
   };
 
-  const getTaskTitle = () => {
-    return currentWord.task === 'prefix' 
-      ? 'Επιλέξτε το ΠΡΟΘΗΜΑ της λέξης' 
-      : 'Επιλέξτε το ΕΠΙΘΗΜΑ της λέξης';
+  // Start highlighting sequence for current word
+  const startWordHighlighting = (wordIndex, slowPhase) => {
+    setHighlightStage("prefix");
+    const duration = slowPhase ? 1000 : 500;
+
+    setTimeout(() => {
+      setHighlightStage("stem");
+      setTimeout(() => {
+        setHighlightStage("suffix");
+        setTimeout(() => {
+          setHighlightStage("full");
+          const fullDuration = slowPhase ? 2000 : 1500;
+          setTimeout(() => {
+            nextWord(wordIndex, slowPhase);
+          }, fullDuration);
+        }, duration);
+      }, duration);
+    }, duration);
   };
 
-  // Render game screen
-  if (!gameCompleted) {
+  // Move to next word
+  const nextWord = (currentIndex, currentSlowPhase) => {
+    // Record result for non-example words (use current word before updating index)
+    const wordToRecord = words[currentIndex];
+    if (wordToRecord && !wordToRecord.isExample) {
+      const round = currentSlowPhase ? "slow" : "fast";
+      // console.log('Recording word:', wordToRecord.word, 'phase:', round);
+      setGameStats((prev) => ({
+        ...prev,
+        rounds: [
+          ...prev.rounds,
+          {
+            question: `${wordToRecord.word} (${round})`,
+          },
+        ],
+      }));
+    }
+
+    if (currentIndex < words.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentWordIndex(nextIndex);
+      setHighlightStage("none");
+      setTimeout(() => startWordHighlighting(nextIndex, currentSlowPhase), 500);
+    } else if (currentSlowPhase) {
+      // Switch to fast phase - skip example word in second round
+      setIsSlowPhase(false);
+      setCurrentWordIndex(1); // Start from index 1 (skip example at index 0)
+      setHighlightStage("none");
+      setTimeout(() => startWordHighlighting(1, false), 500);
+    } else {
+      // Game completed
+      stopRecording();
+      setGameCompleted(true);
+    }
+  };
+
+  // Function to highlight text parts
+  const highlightWord = () => {
+    if (!currentWord) return "";
+
+    const { word, prefix, stem } = currentWord;
+
+    if (highlightStage === "none") {
+      return word;
+    }
+
+    // Find positions
+    const prefixEnd = prefix.length;
+    const stemEnd = prefixEnd + stem.length;
+
+    let result = [];
+
+    // Prefix highlighting
+    if (highlightStage === "prefix" || highlightStage === "full") {
+      result.push(
+        <span key="prefix" style={{ color: "blue" }}>
+          {word.substring(0, prefixEnd)}
+        </span>
+      );
+    } else {
+      result.push(word.substring(0, prefixEnd));
+    }
+
+    // Stem highlighting
+    if (highlightStage === "stem" || highlightStage === "full") {
+      result.push(
+        <span key="stem" style={{ color: "red" }}>
+          {word.substring(prefixEnd, stemEnd)}
+        </span>
+      );
+    } else {
+      result.push(word.substring(prefixEnd, stemEnd));
+    }
+
+    // Suffix highlighting
+    if (highlightStage === "suffix" || highlightStage === "full") {
+      result.push(
+        <span key="suffix" style={{ color: "green" }}>
+          {word.substring(stemEnd)}
+        </span>
+      );
+    } else {
+      result.push(word.substring(stemEnd));
+    }
+
+    return result;
+  };
+
+  // Start screen
+  if (!gameStarted) {
     return (
-      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-        <h2 className="mb-4">Χρωματισμός Προθημάτων & Επιθημάτων</h2>
-
-        <ProgressBar
-          now={(currentRound / words.length) * 100}
-          label={`${currentRound + 1}/${words.length}`}
-          className="w-100 mb-4"
-        />
-
-        <div className="mb-4 text-center">
-          <h4 className={`text-${getTaskColor()}`}>
-            {getTaskTitle()}
-          </h4>
-        </div>
-
-        <div 
-          className="mb-4 display-4 font-weight-bold" 
-          style={{ userSelect: "text", cursor: "pointer" }}
-        >
-          {currentWord.word}
-        </div>
-
-        <div className="mb-4">
-          <p>
-            Επιλέξατε: <strong>{selectedText || "—"}</strong>
-          </p>
-        </div>
-
-        <Button
-          variant={getTaskColor()}
-          onClick={checkSelection}
-          disabled={!selectedText}
-          className="mb-3"
-        >
-          Υποβολή
-        </Button>
-
-        <Button
-          variant="outline-secondary"
-          onClick={() => setSelectedText("")}
-          disabled={!selectedText}
-        >
-          Επαναφορά
-        </Button>
-
-        {/* Feedback Modal */}
-        <Modal show={showFeedback} onHide={nextRound}>
-          <Modal.Header closeButton>
-            <Modal.Title>
-              {isCorrect ? "Σωστά!" : "Λάθος"}
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {isCorrect ? (
-              <p>
-                Επιλέξατε σωστά το <strong>{targetPart}</strong>!
-              </p>
-            ) : (
-              <p>
-                Επιλέξατε: <strong className="text-danger">{selectedText || "τίποτα"}</strong><br />
-                Η σωστή απάντηση ήταν: <strong className="text-success">{targetPart}</strong>
-              </p>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant={isCorrect ? "success" : "primary"} onClick={nextRound}>
-              {currentRound < words.length - 1 ? 'Επόμενη Λέξη' : 'Τέλος'}
-            </Button>
-          </Modal.Footer>
-        </Modal>
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <Card className="main-card">
+              <Card.Header className="text-center bg-primary text-white">
+                <h4 className="mb-0">Προθήματα και Επιθήματα</h4>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <div className="mb-4">
+                  <p className="lead">
+                    Πάτησε Έναρξη και διάβασε τις συλλαβές και τις λέξεις.
+                  </p>
+                </div>
+                <Button
+                  variant="success"
+                  size="lg"
+                  onClick={startGame}
+                  className="mb-4"
+                >
+                  Έναρξη
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     );
   }
 
-  // Render results screen
-  return (
-    <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-      <Card className="w-100" style={{ maxWidth: "600px" }}>
-        <Card.Header as="h3">Αποτελέσματα</Card.Header>
-        <Card.Body>
-          <p className="h4 text-center mb-4">
-            Βαθμολογία: {gameData.totalCorrect} / {gameData.totalRounds}
-          </p>
-
-          <div className="mb-4">
-            <h5>Λεπτομέρειες:</h5>
-            <ul className="list-group">
-              {gameData.rounds.map((round, index) => (
-                <li 
-                  key={index} 
-                  className={`list-group-item ${round.correct ? 'list-group-item-success' : 'list-group-item-danger'}`}
+  // Game completed screen
+  if (gameCompleted) {
+    return (
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <Card className="main-card">
+              <Card.Header className="text-center bg-success text-white">
+                <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => navigate("/")}
+                  className="mt-4"
                 >
-                  <div>
-                    <strong>Λέξη:</strong> {round.word}
-                  </div>
-                  <div>
-                    <strong>Ζητούμενο:</strong> {round.task === 'prefix' ? 'Πρόθημα' : 'Επίθημα'} ({round.target})
-                  </div>
-                  <div>
-                    <strong>Επιλογή σας:</strong> {round.selected}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  Τέλος Άσκησης
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
 
-          <div className="d-flex justify-content-between">
-            <Button variant="secondary" href="/">
-              Αρχική Σελίδα
-            </Button>
-            <Button variant="primary" onClick={resetGame}>
-              Παίξτε Ξανά
-            </Button>
-          </div>
-        </Card.Body>
-      </Card>
+  // Game screen
+  if (!currentWord) {
+    return null; // Safety check
+  }
+
+  return (
+    <Container fluid className="game-container">
+      <Row className="justify-content-center">
+        <Col md={12} lg={10}>
+          <Card className="main-card">
+            <Card.Header
+              className={`text-center ${
+                currentWord.isExample
+                  ? "bg-warning text-dark"
+                  : "bg-primary text-white"
+              }`}
+            >
+              <h4 className="mb-0">
+                {currentWord.isExample && (
+                  <span className="badge badge-dark me-2">Παράδειγμα</span>
+                )}
+                Προθήματα και Επιθήματα {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
+              </h4>
+            </Card.Header>
+            <Card.Body className="text-center">
+              <div
+                className="display-4 font-weight-bold mb-4 p-4"
+                style={{
+                  minHeight: "150px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {highlightWord()}
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </Container>
   );
 };
