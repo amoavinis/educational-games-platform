@@ -1,342 +1,268 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import "../../styles/Game.css";
+import { useNavigate } from 'react-router-dom';
+import QuestionProgressLights from '../QuestionProgressLights';
 
 const PrefixSuffixHighlightGame = () => {
   const navigate = useNavigate();
-  const words = useMemo(
-    () => [
-      {
-        word: "λόγος",
-        prefix: "λογ",
-        stem: "ο",
-        suffix: "ς",
-        isExample: true,
-      },
-      {
-        word: "καταστρέφω",
-        prefix: "κατα",
-        stem: "στρεφ",
-        suffix: "ω",
-      },
-      {
-        word: "επιχρωματισμένος",
-        prefix: "επι",
-        stem: "χρωματισμεν",
-        suffix: "ος",
-      },
-      {
-        word: "επιλέγω",
-        prefix: "επι",
-        stem: "λεγ",
-        suffix: "ω",
-      },
-      {
-        word: "δυσλεξικός",
-        prefix: "δυσ",
-        stem: "λεξικ",
-        suffix: "ός",
-      },
-    ],
-    []
-  );
+  const words = [
+    { word: 'επιτρέπω', prefix: 'επι', stem: 'τρεπ', suffix: 'ω', task: 'prefix', isExample: true },
+    { word: 'καταστρέφω', prefix: 'κατα', stem: 'στρεφ', suffix: 'ω', task: 'prefix' },
+    { word: 'επιχρωματισμένος', prefix: 'επι', stem: 'χρωματισμεν', suffix: 'ος', task: 'suffix' },
+    { word: 'επιλέγω', prefix: 'επι', stem: 'λεγ', suffix: 'ω', task: 'prefix' },
+    { word: 'δυσλεξικός', prefix: 'δυσ', stem: 'λεξικ', suffix: 'ός', task: 'suffix' }
+  ];
 
   // Game state
-  const [gameStarted, setGameStarted] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'prefix', 'stem', 'suffix', 'full'
-  const [isSlowPhase, setIsSlowPhase] = useState(true);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [selectedText, setSelectedText] = useState("");
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [gameStats, setGameStats] = useState({
-    rounds: [],
-    totalRounds: 0,
-  });
+  const [gameResults, setGameResults] = useState([]);
+  const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [highlightedText, setHighlightedText] = useState('');
+  const [highlightPosition, setHighlightPosition] = useState({ start: -1, end: -1 });
+  const [feedback, setFeedback] = useState(null);
 
-  const currentWord = words[currentWordIndex];
+  // Current word data
+  const currentWord = words[currentQuestion];
+  const targetPart = currentWord.task === 'prefix' ? currentWord.prefix : currentWord.suffix;
 
-  // Initialize game stats
-  useEffect(() => {
-    if (gameStats.totalRounds === 0) {
-      setGameStats((prev) => ({
-        ...prev,
-        totalRounds: words.filter((w) => !w.isExample).length,
-      }));
+  // Handle answer selection
+  const handleAnswerSelect = () => {
+    if (!selectedText || selectedAnswer !== null) return;
+    
+    const isCorrect = selectedText === targetPart;
+    setSelectedAnswer(selectedText);
+    
+    setFeedback({
+      isCorrect,
+      targetPart: targetPart,
+      selectedText
+    });
+
+    // If answer is wrong, highlight the correct answer instead
+    if (!isCorrect) {
+      const word = currentWord.word;
+      const correctPart = targetPart;
+      const correctIndex = word.toLowerCase().indexOf(correctPart.toLowerCase());
+      setHighlightedText(correctPart);
+      setHighlightPosition({ start: correctIndex, end: correctIndex + correctPart.length });
     }
-  }, [gameStats.totalRounds, words]);
+    
+    const questionEndTime = Date.now();
+    const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
+
+    // Track the result only for non-example questions
+    if (!currentWord.isExample) {
+      const taskType = currentWord.task === 'prefix' ? 'πρόθεμα' : 'επίθημα';
+      setGameResults((prev) => [
+        ...prev,
+        {
+          question: `${currentWord.word} (${taskType})`,
+          result: selectedText,
+          target: targetPart,
+          isCorrect: isCorrect,
+          seconds: secondsForQuestion
+        },
+      ]);
+    }
+  };
+
+  // Move to next question
+  const nextQuestion = () => {
+    if (currentQuestion < words.length - 1) {
+      setCurrentQuestion((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setQuestionStartTime(null); // Reset timing for next question
+      resetWord();
+    } else {
+      setGameCompleted(true);
+      logGameResults();
+    }
+  };
+
+  // Reset word state
+  const resetWord = () => {
+    setSelectedText('');
+    setFeedback(null);
+    setHighlightedText('');
+    setHighlightPosition({ start: -1, end: -1 });
+  };
 
   // Log game results function
-  const logGameResults = useCallback(() => {
+  const logGameResults = () => {
     const now = new Date();
-    const datetime =
-      now.getFullYear() +
-      "-" +
-      String(now.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(now.getDate()).padStart(2, "0") +
-      " " +
-      String(now.getHours()).padStart(2, "0") +
-      ":" +
-      String(now.getMinutes()).padStart(2, "0");
-
+    const datetime = now.getFullYear() + '-' + 
+                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                     String(now.getDate()).padStart(2, '0') + ' ' + 
+                     String(now.getHours()).padStart(2, '0') + ':' + 
+                     String(now.getMinutes()).padStart(2, '0');
+    
     const results = {
       studentId: "student123",
       datetime: datetime,
       gameName: "PrefixSuffixHighlightGame",
-      questions: gameStats.rounds,
+      questions: gameResults
     };
-
+    
     console.log(results);
-  }, [gameStats.rounds]);
+  };
 
-  // Log final results when game completes
-  useEffect(() => {
-    if (gameCompleted && gameStats.rounds.length > 0) {
-      logGameResults();
-    }
-  }, [gameCompleted, gameStats.rounds, logGameResults]);
-
-  // Audio recording setup
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      setMediaRecorder(recorder);
-      recorder.start();
-      setIsRecording(true);
-      console.log("Recording started");
-    } catch (err) {
-      console.log("Microphone permission denied or not available");
+  // Text selection handler
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (selection.toString() && selection.rangeCount > 0 && selectedAnswer === null) {
+      const selectedText = selection.toString().toLowerCase();
+      const word = currentWord.word;
+      
+      const targetIndex = word.toLowerCase().indexOf(selectedText);
+      
+      if (targetIndex !== -1) {
+        setSelectedText(selectedText);
+        setHighlightedText(selectedText);
+        setHighlightPosition({ start: targetIndex, end: targetIndex + selectedText.length });
+        setFeedback(null);
+      }
+      
+      selection.removeAllRanges();
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
-      setIsRecording(false);
-      console.log("Recording stopped");
-    }
-  };
-
-  // Start game
-  const startGame = async () => {
-    await startRecording();
-    setGameStarted(true);
-    startWordHighlighting(0, true); // Start with first word in slow phase
-  };
-
-  // Start highlighting sequence for current word
-  const startWordHighlighting = (wordIndex, slowPhase) => {
-    setHighlightStage("prefix");
-    const duration = slowPhase ? 1000 : 500;
-
-    setTimeout(() => {
-      setHighlightStage("stem");
-      setTimeout(() => {
-        setHighlightStage("suffix");
-        setTimeout(() => {
-          setHighlightStage("full");
-          const fullDuration = slowPhase ? 2000 : 1500;
-          setTimeout(() => {
-            nextWord(wordIndex, slowPhase);
-          }, fullDuration);
-        }, duration);
-      }, duration);
-    }, duration);
-  };
-
-  // Move to next word
-  const nextWord = (currentIndex, currentSlowPhase) => {
-    // Record result for non-example words (use current word before updating index)
-    const wordToRecord = words[currentIndex];
-    if (wordToRecord && !wordToRecord.isExample) {
-      const round = currentSlowPhase ? "slow" : "fast";
-      // console.log('Recording word:', wordToRecord.word, 'phase:', round);
-      setGameStats((prev) => ({
-        ...prev,
-        rounds: [
-          ...prev.rounds,
-          {
-            question: `${wordToRecord.word} (${round})`,
-          },
-        ],
-      }));
-    }
-
-    if (currentIndex < words.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentWordIndex(nextIndex);
-      setHighlightStage("none");
-      setTimeout(() => startWordHighlighting(nextIndex, currentSlowPhase), 500);
-    } else if (currentSlowPhase) {
-      // Switch to fast phase - skip example word in second round
-      setIsSlowPhase(false);
-      setCurrentWordIndex(1); // Start from index 1 (skip example at index 0)
-      setHighlightStage("none");
-      setTimeout(() => startWordHighlighting(1, false), 500);
-    } else {
-      // Game completed
-      stopRecording();
-      setGameCompleted(true);
-    }
-  };
-
-  // Function to highlight text parts
-  const highlightWord = () => {
-    if (!currentWord) return "";
-
-    const { word, prefix, stem } = currentWord;
-
-    if (highlightStage === "none") {
-      return word;
-    }
-
-    // Find positions
-    const prefixEnd = prefix.length;
-    const stemEnd = prefixEnd + stem.length;
-
-    let result = [];
-
-    // Prefix highlighting
-    if (highlightStage === "prefix" || highlightStage === "full") {
-      result.push(
-        <span key="prefix" style={{ color: "blue" }}>
-          {word.substring(0, prefixEnd)}
-        </span>
-      );
-    } else {
-      result.push(word.substring(0, prefixEnd));
-    }
-
-    // Stem highlighting
-    if (highlightStage === "stem" || highlightStage === "full") {
-      result.push(
-        <span key="stem" style={{ color: "red" }}>
-          {word.substring(prefixEnd, stemEnd)}
-        </span>
-      );
-    } else {
-      result.push(word.substring(prefixEnd, stemEnd));
-    }
-
-    // Suffix highlighting
-    if (highlightStage === "suffix" || highlightStage === "full") {
-      result.push(
-        <span key="suffix" style={{ color: "green" }}>
-          {word.substring(stemEnd)}
-        </span>
-      );
-    } else {
-      result.push(word.substring(stemEnd));
-    }
-
-    return result;
-  };
-
-  // Start screen
-  if (!gameStarted) {
+  // Highlight text function like Game 1
+  const highlightText = (text, highlight, position) => {
+    if (!highlight || position.start === -1) return text;
+    
+    const start = Math.max(0, Math.min(position.start, text.length));
+    const end = Math.max(start, Math.min(position.end, text.length));
+    
+    // Use purple for suffix, green for prefix
+    const backgroundColor = currentWord.task === 'suffix' ? '#6f42c1' : '#28a745';
+    
     return (
-      <Container fluid className="game-container">
-        <Row className="justify-content-center">
-          <Col md={12} lg={10}>
-            <Card className="main-card">
-              <Card.Header className="text-center bg-primary text-white">
-                <h4 className="mb-0">Προθήματα και Επιθήματα</h4>
-              </Card.Header>
-              <Card.Body className="text-center">
-                <div className="mb-4">
-                  <p className="lead">
-                    Πάτησε Έναρξη και διάβασε τις συλλαβές και τις λέξεις.
-                  </p>
-                </div>
-                <Button
-                  variant="success"
-                  size="lg"
-                  onClick={startGame}
-                  className="mb-4"
-                >
-                  Έναρξη
-                </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+      <>
+        {text.substring(0, start)}
+        <span style={{ backgroundColor: backgroundColor, color: 'white', padding: '2px 4px', borderRadius: '3px' }}>
+          {text.substring(start, end)}
+        </span>
+        {text.substring(end)}
+      </>
     );
-  }
+  };
+  
+  // Start timing when question begins
+  useEffect(() => {
+    if (!gameCompleted) {
+      setQuestionStartTime(Date.now());
+    }
+  }, [currentQuestion, gameCompleted]);
 
-  // Game completed screen
+  const getTaskTitle = () => {
+    return currentWord.task === 'prefix' 
+      ? 'Επιλέξτε το ΠΡΟΘΗΜΑ της λέξης' 
+      : 'Επιλέξτε το ΕΠΙΘΗΜΑ της λέξης';
+  };
+
   if (gameCompleted) {
     return (
-      <Container fluid className="game-container">
-        <Row className="justify-content-center">
-          <Col md={12} lg={10}>
-            <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
-                <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
-              </Card.Header>
-              <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
-                  Τέλος Άσκησης
-                </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
+        <Card className="w-100" style={{ maxWidth: "600px" }}>
+          <Card.Header className="text-center bg-success text-white">
+            <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
+          </Card.Header>
+          <Card.Body className="text-center">
+            <QuestionProgressLights
+              totalQuestions={words.filter(q => !q.isExample).length}
+              currentQuestion={words.filter(q => !q.isExample).length}
+              answeredQuestions={gameResults.map(r => r.isCorrect)}
+            />
+            <Button 
+              variant="primary" 
+              size="lg" 
+              onClick={() => navigate('/')}
+              className="mt-4"
+            >
+              Τέλος Άσκησης
+            </Button>
+          </Card.Body>
+        </Card>
       </Container>
     );
-  }
-
-  // Game screen
-  if (!currentWord) {
-    return null; // Safety check
   }
 
   return (
     <Container fluid className="game-container">
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
+          {!words[currentQuestion].isExample && (
+            <QuestionProgressLights
+              totalQuestions={words.filter(q => !q.isExample).length}
+              currentQuestion={currentQuestion - 1}
+              answeredQuestions={gameResults.map(r => r.isCorrect)}
+            />
+          )}
           <Card className="main-card">
-            <Card.Header
-              className={`text-center ${
-                currentWord.isExample
-                  ? "bg-warning text-dark"
-                  : "bg-primary text-white"
-              }`}
-            >
+            <Card.Header className={`text-center ${words[currentQuestion].isExample ? 'bg-warning text-dark' : 'bg-primary text-white'}`}>
               <h4 className="mb-0">
-                {currentWord.isExample && (
-                  <span className="badge badge-dark me-2">Παράδειγμα</span>
-                )}
-                Προθήματα και Επιθήματα {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
+                {words[currentQuestion].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                {getTaskTitle()}
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
-              <div
-                className="display-4 font-weight-bold mb-4 p-4"
-                style={{
-                  minHeight: "150px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {highlightWord()}
+              <div className="mb-4"></div>
+
+              <div className="p-4 bg-light rounded mb-4">
+                <div 
+                  className="display-4 font-weight-bold mb-3" 
+                  style={{ userSelect: "text", cursor: "pointer" }}
+                  onMouseUp={handleTextSelection}
+                >
+                  {highlightedText ? highlightText(currentWord.word, highlightedText, highlightPosition) : currentWord.word}
+                </div>
+
+                {feedback && (
+                  <div className="mb-4 text-center">
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+                      {feedback.isCorrect ? '✅' : '❌'}
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Action Buttons */}
+              {!feedback && (
+                <div className="d-flex gap-3 mt-4 mb-4 justify-content-center">
+                  <Button
+                    variant={selectedText ? "primary" : "secondary"}
+                    size="lg"
+                    onClick={handleAnswerSelect}
+                    disabled={!selectedText || selectedAnswer !== null}
+                  >
+                    Υποβολή
+                  </Button>
+                </div>
+              )}
+
+              {/* Next Question Button (only show after feedback) */}
+              {feedback && (
+                <div className="text-center mt-4">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={nextQuestion}
+                  >
+                    {currentQuestion < words.length - 1 ? 'Επόμενη Λέξη' : 'Ολοκλήρωση'}
+                  </Button>
+                </div>
+              )}
+
             </Card.Body>
           </Card>
         </Col>
       </Row>
     </Container>
   );
+
 };
 
 export default PrefixSuffixHighlightGame;

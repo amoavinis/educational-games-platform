@@ -1,60 +1,58 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Button,
-  Card,
-  Container,
-  Alert,
-  ListGroup,
-  ProgressBar,
-  Row,
-  Col,
-} from "react-bootstrap";
+import React, {
+  useState,
+  useEffect,
+  // useRef
+} from "react";
+import { Button, Card, Container, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import QuestionProgressLights from "../QuestionProgressLights";
 
 const WordEndingGame = () => {
+  const navigate = useNavigate();
   // Game state
   const [currentRound, setCurrentRound] = useState(0); // 0 = slow, 1 = normal
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [feedback, setFeedback] = useState("");
-  const [score, setScore] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameResults, setGameResults] = useState([]);
-  const audioRef = useRef(null);
+  const [questionStartTime, setQuestionStartTime] = useState(null);
+  // const audioRef = useRef(null);
 
   const questions = React.useMemo(
     () => [
+      {
+        stem: "καλ",
+        correctSuffix: "ος",
+        word: "καλός",
+        options: ["ος", "ή", "ό"],
+        /* audioSlow: require("../../assets/sounds/game4/word1-slow.mp3"),
+        audioNormal: require("../../assets/sounds/game4/word1.mp3"), */
+        isExample: true,
+      },
       {
         stem: "τοπ",
         correctSuffix: "ικός",
         word: "τοπικός",
         options: ["ιμός", "ικός", "ώνω"],
-        audioSlow: require("../../assets/sounds/game4/word1-slow.mp3"),
-        audioNormal: require("../../assets/sounds/game4/word1.mp3"),
       },
       {
         stem: "γυάλ",
         correctSuffix: "ινος",
         word: "γυάλινος",
         options: ["ιμος", "ινος", "ικος"],
-        audioSlow: require("../../assets/sounds/game4/word1-slow.mp3"),
-        audioNormal: require("../../assets/sounds/game4/word1.mp3"),
       },
       {
-        stem: "χρωμάτ",
+        stem: "χρωματ",
         correctSuffix: "ικός",
         word: "χρωματικός",
         options: ["ικός", "ιμός", "ώνω"],
-        audioSlow: require("../../assets/sounds/game4/word1-slow.mp3"),
-        audioNormal: require("../../assets/sounds/game4/word1.mp3"),
       },
       {
         stem: "μουσ",
         correctSuffix: "ική",
         word: "μουσική",
         options: ["ική", "ιμή", "ωμένη"],
-        audioSlow: require("../../assets/sounds/game4/word1-slow.mp3"),
-        audioNormal: require("../../assets/sounds/game4/word1.mp3"),
       },
     ],
     []
@@ -63,28 +61,42 @@ const WordEndingGame = () => {
   // Play audio automatically when question changes
   const playAudio = React.useCallback(
     (slow = false) => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+      // Console log for audio file identification
+      console.log(4, currentQuestion + 1, slow ? "slow" : "fast");
+
+      // if (audioRef.current) {
+      //   audioRef.current.pause();
+      //   audioRef.current.currentTime = 0;
+      // }
+
+      // const audioFile = slow
+      //   ? questions[currentQuestion].audioSlow
+      //   : questions[currentQuestion].audioNormal;
+      // audioRef.current = new Audio(audioFile);
+
+      // audioRef.current
+      //   .play()
+      //   .then(() => {
+      setIsPlaying(true);
+
+      // Start timing when audio plays (or when question starts)
+      if (!questionStartTime) {
+        setQuestionStartTime(Date.now());
       }
 
-      const audioFile = slow
-        ? questions[currentQuestion].audioSlow
-        : questions[currentQuestion].audioNormal;
-      audioRef.current = new Audio(audioFile);
-
-      audioRef.current
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          audioRef.current.onended = () => setIsPlaying(false);
-        })
-        .catch((error) => {
-          console.error("Audio playback failed:", error);
-          setIsPlaying(false);
-        });
+      const timeoutId = setTimeout(() => setIsPlaying(false), 1000); // Simulate audio duration
+      return () => clearTimeout(timeoutId);
+      //   })
+      //   .catch((error) => {
+      //     console.error("Audio playback failed:", error);
+      //     setIsPlaying(false);
+      //   });
     },
-    [questions, currentQuestion]
+    [
+      //questions,
+      currentQuestion,
+      questionStartTime,
+    ]
   );
 
   useEffect(() => {
@@ -94,104 +106,100 @@ const WordEndingGame = () => {
   }, [currentQuestion, currentRound, gameCompleted, playAudio]);
 
   const handleAnswerSelect = (answer) => {
+    if (selectedAnswer !== null) return; // Prevent multiple selections
+
     setSelectedAnswer(answer);
     const isCorrect = answer === questions[currentQuestion].correctSuffix;
+    const currentQ = questions[currentQuestion];
+    const questionEndTime = Date.now();
+    const secondsForQuestion = questionStartTime
+      ? Math.round((questionEndTime - questionStartTime) / 1000)
+      : 0;
 
-    // Track the result
-    setGameResults((prev) => [
-      ...prev,
-      {
-        word: questions[currentQuestion].word,
-        stem: questions[currentQuestion].stem,
-        correctSuffix: questions[currentQuestion].correctSuffix,
-        selectedSuffix: answer,
-        isCorrect,
-        round: currentRound === 0 ? "Αργά" : "Γρήγορα",
-      },
-    ]);
-
-    if (isCorrect) {
-      setFeedback("Σωστό! 🎉");
-      setScore((prev) => prev + 1);
-    } else {
-      setFeedback(
-        `Λάθος. Η σωστή απάντηση είναι: ${questions[currentQuestion].correctSuffix}`
-      );
+    // Track the result only for non-example questions
+    if (!currentQ.isExample) {
+      setGameResults((prev) => [
+        ...prev,
+        {
+          question: currentQ.word,
+          result: answer,
+          target: currentQ.correctSuffix,
+          isCorrect: isCorrect,
+          seconds: secondsForQuestion,
+        },
+      ]);
     }
+
+    // Auto advance after 1 second
+    setTimeout(() => {
+      nextQuestion();
+    }, 1000);
   };
 
   const nextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setQuestionStartTime(null); // Reset timing for next question
     } else if (currentRound === 0) {
-      // Move to normal speed round
+      // Move to normal speed round, skip example question
       setCurrentRound(1);
-      setCurrentQuestion(0);
+      setCurrentQuestion(1); // Start at question 1 to skip example
+      setSelectedAnswer(null);
+      setQuestionStartTime(null); // Reset timing for next question
     } else {
       setGameCompleted(true);
+      logGameResults();
     }
-
-    setSelectedAnswer(null);
-    setFeedback("");
   };
 
-  const resetGame = () => {
-    setCurrentRound(0);
-    setCurrentQuestion(0);
-    setSelectedAnswer(null);
-    setFeedback("");
-    setScore(0);
-    setGameCompleted(false);
-    playAudio(true); // Start with slow audio
+  // Log game results function
+  const logGameResults = () => {
+    const now = new Date();
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
+    const results = {
+      studentId: "student123",
+      datetime: datetime,
+      gameName: "WordEndingGame",
+      questions: gameResults,
+    };
+
+    console.log(results);
   };
 
   if (gameCompleted) {
     return (
-      <Container
-        className="d-flex flex-column align-items-center justify-content-center"
-        style={{ overflowY: "scroll" }}
-      >
-        <Card className="w-100" style={{ maxWidth: "800px" }}>
-          <Card.Header as="h3" className="text-center bg-primary text-white">
-            Αποτελέσματα
+      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
+        <Card className="w-100" style={{ maxWidth: "600px" }}>
+          <Card.Header className="text-center bg-success text-white">
+            <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
           </Card.Header>
-          <Card.Body>
-            <Alert variant="info" className="text-center">
-              <h4 className="alert-heading">
-                Τελικό Σκορ: {score}/{questions.length * 2}
-              </h4>
-            </Alert>
-
-            <h5 className="mb-3">Λεπτομέρειες:</h5>
-            <ListGroup className="mb-4">
-              {gameResults.map((result, index) => (
-                <ListGroup.Item key={index}>
-                  <div className="mb-2">
-                    <strong>{result.word}</strong> ({result.round})
-                  </div>
-                  <div
-                    className={
-                      result.isCorrect ? "text-success" : "text-danger"
-                    }
-                  >
-                    Επιλογή: {result.stem}
-                    {result.selectedSuffix}
-                  </div>
-                  {!result.isCorrect && (
-                    <div className="text-success">Σωστό: {result.word}</div>
-                  )}
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-
-            <div className="d-flex justify-content-between">
-              <Button variant="outline-secondary" href="/">
-                Πίσω στην αρχική
-              </Button>
-              <Button variant="primary" onClick={resetGame}>
-                Νέα Άσκηση
-              </Button>
-            </div>
+          <Card.Body className="text-center">
+            <QuestionProgressLights
+              totalQuestions={questions.filter((q) => !q.isExample).length * 2}
+              currentQuestion={questions.filter((q) => !q.isExample).length * 2}
+              answeredQuestions={gameResults
+                .filter((r) => !r.isExample)
+                .map((r) => r.isCorrect)}
+            />
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => navigate("/")}
+              className="mt-4"
+            >
+              Τέλος Άσκησης
+            </Button>
           </Card.Body>
         </Card>
       </Container>
@@ -201,104 +209,83 @@ const WordEndingGame = () => {
   const currentQ = questions[currentQuestion];
 
   return (
-    <Container
-      className="d-flex flex-column align-items-center justify-content-center"
-      style={{ overflowY: "scroll" }}
-    >
-      <Card className="w-100 mb-4 border-0 bg-transparent">
-        <Card.Body className="text-center">
-          <Card.Title as="h1" className="text-primary mb-3">
-            4η δραστηριότητα: Πολλαπλής επιλογής
-          </Card.Title>
-          <Card.Text className="lead">
-            Άκουσε προσεκτικά τη λέξη και επίλεξε το σωστό επίθημα που την
-            ολοκληρώνει.
-          </Card.Text>
-        </Card.Body>
-      </Card>
-
-      <ProgressBar
-        now={
-          ((currentRound * questions.length + currentQuestion) /
-            (questions.length * 2)) *
-          100
-        }
-        label={`${currentRound * questions.length + currentQuestion + 1}/${
-          questions.length * 2
-        }`}
-        className="w-100 mb-4"
-      />
-
-      <Card className="w-100 mb-4" style={{ maxWidth: "800px" }}>
-        <Card.Body className="text-center">
-          <div className="mb-4">
-            <span className="text-muted">
-              {currentRound === 0 ? "Αργά" : "Γρήγορα"} | Ερώτηση{" "}
-              {currentQuestion + 1} από {questions.length} | Σκορ: {score}/
-              {questions.length * 2}
-            </span>
-          </div>
-
-          <div className="p-4 bg-light rounded mb-4">
-            <div className="display-4 font-weight-bold mb-3">
-              {currentQ.stem}_______
-            </div>
-
-            <Button
-              variant={isPlaying ? "secondary" : "primary"}
-              onClick={() => playAudio(currentRound === 0)}
-              disabled={isPlaying}
-              className="mb-3"
-            >
-              {isPlaying ? "Αναπαραγωγή..." : "Ακούστε τη λέξη"}
-            </Button>
-
-            <div className="h5 text-muted">Λέξη: {currentQ.word}</div>
-          </div>
-
-          <Row className="g-3 mb-4">
-            {currentQ.options.map((option, index) => (
-              <Col key={index} xs={12}>
-                <Button
-                  variant={
-                    selectedAnswer === option
-                      ? option === currentQ.correctSuffix
-                        ? "success"
-                        : "danger"
-                      : selectedAnswer && option === currentQ.correctSuffix
-                      ? "success"
-                      : "outline-primary"
-                  }
-                  onClick={() => handleAnswerSelect(option)}
-                  disabled={selectedAnswer !== null}
-                  className="w-100 py-3"
-                >
-                  {option}
-                </Button>
-              </Col>
-            ))}
-          </Row>
-
-          {feedback && (
-            <Alert
-              variant={feedback.includes("Σωστό") ? "success" : "danger"}
-              className="mb-4"
-            >
-              {feedback}
-            </Alert>
+    <Container fluid className="game-container">
+      <Row className="justify-content-center">
+        <Col md={12} lg={10}>
+          {!questions[currentQuestion].isExample && (
+            <QuestionProgressLights
+              totalQuestions={questions.filter((q) => !q.isExample).length * 2}
+              currentQuestion={
+                currentRound * questions.filter((q) => !q.isExample).length +
+                (currentQuestion - 1)
+              }
+              answeredQuestions={gameResults
+                .filter(
+                  (r) => !questions.find((q) => q.word === r.word)?.isExample
+                )
+                .map((r) => r.isCorrect)}
+            />
           )}
+          <Card className="main-card">
+            <Card.Header
+              className={`text-center ${
+                questions[currentQuestion].isExample
+                  ? "bg-warning text-dark"
+                  : "bg-primary text-white"
+              }`}
+            >
+              <h4 className="mb-0">
+                {questions[currentQuestion].isExample && (
+                  <span className="badge badge-dark me-2">Παράδειγμα</span>
+                )}
+                Διάλεξε τη σωστή κατάληξη
+              </h4>
+            </Card.Header>
+            <Card.Body className="text-center">
+              <div className="mb-4"></div>
 
-          <Button
-            variant="primary"
-            onClick={nextQuestion}
-            disabled={!selectedAnswer}
-          >
-            {currentQuestion < questions.length - 1 || currentRound === 0
-              ? "Επόμενη Ερώτηση"
-              : "Ολοκλήρωση"}
-          </Button>
-        </Card.Body>
-      </Card>
+              <div className="p-4 bg-light rounded mb-4">
+                <div className="display-4 font-weight-bold mb-3">
+                  {currentQ.stem}
+                  {selectedAnswer || "_______"}
+                </div>
+
+                <Button
+                  variant={isPlaying ? "secondary" : "primary"}
+                  onClick={() => playAudio(currentRound === 0)}
+                  disabled={isPlaying}
+                  className="mb-3"
+                >
+                  {isPlaying ? "Αναπαραγωγή..." : "Ακούστε τη λέξη"}
+                </Button>
+              </div>
+
+              <Row className="g-3 mb-4">
+                {currentQ.options.map((option, index) => (
+                  <Col key={index} xs={4}>
+                    <Button
+                      variant={
+                        selectedAnswer === option
+                          ? option === currentQ.correctSuffix
+                            ? "success"
+                            : "danger"
+                          : selectedAnswer && option === currentQ.correctSuffix
+                          ? "success"
+                          : "outline-primary"
+                      }
+                      onClick={() => handleAnswerSelect(option)}
+                      disabled={selectedAnswer !== null}
+                      className="w-100 py-3"
+                    >
+                      {option}
+                    </Button>
+                  </Col>
+                ))}
+              </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </Container>
   );
 };

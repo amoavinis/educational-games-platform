@@ -1,337 +1,340 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Button, Card, Container, ProgressBar } from "react-bootstrap";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Button, Card, Container, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 
 const SyllableReadingGame = () => {
-  // Greek words with syllables
-  const words = [
-    {
-      word: "καταστρέφω",
-      syllables: ["κα", "τα", "στρέ", "φω"],
-      fullWord: "καταστρέφω"
-    },
-    {
-      word: "επιχρωματισμένος",
-      syllables: ["ε", "πι", "χρω", "μα", "τι", "σμέ", "νος"],
-      fullWord: "επιχρωματισμένος"
-    },
-    {
-      word: "ανατρεπόμενη",
-      syllables: ["α", "να", "τρε", "πό", "με", "νη"],
-      fullWord: "ανατρεπόμενη"
-    },
-    {
-      word: "δυσλειτουργία",
-      syllables: ["δυσ", "λει", "τουρ", "γί", "α"],
-      fullWord: "δυσλειτουργία"
-    },
-    {
-      word: "προκαταρκτικός",
-      syllables: ["προ", "κα", "ταρ", "κτι", "κός"],
-      fullWord: "προκαταρκτικός"
-    }
-  ];
+  const navigate = useNavigate();
+  const words = useMemo(
+    () => [
+      {
+        word: "αντίστροφος",
+        prefix: "αντί",
+        stem: "στροφ",
+        suffix: "ος",
+        isExample: true,
+      },
+      {
+        word: "καταστρέφω",
+        prefix: "κατα",
+        stem: "στρεφ",
+        suffix: "ω",
+      },
+      {
+        word: "επιχρωματισμένος",
+        prefix: "επι",
+        stem: "χρωματισμεν",
+        suffix: "ος",
+      },
+      {
+        word: "επιλέγω",
+        prefix: "επι",
+        stem: "λεγ",
+        suffix: "ω",
+      },
+      {
+        word: "δυσλεξικός",
+        prefix: "δυσ",
+        stem: "λεξικ",
+        suffix: "ός",
+      },
+    ],
+    []
+  );
 
-  // Game states
-  const [gameState, setGameState] = useState("waiting"); // 'waiting', 'playing', 'evaluation', 'completed'
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [currentSyllableIndex, setCurrentSyllableIndex] = useState(0);
-  const [timer, setTimer] = useState(3);
-  const [audioBlob, setAudioBlob] = useState(null);
+  // Game state
+  const [gameStarted, setGameStarted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [evaluation, setEvaluation] = useState([]); // Store evaluation results
-  
-  // Audio recording refs
-  const mediaRecorder = useRef(null);
-  const audioChunks = useRef([]);
-  
-  // Current word data
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'prefix', 'stem', 'suffix', 'full'
+  const [isSlowPhase, setIsSlowPhase] = useState(true);
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [gameStats, setGameStats] = useState({
+    rounds: [],
+    totalRounds: 0,
+  });
+
   const currentWord = words[currentWordIndex];
-  const currentSyllable = currentWord.syllables[currentSyllableIndex];
-  const isLastSyllable = currentSyllableIndex === currentWord.syllables.length - 1;
-  
-  // Start recording function
+
+  // Initialize game stats
+  useEffect(() => {
+    if (gameStats.totalRounds === 0) {
+      setGameStats((prev) => ({
+        ...prev,
+        totalRounds: words.filter((w) => !w.isExample).length,
+      }));
+    }
+  }, [gameStats.totalRounds, words]);
+
+  // Log game results function
+  const logGameResults = useCallback(() => {
+    const now = new Date();
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
+    const results = {
+      studentId: "student123",
+      datetime: datetime,
+      gameName: "PrefixSuffixHighlightGame",
+      questions: gameStats.rounds,
+    };
+
+    console.log(results);
+  }, [gameStats.rounds]);
+
+  // Log final results when game completes
+  useEffect(() => {
+    if (gameCompleted && gameStats.rounds.length > 0) {
+      logGameResults();
+    }
+  }, [gameCompleted, gameStats.rounds, logGameResults]);
+
+  // Audio recording setup
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder.current = new MediaRecorder(stream);
-      audioChunks.current = [];
-
-      mediaRecorder.current.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          audioChunks.current.push(e.data);
-        }
-      };
-
-      mediaRecorder.current.start(250);
+      const recorder = new MediaRecorder(stream);
+      setMediaRecorder(recorder);
+      recorder.start();
       setIsRecording(true);
-      setGameState("playing");
+      console.log("Recording started");
     } catch (err) {
-      console.error("Recording failed:", err);
+      console.log("Microphone permission denied or not available");
     }
   };
 
-  // Stop recording function
-  const stopRecording = async () => {
-    if (mediaRecorder.current?.state === "recording") {
-      mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach((track) => track.stop());
-
-      // Create final blob when recording stops
-      const blob = new Blob(audioChunks.current, { type: "audio/webm" });
-      setAudioBlob(blob);
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
       setIsRecording(false);
+      console.log("Recording stopped");
     }
   };
 
-  // Timer for syllable display
-  useEffect(() => {
-    let interval;
-    
-    if (gameState === "playing") {
-      interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            // Move to next syllable or word
-            if (currentSyllableIndex < currentWord.syllables.length - 1) {
-              setCurrentSyllableIndex(currentSyllableIndex + 1);
-              return 3; // Reset timer for next syllable
-            } else {
-              // Finished all syllables - show full word
-              setGameState("evaluation");
-              return 0;
-            }
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    
-    return () => clearInterval(interval);
-  }, [gameState, currentSyllableIndex, currentWordIndex, currentWord.syllables.length]);
+  // Start game
+  const startGame = async () => {
+    await startRecording();
+    setGameStarted(true);
+    startWordHighlighting(0, true); // Start with first word in slow phase
+  };
 
-  // Handle evaluation
-  const handleEvaluation = (correct) => {
-    const newEvaluation = [...evaluation, {
-      word: currentWord.word,
-      correct,
-      index: currentWordIndex
-    }];
-    
-    setEvaluation(newEvaluation);
-    
-    // Move to next word or finish game
-    if (currentWordIndex < words.length - 1) {
-      setCurrentWordIndex(currentWordIndex + 1);
-      setCurrentSyllableIndex(0);
-      setTimer(3);
-      setGameState("playing");
+  // Start highlighting sequence for current word
+  const startWordHighlighting = (wordIndex, slowPhase) => {
+    setHighlightStage("prefix");
+    const duration = slowPhase ? 1000 : 500;
+
+    setTimeout(() => {
+      setHighlightStage("stem");
+      setTimeout(() => {
+        setHighlightStage("suffix");
+        setTimeout(() => {
+          setHighlightStage("full");
+          const fullDuration = slowPhase ? 2000 : 1500;
+          setTimeout(() => {
+            nextWord(wordIndex, slowPhase);
+          }, fullDuration);
+        }, duration);
+      }, duration);
+    }, duration);
+  };
+
+  // Move to next word
+  const nextWord = (currentIndex, currentSlowPhase) => {
+    // Record result for non-example words (use current word before updating index)
+    const wordToRecord = words[currentIndex];
+    if (wordToRecord && !wordToRecord.isExample) {
+      const round = currentSlowPhase ? "slow" : "fast";
+      // console.log('Recording word:', wordToRecord.word, 'phase:', round);
+      setGameStats((prev) => ({
+        ...prev,
+        rounds: [
+          ...prev.rounds,
+          {
+            question: `${wordToRecord.word} (${round})`,
+          },
+        ],
+      }));
+    }
+
+    if (currentIndex < words.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentWordIndex(nextIndex);
+      setHighlightStage("none");
+      setTimeout(() => startWordHighlighting(nextIndex, currentSlowPhase), 500);
+    } else if (currentSlowPhase) {
+      // Switch to fast phase - skip example word in second round
+      setIsSlowPhase(false);
+      setCurrentWordIndex(1); // Start from index 1 (skip example at index 0)
+      setHighlightStage("none");
+      setTimeout(() => startWordHighlighting(1, false), 500);
     } else {
+      // Game completed
       stopRecording();
-      setGameState("completed");
-      /* reportFn({
-        words,
-        evaluation: newEvaluation,
-        audioBlob
-      }); */
+      setGameCompleted(true);
     }
   };
 
-  // Reset game
-  const resetGame = () => {
-    setGameState("waiting");
-    setCurrentWordIndex(0);
-    setCurrentSyllableIndex(0);
-    setTimer(3);
-    setAudioBlob(null);
-    setIsRecording(false);
-    setEvaluation([]);
+  // Function to highlight text parts
+  const highlightWord = () => {
+    if (!currentWord) return "";
+
+    const { word, prefix, stem } = currentWord;
+
+    if (highlightStage === "none") {
+      return word;
+    }
+
+    // Find positions
+    const prefixEnd = prefix.length;
+    const stemEnd = prefixEnd + stem.length;
+
+    let result = [];
+
+    // Prefix highlighting
+    if (highlightStage === "prefix" || highlightStage === "full") {
+      result.push(
+        <span key="prefix" style={{ color: "blue" }}>
+          {word.substring(0, prefixEnd)}
+        </span>
+      );
+    } else {
+      result.push(word.substring(0, prefixEnd));
+    }
+
+    // Stem highlighting
+    if (highlightStage === "stem" || highlightStage === "full") {
+      result.push(
+        <span key="stem" style={{ color: "red" }}>
+          {word.substring(prefixEnd, stemEnd)}
+        </span>
+      );
+    } else {
+      result.push(word.substring(prefixEnd, stemEnd));
+    }
+
+    // Suffix highlighting
+    if (highlightStage === "suffix" || highlightStage === "full") {
+      result.push(
+        <span key="suffix" style={{ color: "green" }}>
+          {word.substring(stemEnd)}
+        </span>
+      );
+    } else {
+      result.push(word.substring(stemEnd));
+    }
+
+    return result;
   };
 
-  // Audio player component
-  const AudioPlayer = () => {
+  // Start screen
+  if (!gameStarted) {
     return (
-      <div className="mt-4">
-        <h4>Your Recording:</h4>
-        <audio
-          controls
-          src={audioBlob ? URL.createObjectURL(audioBlob) : ""}
-          onEnded={(e) => URL.revokeObjectURL(e.target.src)}
-          className="w-100"
-        />
-      </div>
-    );
-  };
-
-  // Calculate progress
-  const totalSyllables = words.reduce((sum, word) => sum + word.syllables.length, 0);
-  const completedSyllables = words.slice(0, currentWordIndex).reduce(
-    (sum, word) => sum + word.syllables.length, 
-    currentSyllableIndex
-  );
-  const progress = (completedSyllables / totalSyllables) * 100;
-
-  // Render game screen
-  if (gameState === "waiting") {
-    return (
-      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-        <h2 className="mb-4">Ανάγνωση Συλλαβών</h2>
-        <p className="text-center mb-4">
-          Το παιχνίδι θα εμφανίζει συλλαβές από ελληνικές λέξεις. <br />
-          Διαβάστε δυνατά κάθε συλλαβή καθώς εμφανίζεται. <br />
-          Στο τέλος κάθε λέξης, θα εμφανιστεί ολόκληρη η λέξη.
-        </p>
-        
-        <Button variant="primary" onClick={startRecording} className="mb-3">
-          Έναρξη και Ηχογράφηση
-        </Button>
-      </Container>
-    );
-  }
-
-  if (gameState === "playing") {
-    return (
-      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-        <h2 className="mb-4">Διαβάστε τη Συλλαβή</h2>
-        
-        <ProgressBar
-          now={progress}
-          label={`${Math.round(progress)}%`}
-          className="w-100 mb-4"
-        />
-        
-        <div className="mb-3">
-          <h3 className={timer > 0 ? "text-primary" : "text-danger"}>
-            {timer}s
-          </h3>
-        </div>
-        
-        <div className="mb-4 text-center">
-          <div className="display-4 font-weight-bold mb-3">
-            {currentSyllable}
-          </div>
-          <p>
-            Λέξη {currentWordIndex + 1} από {words.length}
-            <br />
-            Συλλαβή {currentSyllableIndex + 1} από {currentWord.syllables.length}
-          </p>
-        </div>
-        
-        {/* Full word display after last syllable */}
-        {isLastSyllable && (
-          <div className="mb-4 p-3 border border-success rounded">
-            <h4>Ολόκληρη η λέξη:</h4>
-            <div className="display-4 text-success">
-              {currentWord.fullWord}
-            </div>
-          </div>
-        )}
-        
-        <div className="d-flex gap-3 mt-4">
-          {!isRecording ? (
-            <Button variant="primary" onClick={startRecording}>
-              Έναρξη Ηχογράφησης
-            </Button>
-          ) : (
-            <div className="text-danger d-flex align-items-center">
-              <strong>Γίνεται ηχογράφηση...</strong>
-            </div>
-          )}
-          
-          {isRecording && (
-            <Button variant="warning" onClick={stopRecording}>
-              Διακοπή Ηχογράφησης
-            </Button>
-          )}
-        </div>
-      </Container>
-    );
-  }
-
-  if (gameState === "evaluation") {
-    return (
-      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-        <h2 className="mb-4">Αξιολόγηση Ανάγνωσης</h2>
-        
-        <div className="text-center mb-5">
-          <h3 className="mb-3">Λέξη: {currentWord.fullWord}</h3>
-          <p>Ο παίκτης την διάβασε σωστά;</p>
-        </div>
-        
-        <div className="d-flex gap-3">
-          <Button 
-            variant="success" 
-            size="lg"
-            onClick={() => handleEvaluation(true)}
-          >
-            Ναι, Σωστά
-          </Button>
-          <Button 
-            variant="danger" 
-            size="lg"
-            onClick={() => handleEvaluation(false)}
-          >
-            Όχι, Λάθος
-          </Button>
-        </div>
-      </Container>
-    );
-  }
-
-  // Completed game state
-  return (
-    <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-      <Card className="w-100" style={{ maxWidth: "800px" }}>
-        <Card.Header as="h3">Αποτελέσματα</Card.Header>
-        <Card.Body>
-          <p className="h4 text-center mb-4">
-            Ολοκληρώσατε την ανάγνωση {words.length} λέξεων!
-          </p>
-          
-          <div className="mb-4">
-            <h5>Αποτελέσματα ανάγνωσης:</h5>
-            <ul className="list-group">
-              {evaluation.map((result, index) => (
-                <li 
-                  key={index} 
-                  className={`list-group-item d-flex justify-content-between align-items-center ${
-                    result.correct ? 'list-group-item-success' : 'list-group-item-danger'
-                  }`}
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <Card className="main-card">
+              <Card.Header className="text-center bg-primary text-white">
+                <h4 className="mb-0">Προθήματα και Επιθήματα</h4>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <div className="mb-4">
+                  <p className="lead">
+                    Πάτησε Έναρξη και διάβασε τις συλλαβές και τις λέξεις.
+                  </p>
+                </div>
+                <Button
+                  variant="success"
+                  size="lg"
+                  onClick={startGame}
+                  className="mb-4"
                 >
-                  <div>
-                    <strong>{words[result.index].fullWord}</strong>
-                  </div>
-                  <div>
-                    {result.correct ? (
-                      <span className="text-success">✓ Σωστά</span>
-                    ) : (
-                      <span className="text-danger">✗ Λάθος</span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="text-center mb-4">
-            <h5>
-              Συνολική επίδοση:{" "}
-              {evaluation.filter(r => r.correct).length} / {words.length}
-            </h5>
-          </div>
-          
-          {audioBlob && <AudioPlayer />}
-          
-          <div className="d-flex justify-content-between mt-4">
-            <Button variant="secondary" href="/">
-              Αρχική Σελίδα
-            </Button>
-            <Button variant="primary" onClick={resetGame}>
-              Παίξτε Ξανά
-            </Button>
-          </div>
-        </Card.Body>
-      </Card>
+                  Έναρξη
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+
+  // Game completed screen
+  if (gameCompleted) {
+    return (
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <Card className="main-card">
+              <Card.Header className="text-center bg-success text-white">
+                <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => navigate("/")}
+                  className="mt-4"
+                >
+                  Τέλος Άσκησης
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+
+  // Game screen
+  if (!currentWord) {
+    return null; // Safety check
+  }
+
+  return (
+    <Container fluid className="game-container">
+      <Row className="justify-content-center">
+        <Col md={12} lg={10}>
+          <Card className="main-card">
+            <Card.Header
+              className={`text-center ${
+                currentWord.isExample
+                  ? "bg-warning text-dark"
+                  : "bg-primary text-white"
+              }`}
+            >
+              <h4 className="mb-0">
+                {currentWord.isExample && (
+                  <span className="badge badge-dark me-2">Παράδειγμα</span>
+                )}
+                Προθήματα και Επιθήματα {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
+              </h4>
+            </Card.Header>
+            <Card.Body className="text-center">
+              <div
+                className="display-4 font-weight-bold mb-4 p-4"
+                style={{
+                  minHeight: "150px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {highlightWord()}
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </Container>
   );
 };
