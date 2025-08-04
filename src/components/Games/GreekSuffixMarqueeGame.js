@@ -1,59 +1,58 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Button,
   Card,
   Container,
   Row,
   Col,
-  Alert,
-  ProgressBar,
-  ListGroup,
 } from "react-bootstrap";
+import { useNavigate, useLocation } from 'react-router-dom';
+import QuestionProgressLights from '../QuestionProgressLights';
 import "../../styles/Game.css";
 
 const GreekSuffixMarqueeGame = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [currentQuestion, setCurrentQuestion] = useState(0);
+  
+  // Get student ID from URL parameters
+  const searchParams = new URLSearchParams(location.search);
+  const studentId = searchParams.get("studentId") || "unknown";
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [feedback, setFeedback] = useState("");
-  const [score, setScore] = useState(0);
-  const [gameState, setGameState] = useState("playing");
+  const [gameCompleted, setGameCompleted] = useState(false);
   const [isMarqueeActive, setIsMarqueeActive] = useState(true);
-  const [gameData, setGameData] = useState([]);
+  const [gameResults, setGameResults] = useState([]);
+  const [questionStartTime, setQuestionStartTime] = useState(null);
   const marqueeRef = useRef(null);
   const containerRef = useRef(null);
 
-  const questions = [
+  const questions = useMemo(() => [
     {
-      sentence: "Ο καιρός σήμερα είναι πολύ ζεστ___",
-      hiddenPart: "__",
+      sentence: "Η γάτα είναι μικρ",
+      options: ["-ή", "-ός", "-ό"],
+      correct: "-ή",
+      result: "Η γάτα είναι μικρή",
+      isExample: true,
+    },
+    {
+      sentence: "Ο καιρός σήμερα είναι πολύ ζεστ",
       options: ["-ός", "-ή", "-ό"],
       correct: "-ός",
-      explanation:
-        "Το επίθετο 'ζεστός' στο αρσενικό γένος παίρνει την κατάληξη -ός",
-      context: "Αρσενικό γένος, ενικός αριθμός",
-      type: "επίθετο",
+      result: "Ο καιρός σήμερα είναι πολύ ζεστός",
     },
     {
-      sentence: "Η θάλασσα φαίνεται πολύ γαλην___",
-      hiddenPart: "__",
+      sentence: "Η θάλασσα φαίνεται πολύ γαλην",
       options: ["-ια", "-ός", "-ό"],
       correct: "-ια",
-      explanation:
-        "Το επίθετο 'γαλήνια' στο θηλυκό γένος παίρνει την κατάληξη -ια",
-      context: "Θηλυκό γένος, ενικός αριθμός",
-      type: "επίθετο",
+      result: "Η θάλασσα φαίνεται πολύ γαλήνια",
     },
     {
-      sentence: "Το παιδί κοιμήθηκε ήσυχ___",
-      hiddenPart: "__",
-      options: ["-ό", "-ός", "-ή"],
-      correct: "-ό",
-      explanation:
-        "Το επίθετο 'ήσυχο' στο ουδέτερο γένος παίρνει την κατάληξη -ο",
-      context: "Ουδέτερο γένος, ενικός αριθμός",
-      type: "επίθετο",
+      sentence: "Το παιδί κοιμήθηκε ήσυχ",
+      options: ["-ο", "-ος", "-η"],
+      correct: "-ο",
+      result: "Το παιδί κοιμήθηκε ήσυχο",
     },
-  ];
+  ], []);
 
   useEffect(() => {
     if (!isMarqueeActive) return;
@@ -63,29 +62,34 @@ const GreekSuffixMarqueeGame = () => {
 
     if (!container || !textElement) return;
 
-    // Reset styles
+    // Reset styles - start with first letter at right edge
     textElement.style.transition = "none";
-    textElement.style.left = "100%";
-    textElement.style.transform = "translateX(0)";
-
+    textElement.style.visibility = "visible";
+    
     // Force reflow to apply reset styles
     textElement.getBoundingClientRect();
 
     const containerWidth = container.offsetWidth;
     const textWidth = textElement.offsetWidth;
 
-    const centerOffset = (containerWidth - textWidth) / 2;
+    // Start with first letter at right edge of container
+    textElement.style.left = `${containerWidth}px`;
+    textElement.style.transform = "translateX(0)";
 
-    // Animate to center
+    // Force reflow
+    textElement.getBoundingClientRect();
+
+    // Move left until last letter is visible (stop when text fits completely)
+    const stopOffset = containerWidth - textWidth;
+
     textElement.style.transition = "left 3s ease-out";
-    textElement.style.left = `${centerOffset}px`;
+    textElement.style.left = `${stopOffset}px`;
 
     const handleTransitionEnd = () => {
       setIsMarqueeActive(false);
-      textElement.style.transition = "none";
-      textElement.style.left = "50%";
-      textElement.style.transform = "translateX(-50%)";
       textElement.removeEventListener("transitionend", handleTransitionEnd);
+      // Start timing when buttons appear
+      setQuestionStartTime(Date.now());
     };
 
     textElement.addEventListener("transitionend", handleTransitionEnd);
@@ -96,242 +100,228 @@ const GreekSuffixMarqueeGame = () => {
   }, [currentQuestion, isMarqueeActive]);
 
   const handleAnswerSelect = (answer) => {
+    if (selectedAnswer !== null) return; // Prevent multiple selections
+    
     const question = questions[currentQuestion];
     const isCorrect = answer === question.correct;
+    const questionEndTime = Date.now();
+    const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
 
     setSelectedAnswer(answer);
 
-    // Record the attempt
-    const attempt = {
-      question: question.sentence,
-      context: question.context,
-      type: question.type,
-      selected: answer,
-      correct: question.correct,
-      isCorrect,
-      explanation: question.explanation,
-    };
-
-    setGameData((prev) => [...prev, attempt]);
-
-    if (isCorrect) {
-      setFeedback(`Σωστό! 🎉 ${question.explanation}`);
-      setScore((prev) => prev + 1);
-    } else {
-      setFeedback(`Λάθος. ${question.explanation}`);
+    // Track the result only for non-example questions
+    if (!question.isExample) {
+      setGameResults((prev) => [
+        ...prev,
+        {
+          question: question.sentence,
+          result: answer,
+          target: question.correct,
+          isCorrect: isCorrect,
+          seconds: secondsForQuestion,
+        },
+      ]);
     }
+
+    // Auto advance after 1 second
+    setTimeout(() => {
+      nextQuestion();
+    }, 1000);
   };
 
   const nextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
       setSelectedAnswer(null);
-      setFeedback("");
+      setQuestionStartTime(null); // Reset timing for next question
       setIsMarqueeActive(true);
+      // Hide current text first, then change question
+      const textElement = marqueeRef.current;
+      if (textElement) {
+        textElement.style.visibility = "hidden";
+      }
+      setTimeout(() => {
+        setCurrentQuestion((prev) => prev + 1);
+      }, 50);
     } else {
-      setGameState("results");
+      setGameCompleted(true);
     }
   };
 
-  const resetGame = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswer(null);
-    setFeedback("");
-    setScore(0);
-    setGameData([]);
-    setGameState("playing");
-    setIsMarqueeActive(true);
+  // Log game results function
+  const logGameResults = (finalResults) => {
+    const now = new Date();
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
+    const results = {
+      studentId: studentId,
+      datetime: datetime,
+      gameName: "GreekSuffixMarqueeGame",
+      questions: finalResults,
+    };
+
+    console.log(results);
   };
 
-  const getGenderColor = (context) => {
-    if (context.includes("Αρσενικό")) return "text-primary";
-    if (context.includes("Θηλυκό")) return "text-danger";
-    if (context.includes("Ουδέτερο")) return "text-success";
-    return "text-secondary";
-  };
+  // Use effect to log results when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      logGameResults(gameResults);
+    }
+  }, [gameCompleted, gameResults]);
 
   const question = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  
+  // Center the text when answer is selected
+  useEffect(() => {
+    if (selectedAnswer) {
+      const textElement = marqueeRef.current;
+      const container = containerRef.current;
+      if (textElement && container) {
+        const containerWidth = container.offsetWidth;
+        const textWidth = textElement.offsetWidth;
+        const centerOffset = (containerWidth - textWidth) / 2;
+        textElement.style.transition = "left 0.5s ease";
+        textElement.style.left = `${centerOffset}px`;
+      }
+    }
+  }, [selectedAnswer]);
 
-  if (gameState === "results") {
+  if (gameCompleted) {
     return (
-      <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-        <Card
-          className="w-100"
-          style={{ maxWidth: "800px", overflowY: "auto" }}
-        >
-          <Card.Header className="text-center bg-primary text-white">
-            <h2 className="mb-0">Αποτελέσματα</h2>
-          </Card.Header>
-
-          <Card.Body>
-            <div className="text-center mb-4">
-              <h3 className="text-primary">
-                Τελικό Σκορ: {score}/{questions.length}
-              </h3>
-              <p className="h4 mt-3">
-                {score === questions.length
-                  ? "🎉 Τέλεια! Όλα σωστά!"
-                  : score >= questions.length * 0.8
-                  ? "👍 Πολύ καλά!"
-                  : score >= questions.length * 0.6
-                  ? "😊 Καλά!"
-                  : "💪 Συνέχισε την προσπάθεια!"}
-              </p>
-            </div>
-
-            <ListGroup className="mb-4">
-              {gameData.map((item, index) => (
-                <ListGroup.Item
-                  key={index}
-                  variant={item.isCorrect ? "success" : "danger"}
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <QuestionProgressLights
+              totalQuestions={questions.filter(q => !q.isExample).length}
+              currentQuestion={questions.filter(q => !q.isExample).length}
+              answeredQuestions={gameResults.map(r => r.isCorrect)}
+            />
+            <Card className="main-card">
+              <Card.Header className="text-center bg-success text-white">
+                <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  onClick={() => navigate('/')}
+                  className="mt-4"
                 >
-                  <div className="d-flex justify-content-between">
-                    <strong>{item.question}</strong>
-                    <span>{item.isCorrect ? "✓" : "✗"}</span>
-                  </div>
-                  <div className="mt-2">
-                    <small
-                      className={`font-italic ${getGenderColor(item.context)}`}
-                    >
-                      {item.context} ({item.type})
-                    </small>
-                  </div>
-                  <div className="mt-2">
-                    <strong>Επιλογή σας:</strong> {item.selected}
-                    {!item.isCorrect && (
-                      <span className="text-danger"> (Λάθος)</span>
-                    )}
-                  </div>
-                  {!item.isCorrect && (
-                    <div>
-                      <strong>Σωστή απάντηση:</strong> {item.correct}
-                    </div>
-                  )}
-                  <div className="mt-2">
-                    <em>{item.explanation}</em>
-                  </div>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-
-            <div className="d-flex justify-content-center gap-3">
-              <Button variant="primary" onClick={resetGame}>
-                Παίξτε Ξανά
-              </Button>
-              <Button variant="secondary" href="/">
-                Αρχική Σελίδα
-              </Button>
-            </div>
-          </Card.Body>
-        </Card>
+                  Τέλος Άσκησης
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     );
   }
 
   return (
-    <Container className="d-flex flex-column align-items-center justify-content-center full-height">
-      <Card className="w-100" style={{ maxWidth: "800px" }}>
-        <Card.Header className="text-center bg-primary text-white">
-          <h2 className="mb-0">Επιλογή Καταλήξεων</h2>
+    <Container fluid className="game-container">
+      <Row className="justify-content-center">
+        <Col md={12} lg={10}>
+          {!questions[currentQuestion].isExample && (
+            <QuestionProgressLights
+              totalQuestions={questions.filter(q => !q.isExample).length}
+              currentQuestion={currentQuestion - 1} // Subtract 1 for example
+              answeredQuestions={gameResults.map(r => r.isCorrect)}
+            />
+          )}
+          <Card className="main-card">
+        <Card.Header className={`text-center ${questions[currentQuestion].isExample ? 'bg-warning text-dark' : 'bg-primary text-white'}`}>
+          <h4 className="mb-0">
+            {questions[currentQuestion].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+            Επιθήματα
+          </h4>
         </Card.Header>
+        <Card.Body className="text-center">
 
-        <Card.Body>
-          <ProgressBar
-            now={progress}
-            label={`${currentQuestion + 1}/${questions.length}`}
-            className="w-100 mb-4"
-          />
-
-          {/* Marquee container */}
-          <div
-            ref={containerRef}
-            className="marquee-container mb-4"
-            style={{
-              width: "100%",
-              padding: "20px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+          <div className="rounded mb-4">
+            {/* Marquee container */}
             <div
-              ref={marqueeRef}
-              className="marquee-text"
+              ref={containerRef}
+              className="marquee-container mb-4"
               style={{
-                position: "absolute",
-                whiteSpace: "nowrap",
-                transition: "left 3s ease-out",
-                fontSize: "1.5rem",
+                width: "600px",
+                margin: "0 auto",
+                padding: "20px 0",
+                display: "block",
+                minHeight: "80px",
+                position: "relative",
+                overflow: "hidden",
               }}
             >
-              {question.sentence.replace(question.hiddenPart, "____")}
+              <div
+                ref={marqueeRef}
+                className="marquee-text"
+                style={{
+                  position: "absolute",
+                  whiteSpace: "nowrap",
+                  transition: "left 3s ease-out",
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  visibility: "visible",
+                }}
+              >
+                {selectedAnswer ? question.result : question.sentence}
+              </div>
             </div>
+            
+            {selectedAnswer && (
+              <div className="mt-3 mb-4">
+                <h4 className="font-weight-bold">
+                  {selectedAnswer === question.correct ? (
+                    <span className="text-success">
+                      ✓
+                    </span>
+                  ) : (
+                    <span className="text-danger">
+                      ✗
+                    </span>
+                  )}
+                </h4>
+              </div>
+            )}
           </div>
 
           {!isMarqueeActive && (
-            <>
-              <div className="text-center mb-4">
-                <p
-                  className={`font-italic ${getGenderColor(question.context)}`}
-                >
-                  {question.context} ({question.type})
-                </p>
-              </div>
-
-              <Row className="justify-content-center mb-4">
-                {question.options.map((option, index) => (
-                  <Col
-                    key={index}
-                    md={4}
-                    className="mb-3 d-flex justify-content-center"
+            <Row className="g-3 mb-4">
+              {question.options.map((option, index) => (
+                <Col key={index} xs={4}>
+                  <Button
+                    variant={
+                      selectedAnswer === option
+                        ? option === question.correct
+                          ? "success"
+                          : "danger"
+                        : selectedAnswer && option === question.correct
+                        ? "success"
+                        : "outline-primary"
+                    }
+                    onClick={() => handleAnswerSelect(option)}
+                    disabled={selectedAnswer !== null}
+                    className="w-100 py-3"
                   >
-                    <Button
-                      block
-                      onClick={() => handleAnswerSelect(option)}
-                      disabled={selectedAnswer !== null}
-                      variant={
-                        selectedAnswer === option
-                          ? option === question.correct
-                            ? "success"
-                            : "danger"
-                          : selectedAnswer && option === question.correct
-                          ? "outline-success"
-                          : "outline-primary"
-                      }
-                      size="lg"
-                      className="py-3"
-                    >
-                      {option}
-                    </Button>
-                  </Col>
-                ))}
-              </Row>
-
-              {feedback && (
-                <Alert
-                  variant={feedback.includes("Σωστό") ? "success" : "danger"}
-                  className="text-center"
-                >
-                  {feedback}
-                </Alert>
-              )}
-
-              <div className="d-flex justify-content-center mt-4 gap-3">
-                {selectedAnswer && (
-                  <Button variant="primary" onClick={nextQuestion}>
-                    {currentQuestion < questions.length - 1
-                      ? "Επόμενη Ερώτηση"
-                      : "Τέλος"}
+                    {option}
                   </Button>
-                )}
-                {/* <Button variant="secondary" onClick={resetGame}>
-                  Επανάληψη
-                </Button> */}
-              </div>
-            </>
+                </Col>
+              ))}
+            </Row>
           )}
         </Card.Body>
       </Card>
+        </Col>
+      </Row>
     </Container>
   );
 };
