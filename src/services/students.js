@@ -70,6 +70,9 @@ export const addStudent = async (studentData) => {
   const docRef = await addDoc(collection(db, "students"), {
     name: studentData.name,
     classId: studentData.classId,
+    gender: studentData.gender,
+    dateOfBirth: studentData.dateOfBirth,
+    diagnosis: studentData.diagnosis,
     schoolId: localStorage.getItem("school"),
   });
   return docRef.id;
@@ -80,6 +83,9 @@ export const updateStudent = async (studentId, studentData) => {
   await updateDoc(doc(db, "students", studentId), {
     name: studentData.name,
     classId: studentData.classId,
+    gender: studentData.gender,
+    dateOfBirth: studentData.dateOfBirth,
+    diagnosis: studentData.diagnosis,
   });
 };
 

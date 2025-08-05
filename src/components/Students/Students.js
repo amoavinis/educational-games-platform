@@ -36,7 +36,7 @@ const Students = () => {
       setStudents(data);
       setLoading(false);
     } catch (err) {
-      setError("Failed to load students");
+      setError("Αποτυχία φόρτωσης μαθητών");
       setLoading(false);
       console.error(err);
     }
@@ -46,7 +46,7 @@ const Students = () => {
   useEffect(() => {
     const loadClasses = async () => {
       const classes = await getClasses();
-      setAvailableClasses([{ id: null, name: "All" }, ...classes]);
+      setAvailableClasses([{ id: null, name: "Όλες" }, ...classes]);
     };
 
     if (auth.currentUser) {
@@ -77,6 +77,9 @@ const Students = () => {
         await updateStudent(student.id, {
           name: student.name,
           classId: student.classId,
+          gender: student.gender,
+          dateOfBirth: student.dateOfBirth,
+          diagnosis: student.diagnosis,
         });
         setStudents(students.map((s) => (s.id === student.id ? student : s)));
       } else {
@@ -84,13 +87,16 @@ const Students = () => {
         const newStudent = {
           name: student.name,
           classId: student.classId,
+          gender: student.gender,
+          dateOfBirth: student.dateOfBirth,
+          diagnosis: student.diagnosis,
         };
         const id = await addStudent(newStudent);
         setStudents([...students, { ...student, id }]);
       }
       setShowEditor(false);
     } catch (err) {
-      setError("Failed to save student");
+      setError("Αποτυχία αποθήκευσης μαθητή");
       console.error(err);
     }
   };
@@ -101,7 +107,7 @@ const Students = () => {
       setStudents(students.filter((s) => s.id !== currentStudent.id));
       setShowDeleteModal(false);
     } catch (err) {
-      setError("Failed to delete student");
+      setError("Αποτυχία διαγραφής μαθητή");
       console.error(err);
     }
   };
@@ -138,7 +144,7 @@ const Students = () => {
         (student.className
           .toLowerCase()
           .includes(filters.class.toLowerCase()) ||
-          filters.class === "All")
+          filters.class === "Όλες")
       );
     });
   };
@@ -153,7 +159,7 @@ const Students = () => {
   );
 
   if (loading) {
-    return <div>Loading students...</div>;
+    return <div>Φόρτωση μαθητών...</div>;
   }
   if (error) {
     return <div className="text-danger">{error}</div>;
@@ -161,16 +167,16 @@ const Students = () => {
 
   return (
     <div className="students-container">
-      <h2>Students Management</h2>
+      <h2>Διαχείριση Μαθητών</h2>
 
       <div className="students-controls">
         <Row className="mb-3">
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Filter by Name</Form.Label>
+              <Form.Label>Φίλτρο κατά Όνομα</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Search by name"
+                placeholder="Αναζήτηση κατά όνομα"
                 value={filters.name}
                 onChange={(e) =>
                   setFilters({ ...filters, name: e.target.value })
@@ -180,7 +186,7 @@ const Students = () => {
           </Col>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Filter by Class</Form.Label>
+              <Form.Label>Φίλτρο κατά Τάξη</Form.Label>
               <Form.Control
                 as="select"
                 value={filters.class}
@@ -198,7 +204,7 @@ const Students = () => {
           </Col>
           <Col md={4} className="d-flex align-items-end">
             <Button variant="primary" onClick={handleAddStudent}>
-              Add New Student
+              Προσθήκη Νέου Μαθητή
             </Button>
           </Col>
         </Row>
@@ -208,16 +214,31 @@ const Students = () => {
         <thead>
           <tr>
             <th onClick={() => requestSort("name")}>
-              Name{" "}
+              Όνομα{" "}
               {sortConfig.key === "name" &&
                 (sortConfig.direction === "asc" ? "↑" : "↓")}
             </th>
             <th onClick={() => requestSort("class")}>
-              Class{" "}
+              Τάξη{" "}
               {sortConfig.key === "class" &&
                 (sortConfig.direction === "asc" ? "↑" : "↓")}
             </th>
-            <th>Actions</th>
+            <th onClick={() => requestSort("gender")}>
+              Φύλο{" "}
+              {sortConfig.key === "gender" &&
+                (sortConfig.direction === "asc" ? "↑" : "↓")}
+            </th>
+            <th onClick={() => requestSort("dateOfBirth")}>
+              Ημερομηνία γέννησης{" "}
+              {sortConfig.key === "dateOfBirth" &&
+                (sortConfig.direction === "asc" ? "↑" : "↓")}
+            </th>
+            <th onClick={() => requestSort("diagnosis")}>
+              Διάγνωση{" "}
+              {sortConfig.key === "diagnosis" &&
+                (sortConfig.direction === "asc" ? "↑" : "↓")}
+            </th>
+            <th>Ενέργειες</th>
           </tr>
         </thead>
         <tbody>
@@ -226,6 +247,9 @@ const Students = () => {
               <tr key={student.id}>
                 <td>{student.name}</td>
                 <td>{student.className}</td>
+                <td>{student.gender || "-"}</td>
+                <td>{student.dateOfBirth || "-"}</td>
+                <td>{student.diagnosis === true ? "Ναι" : student.diagnosis === false ? "Όχι" : "-"}</td>
                 <td>
                   <Button
                     variant="info"
@@ -233,22 +257,22 @@ const Students = () => {
                     className="me-2"
                     onClick={() => handleEditStudent(student)}
                   >
-                    Edit
+                    Επεξεργασία
                   </Button>
                   <Button
                     variant="danger"
                     size="sm"
                     onClick={() => handleDeleteStudent(student)}
                   >
-                    Delete
+                    Διαγραφή
                   </Button>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="3" className="text-center">
-                No students found
+              <td colSpan="6" className="text-center">
+                Δεν βρέθηκαν μαθητές
               </td>
             </tr>
           )}

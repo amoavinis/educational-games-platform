@@ -85,6 +85,9 @@ exports.getStudentsWithClasses = functions.https.onRequest(
             name: studentData.name,
             classId: studentData.classId,
             className: classesMap[studentData.classId] || "Unknown Class",
+            gender: studentData.gender,
+            dateOfBirth: studentData.dateOfBirth,
+            diagnosis: studentData.diagnosis,
             schoolId: studentData.schoolId,
           });
         });

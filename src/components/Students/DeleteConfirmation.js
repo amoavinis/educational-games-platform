@@ -5,17 +5,17 @@ const DeleteConfirmation = ({ show, student, onConfirm, onCancel }) => {
   return (
     <Modal show={show} onHide={onCancel}>
       <Modal.Header closeButton>
-        <Modal.Title>Confirm Deletion</Modal.Title>
+        <Modal.Title>Επιβεβαίωση Διαγραφής</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        Are you sure you want to delete {student?.name} from {student?.class}?
+        Είστε σίγουροι ότι θέλετε να διαγράψετε τον/την {student?.name} από την τάξη {student?.className};
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onCancel}>
-          Cancel
+          Ακύρωση
         </Button>
         <Button variant="danger" onClick={onConfirm}>
-          Delete
+          Διαγραφή
         </Button>
       </Modal.Footer>
     </Modal>
