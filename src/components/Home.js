@@ -70,9 +70,11 @@ const Home = () => {
   };
 
   const handlePlay = () => {
-    let name = students.find((s) => s.id === selectedStudentId)?.name || "";
+    const selectedStudent = students.find((s) => s.id === selectedStudentId);
+    const name = selectedStudent?.name || "";
+    const classId = selectedStudent?.classId || "";
     navigate(
-      `/games/game${selectedGame.id}?studentId=${selectedStudentId}&studentName=${name}`
+      `/games/game${selectedGame.id}?studentId=${selectedStudentId}&studentName=${name}&classId=${classId}`
     );
   };
 

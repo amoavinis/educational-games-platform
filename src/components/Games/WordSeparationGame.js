@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Container, Card, Button, Row, Col } from "react-bootstrap";
 import { useNavigate } from 'react-router-dom';
 import QuestionProgressLights from '../QuestionProgressLights';
+import { addReport } from "../../services/reports";
 
-const WordSeparationGame = () => {
+const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [separatorPosition, setSeparatorPosition] = useState(null);
@@ -81,13 +82,18 @@ const WordSeparationGame = () => {
         setQuestionStartTime(null); // Reset timing for next question
       } else {
         setShowResults(true);
-        logGameResults();
+        submitGameResults();
       }
     }, 1000);
   };
 
-  // Log game results function
-  const logGameResults = () => {
+  // Submit game results function
+  const submitGameResults = async () => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
     const now = new Date();
     const datetime = now.getFullYear() + '-' + 
                      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -96,13 +102,24 @@ const WordSeparationGame = () => {
                      String(now.getMinutes()).padStart(2, '0');
     
     const results = {
-      studentId: "student123", // TODO: Replace with actual student ID
+      studentId: studentId,
       datetime: datetime,
       gameName: "WordSeparationGame",
       questions: gameResults
     };
     
-    console.log(results);
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results)
+      });
+      console.log("Game results submitted successfully");
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
   };
 
   const current = compounds[currentWordIndex];

@@ -321,3 +321,85 @@ async (req, res) => {
   }
 },
 );
+
+exports.getReportsWithDetails = functions.https.onRequest(
+    {
+      region: "europe-west1",
+    },
+    async (req, res) => {
+      // Handle CORS preflight
+      if (req.method === "OPTIONS") {
+        res.set("Access-Control-Allow-Origin", "*");
+        res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+        res.set("Access-Control-Allow-Headers",
+            "Authorization, Content-Type");
+        res.status(204).send("");
+        return;
+      }
+
+      // Handle actual request
+      res.set("Access-Control-Allow-Origin", "*");
+
+      // Validate Authorization header
+      const authHeader = req.headers.authorization;
+      const idToken = authHeader?.split("Bearer ")?.[1];
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const uid = decodedToken?.uid;
+
+      if (!authHeader || !authHeader.startsWith("Bearer ") || !uid) {
+        res.status(401)
+            .json({error: "Unauthorized: Missing or invalid token"});
+        return;
+      }
+
+      try {
+        const db = admin.firestore();
+        const schoolId = req.query.schoolId;
+
+        // Get all classes and students for the school to join with reports
+        const [classesSnapshot, studentsSnapshot] = await Promise.all([
+          db.collection("classes").where("schoolId", "==", schoolId).get(),
+          db.collection("students").where("schoolId", "==", schoolId).get(),
+        ]);
+
+        const classesMap = {};
+        classesSnapshot.forEach((doc) => {
+          classesMap[doc.id] = doc.data().name;
+        });
+
+        const studentsMap = {};
+        studentsSnapshot.forEach((doc) => {
+          studentsMap[doc.id] = doc.data().name;
+        });
+
+        // Get reports
+        const reportsQuery = db.collection("reports")
+            .where("schoolId", "==", schoolId);
+
+        const reportsSnapshot = await reportsQuery.get();
+
+        // Join data
+        const reports = [];
+        reportsSnapshot.forEach((doc) => {
+          const reportData = doc.data();
+          reports.push({
+            id: doc.id,
+            schoolId: reportData.schoolId,
+            classId: reportData.classId,
+            className: classesMap[reportData.classId] || "Unknown Class",
+            studentId: reportData.studentId,
+            studentName: studentsMap[reportData.studentId] || "Unknown Student",
+            game: reportData.game,
+            results: reportData.results,
+            createdAt: reportData.createdAt,
+            updatedAt: reportData.updatedAt,
+          });
+        });
+
+        res.status(200).json(reports);
+      } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Internal Server Error");
+      }
+    },
+);

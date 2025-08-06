@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Button, Card, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import QuestionProgressLights from '../QuestionProgressLights';
+import { addReport } from '../../services/reports';
 
-const WordHighlightGame = () => {
+const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [selectedText, setSelectedText] = useState('');
@@ -95,12 +96,17 @@ const WordHighlightGame = () => {
       setQuestionStartTime(Date.now());
     } else {
       setGameCompleted(true);
-      logGameResults({ gameStats });
+      submitGameResults({ gameStats });
     }
   };
 
-  // Log game results function
-  const logGameResults = (gameData) => {
+  // Submit game results function
+  const submitGameResults = async (gameData) => {
+    if (!studentId || !classId) {
+      console.error('Missing required data for report submission');
+      return;
+    }
+
     const now = new Date();
     const datetime = now.getFullYear() + '-' + 
                      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -109,13 +115,23 @@ const WordHighlightGame = () => {
                      String(now.getMinutes()).padStart(2, '0');
     
     const results = {
-      studentId: "student123", // TODO: Replace with actual student ID
       datetime: datetime,
       gameName: "WordHighlightGame",
       questions: gameData.gameStats.rounds
     };
     
-    console.log(results);
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results)
+      });
+      console.log('Report submitted successfully');
+    } catch (error) {
+      console.error('Error submitting report:', error);
+    }
   };
 
 

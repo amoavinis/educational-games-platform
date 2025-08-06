@@ -1,7 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-// import { sendReport } from "../../services/reports";
-// import { games as allGames } from "../games";
 import "../../styles/Game.css";
 import WordHighlightGame from "./WordHighlightGame";
 import RootSuffixGame from "./RootSuffixGame";
@@ -23,12 +21,11 @@ const GameScreen = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // const searchParams = new URLSearchParams(location.search);
-  // const studentId = searchParams.get("studentId");
-  // const studentName = searchParams.get("studentName");
+  const searchParams = new URLSearchParams(location.search);
+  const studentId = searchParams.get("studentId");
+  const classId = searchParams.get("classId");
   const gameId = parseInt(location.pathname.split("/").pop().split("game")[1]);
-  // const games = allGames;
-  // const game = games.find((g) => g.id === gameId);
+  const schoolId = localStorage.getItem("school");
 
   const enterFullscreen = async () => {
     try {
@@ -83,22 +80,6 @@ const GameScreen = () => {
     };
   }, []);
 
-  /* const reportFn = async (data) => {
-    let payload = {
-      studentId: studentId,
-      studentName: studentName,
-      gameData: data,
-    };
-
-    const uploadRecording = async (blob) => {
-      const storageRef = ref(storage, `recordings/${Date.now()}.webm`);
-      await uploadBytes(storageRef, blob, { contentType: "audio/webm" });
-      return getDownloadURL(storageRef);
-    };
-
-    sendReport(payload);
-  }; */
-
   return (
     <div className="game-screen-fullscreen">
       <button 
@@ -110,21 +91,21 @@ const GameScreen = () => {
       </button>
       
       <div className="game-body-fullscreen">
-        {gameId === 1 && <WordHighlightGame />}
-        {gameId === 2 && <RootSuffixGame />}
-        {gameId === 3 && <GreekReadingExercise />}
-        {gameId === 4 && <WordEndingGame />}
-        {gameId === 5 && <WordSeparationGame />}
-        {gameId === 6 && <PrefixMatchingGame />}
-        {gameId === 7 && <GreekPrefixGame />}
-        {gameId === 8 && <GreekMorphologyGame />}
-        {gameId === 9 && <PrefixSuffixHighlightGame />}
-        {gameId === 10 && <SyllableReadingGame />}
-        {gameId === 11 && <GreekCliticSuffixGame />}
-        {gameId === 12 && <GreekVerbEndingGame />}
-        {gameId === 13 && <GreekWordFormationGame />}
-        {gameId === 14 && <GreekAdjectiveEndingGame />}
-        {gameId === 15 && <GreekSuffixMarqueeGame />}
+        {gameId === 1 && <WordHighlightGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 2 && <RootSuffixGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 3 && <GreekReadingExercise gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 4 && <WordEndingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 5 && <WordSeparationGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 6 && <PrefixMatchingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 7 && <GreekPrefixGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 8 && <GreekMorphologyGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 9 && <PrefixSuffixHighlightGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 10 && <SyllableReadingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 11 && <GreekCliticSuffixGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 12 && <GreekVerbEndingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 13 && <GreekWordFormationGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 14 && <GreekAdjectiveEndingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 15 && <GreekSuffixMarqueeGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
       </div>
     </div>
   );

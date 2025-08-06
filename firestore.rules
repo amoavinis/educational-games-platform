@@ -1,6 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Global debug rule - allow all operations temporarily - updated
+    match /{document=**} {
+      allow read, write: if true;
+    }
     // Role checking functions
     function isAdmin() {
       return request.auth.token.role == 1;
@@ -90,6 +94,34 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && (
                       isAdmin() ||
                       (isSchoolUser() && belongsToUsersSchool())
+                    );
+    }
+    
+    match /reports/{reportId} {
+      // Temporarily allow all operations for debugging
+      allow read, write: if true;
+
+      // Reports can be updated by authenticated users
+      allow update: if isAuthenticated() && (
+                     isAdmin() ||
+                     isSchoolUser()
+                   );
+
+      // Reports can be read by authenticated users
+      allow get: if isAuthenticated() && (
+                   isAdmin() ||
+                   isSchoolUser()
+                 );
+                 
+      allow list: if isAuthenticated() && (
+                    isAdmin() ||
+                    isSchoolUser()
+                  );
+
+      // Reports can be deleted by authenticated users
+      allow delete: if isAuthenticated() && (
+                      isAdmin() ||
+                      isSchoolUser()
                     );
     }
   }

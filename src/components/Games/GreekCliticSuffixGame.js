@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import "../../styles/Game10And11.css";
 import { level11Words } from "../Data/Game11";
+import { addReport } from "../../services/reports";
 
-const GreekCliticSuffixGame = () => {
+const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = level11Words;
 
@@ -130,7 +131,7 @@ const GreekCliticSuffixGame = () => {
           // All regular words placed - game completed
           setTimeout(() => {
             setGameCompleted(true);
-            logGameResults();
+            submitGameResults();
           }, 500);
         }
       }
@@ -178,7 +179,7 @@ const GreekCliticSuffixGame = () => {
             // All regular words placed - game completed
             setTimeout(() => {
               setGameCompleted(true);
-              logGameResults();
+              submitGameResults();
             }, 500);
           }
         }
@@ -212,8 +213,13 @@ const GreekCliticSuffixGame = () => {
     ]);
   };
 
-  // Log game results function
-  const logGameResults = () => {
+  // Submit game results function
+  const submitGameResults = async () => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
     const now = new Date();
     const datetime =
       now.getFullYear() +
@@ -231,14 +237,25 @@ const GreekCliticSuffixGame = () => {
       : 0;
 
     const results = {
-      studentId: "student123",
+      studentId: studentId,
       datetime: datetime,
       gameName: "GreekCliticSuffixGame",
       questions: gameResults,
       totalTime: totalTime,
     };
 
-    console.log(results);
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results)
+      });
+      console.log("Game results submitted successfully");
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
   };
 
   const getSuffixTitle = (suffix) => {

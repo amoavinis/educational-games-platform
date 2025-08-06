@@ -3,8 +3,9 @@ import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from 'react-router-dom';
 import "../../styles/Game.css";
 import "../../styles/Game6.css";
+import { addReport } from "../../services/reports";
 
-const GreekWordSortingGame = () => {
+const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = React.useMemo(
     () => [
@@ -130,7 +131,7 @@ const GreekWordSortingGame = () => {
           // All regular words placed - game completed
           setTimeout(() => {
             setGameCompleted(true);
-            logGameResults();
+            submitGameResults();
           }, 500);
         }
       }
@@ -179,7 +180,7 @@ const GreekWordSortingGame = () => {
             // All regular words placed - game completed
             setTimeout(() => {
               setGameCompleted(true);
-              logGameResults();
+              submitGameResults();
             }, 500);
           }
         }
@@ -214,8 +215,13 @@ const GreekWordSortingGame = () => {
   };
 
 
-  // Log game results function
-  const logGameResults = () => {
+  // Submit game results function
+  const submitGameResults = async () => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
     const now = new Date();
     const datetime = now.getFullYear() + '-' + 
                      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -226,14 +232,25 @@ const GreekWordSortingGame = () => {
     const totalTime = gameStartTime ? Math.round((Date.now() - gameStartTime) / 1000) : 0;
     
     const results = {
-      studentId: "student123",
+      studentId: studentId,
       datetime: datetime,
       gameName: "GreekPrefixGame",
       questions: gameResults,
       totalTime: totalTime
     };
     
-    console.log(results);
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results)
+      });
+      console.log("Game results submitted successfully");
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
   };
 
   const WordCard = ({ wordData, isDraggable = true }) => (

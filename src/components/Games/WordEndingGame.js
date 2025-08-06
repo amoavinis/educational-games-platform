@@ -6,8 +6,9 @@ import React, {
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
+import { addReport } from "../../services/reports";
 
-const WordEndingGame = () => {
+const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   // Game state
   const [currentRound, setCurrentRound] = useState(0); // 0 = slow, 1 = normal
@@ -149,12 +150,17 @@ const WordEndingGame = () => {
       setQuestionStartTime(null); // Reset timing for next question
     } else {
       setGameCompleted(true);
-      logGameResults();
+      submitGameResults();
     }
   };
 
-  // Log game results function
-  const logGameResults = () => {
+  // Submit game results function
+  const submitGameResults = async () => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
     const now = new Date();
     const datetime =
       now.getFullYear() +
@@ -168,13 +174,24 @@ const WordEndingGame = () => {
       String(now.getMinutes()).padStart(2, "0");
 
     const results = {
-      studentId: "student123",
+      studentId: studentId,
       datetime: datetime,
       gameName: "WordEndingGame",
       questions: gameResults,
     };
 
-    console.log(results);
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results)
+      });
+      console.log("Game results submitted successfully");
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
   };
 
   if (gameCompleted) {

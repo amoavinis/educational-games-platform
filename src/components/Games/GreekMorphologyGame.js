@@ -3,8 +3,9 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
+import { addReport } from "../../services/reports";
 
-const GreekMorphologyGame = () => {
+const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const questions = [
     {
@@ -113,13 +114,18 @@ const GreekMorphologyGame = () => {
       setQuestionStartTime(null); // Reset timing for next question
     } else {
       setGameState("completed");
-      logGameResults();
+      submitGameResults();
     }
   };
 
 
-  // Log game results function
-  const logGameResults = () => {
+  // Submit game results function
+  const submitGameResults = async () => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
     const now = new Date();
     const datetime = now.getFullYear() + '-' + 
                      String(now.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -128,13 +134,24 @@ const GreekMorphologyGame = () => {
                      String(now.getMinutes()).padStart(2, '0');
     
     const results = {
-      studentId: "student123",
+      studentId: studentId,
       datetime: datetime,
       gameName: "GreekMorphologyGame",
       questions: gameResults
     };
     
-    console.log(results);
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results)
+      });
+      console.log("Game results submitted successfully");
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
   };
 
   // Start timing when question loads

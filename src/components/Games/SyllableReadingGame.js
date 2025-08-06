@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
+import { addReport } from "../../services/reports";
 
-const SyllableReadingGame = () => {
+const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = useMemo(
     () => [
@@ -67,8 +68,13 @@ const SyllableReadingGame = () => {
     }
   }, [gameStats.totalRounds, words]);
 
-  // Log game results function
-  const logGameResults = useCallback(() => {
+  // Submit game results function
+  const submitGameResults = useCallback(async () => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
     const now = new Date();
     const datetime =
       now.getFullYear() +
@@ -82,21 +88,32 @@ const SyllableReadingGame = () => {
       String(now.getMinutes()).padStart(2, "0");
 
     const results = {
-      studentId: "student123",
+      studentId: studentId,
       datetime: datetime,
-      gameName: "PrefixSuffixHighlightGame",
+      gameName: "SyllableReadingGame",
       questions: gameStats.rounds,
     };
 
-    console.log(results);
-  }, [gameStats.rounds]);
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results)
+      });
+      console.log("Game results submitted successfully");
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
+  }, [gameStats.rounds, studentId, classId, schoolId, gameId]);
 
-  // Log final results when game completes
+  // Submit final results when game completes
   useEffect(() => {
     if (gameCompleted && gameStats.rounds.length > 0) {
-      logGameResults();
+      submitGameResults();
     }
-  }, [gameCompleted, gameStats.rounds, logGameResults]);
+  }, [gameCompleted, gameStats.rounds, submitGameResults]);
 
   // Audio recording setup
   const startRecording = async () => {

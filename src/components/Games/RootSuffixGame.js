@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
+import { addReport } from "../../services/reports";
 
-const RootSuffixGame = () => {
+const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [selectedText, setSelectedText] = useState("");
@@ -111,12 +112,17 @@ const RootSuffixGame = () => {
       setQuestionStartTime(Date.now());
     } else {
       setGameCompleted(true);
-      logGameResults({ gameStats });
+      submitGameResults({ gameStats });
     }
   };
 
-  // Log game results function
-  const logGameResults = (gameData) => {
+  // Submit game results function
+  const submitGameResults = async (gameData) => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
     const now = new Date();
     const datetime =
       now.getFullYear() +
@@ -130,13 +136,24 @@ const RootSuffixGame = () => {
       String(now.getMinutes()).padStart(2, "0");
 
     const results = {
-      studentId: "student123", // TODO: Replace with actual student ID
+      studentId: studentId,
       datetime: datetime,
       gameName: "RootSuffixGame",
       questions: gameData.gameStats.rounds,
     };
 
-    console.log(results);
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results)
+      });
+      console.log("Game results submitted successfully");
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
   };
 
   const handleTextSelection = () => {
