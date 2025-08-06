@@ -184,7 +184,7 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
           gameId,
           results: JSON.stringify(results)
         });
-        console.log("Game results submitted successfully");
+        // console.log("Game results submitted successfully");
       } catch (error) {
         console.error("Error submitting game results:", error);
       }

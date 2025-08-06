@@ -252,7 +252,7 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
         gameId,
         results: JSON.stringify(results)
       });
-      console.log("Game results submitted successfully");
+      // console.log("Game results submitted successfully");
     } catch (error) {
       console.error("Error submitting game results:", error);
     }

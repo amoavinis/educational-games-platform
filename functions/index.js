@@ -357,9 +357,9 @@ exports.getReportsWithDetails = functions.https.onRequest(
         const schoolId = req.query.schoolId;
 
         // Get all classes and students for the school to join with reports
-        const [classesSnapshot, studentsSnapshot] = await Promise.all([
+        const [classesSnapshot, schoolsSnapshot] = await Promise.all([
           db.collection("classes").where("schoolId", "==", schoolId).get(),
-          db.collection("students").where("schoolId", "==", schoolId).get(),
+          db.collection("schools").get(),
         ]);
 
         const classesMap = {};
@@ -367,9 +367,9 @@ exports.getReportsWithDetails = functions.https.onRequest(
           classesMap[doc.id] = doc.data().name;
         });
 
-        const studentsMap = {};
-        studentsSnapshot.forEach((doc) => {
-          studentsMap[doc.id] = doc.data().name;
+        const schoolsMap = {};
+        schoolsSnapshot.forEach((doc) => {
+          schoolsMap[doc.id] = doc.data().name;
         });
 
         // Get reports
@@ -384,12 +384,10 @@ exports.getReportsWithDetails = functions.https.onRequest(
           const reportData = doc.data();
           reports.push({
             id: doc.id,
-            schoolId: reportData.schoolId,
-            classId: reportData.classId,
-            className: classesMap[reportData.classId] || "Unknown Class",
+            schoolName: schoolsMap[reportData.schoolId],
+            className: classesMap[reportData.classId],
             studentId: reportData.studentId,
-            studentName: studentsMap[reportData.studentId] || "Unknown Student",
-            game: reportData.game,
+            gameId: reportData.gameId,
             results: reportData.results,
             createdAt: reportData.createdAt,
             updatedAt: reportData.updatedAt,
