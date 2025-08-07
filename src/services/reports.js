@@ -10,6 +10,7 @@ import {
   where,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { canSaveGameReport } from "./gameAttempts";
 
 async function callFunction(url, method, body) {
   const auth = getAuth();
@@ -68,6 +69,18 @@ export const getReportsWithDetails = async () => {
 
 // Add new report
 export const addReport = async (reportData) => {
+  // Validate that the student can save another attempt for this game
+  const canSave = await canSaveGameReport(
+    reportData.studentId,
+    reportData.gameId,
+    reportData.schoolId || localStorage.getItem("school")
+  );
+  
+  if (!canSave) {
+    console.warn("Report not saved: Student has already completed maximum attempts for this game");
+    throw new Error("Έχετε ήδη ολοκληρώσει τον μέγιστο αριθμό προσπαθειών για αυτό το παιχνίδι.");
+  }
+  
   const docRef = await addDoc(collection(db, "reports"), {
     schoolId: reportData.schoolId || localStorage.getItem("school"),
     classId: reportData.classId,
