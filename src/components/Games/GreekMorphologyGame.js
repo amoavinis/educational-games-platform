@@ -1,61 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
+import { game8Questions } from "../Data/Game8";
 
 const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const questions = [
-    {
-      word: "λόγος",
-      choices: ["λόγ|ος", "λό|γος", "λογ|ος"],
-      correct: 0,
-      isExample: true,
-    },
-    {
-      word: "καταπονώ",
-      choices: ["κατ|απον|ώ", "κατα|πον|ώ", "κα|ταπο|νώ"],
-      correct: 1,
-    },
-    {
-      word: "ανατρέποντας",
-      choices: ["ανα|τρέπ|οντας", "α|νατρε|ποντας", "ανα|τρέπο|ντας"],
-      correct: 0,
-    },
-    {
-      word: "παραγωγικός",
-      choices: ["παρα|γωγ|ικός", "πα|ραγω|γικός", "παραγω|γι|κός"],
-      correct: 0,
-    },
-    {
-      word: "διασκεδάζω",
-      choices: ["δια|σκεδάζ|ω", "δι|ασκε|δάζω", "δια|σκεδ|άζω"],
-      correct: 0,
-    },
-    {
-      word: "επανάληψη",
-      choices: ["επα|νάλη|ψη", "επαν|άλη|ψη", "επ|αναλ|ηψη"],
-      correct: 1,
-    },
-    {
-      word: "υπερβολικός",
-      choices: ["υπερ|βολ|ικός", "υπε|ρβο|λικός", "υπερβο|λι|κός"],
-      correct: 0,
-    },
-    {
-      word: "αντιμετωπίζω",
-      choices: ["αντι|μετωπ|ίζω", "αντ|ιμετω|πίζω", "αντιμε|τωπ|ίζω"],
-      correct: 0,
-    },
-    {
-      word: "προσαρμόζω",
-      choices: ["προσ|αρμόζ|ω", "προσαρ|μόζ|ω", "προσ|αρμ|όζω"],
-      correct: 0,
-    },
-  ];
-
+  const questions = useMemo(() => game8Questions, []);
 
   const [gameState, setGameState] = useState("playing");
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -76,12 +29,14 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
 
   const handleChoiceSelect = (choiceIndex) => {
     if (selectedChoice !== null) return; // Prevent multiple selections
-    
+
     setSelectedChoice(choiceIndex);
     const isCorrect = choiceIndex === questions[currentQuestion].correct;
     const currentQ = questions[currentQuestion];
     const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
+    const secondsForQuestion = questionStartTime
+      ? (questionEndTime - questionStartTime) / 1000
+      : 0;
 
     // Track the result only for non-example questions
     if (!currentQ.isExample) {
@@ -92,7 +47,7 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
           result: currentQ.choices[choiceIndex],
           target: currentQ.choices[currentQ.correct],
           isCorrect: isCorrect,
-          seconds: secondsForQuestion
+          seconds: secondsForQuestion,
         },
       ]);
 
@@ -118,7 +73,6 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-
   // Submit game results function
   const submitGameResults = async () => {
     if (!studentId || !classId) {
@@ -127,26 +81,31 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
     }
 
     const now = new Date();
-    const datetime = now.getFullYear() + '-' + 
-                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                     String(now.getDate()).padStart(2, '0') + ' ' + 
-                     String(now.getHours()).padStart(2, '0') + ':' + 
-                     String(now.getMinutes()).padStart(2, '0');
-    
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
     const results = {
       studentId: studentId,
       datetime: datetime,
       gameName: "GreekMorphologyGame",
-      questions: gameResults
+      questions: gameResults,
     };
-    
+
     try {
       await addReport({
         schoolId,
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
       // console.log("Game results submitted successfully");
     } catch (error) {
@@ -238,7 +197,6 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
       </Container>
     );
   } else {
-
     return (
       <Container fluid className="game-container">
         <Row className="justify-content-center">

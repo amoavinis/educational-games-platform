@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from 'react-router-dom';
 import QuestionProgressLights from '../QuestionProgressLights';
 import { addReport } from "../../services/reports";
+import { game9Words } from "../Data/Game9";
 
 const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = [
-    { word: 'επιτρέπω', prefix: 'επι', stem: 'τρεπ', suffix: 'ω', task: 'prefix', isExample: true },
-    { word: 'καταστρέφω', prefix: 'κατα', stem: 'στρεφ', suffix: 'ω', task: 'prefix' },
-    { word: 'επιχρωματισμένος', prefix: 'επι', stem: 'χρωματισμεν', suffix: 'ος', task: 'suffix' },
-    { word: 'επιλέγω', prefix: 'επι', stem: 'λεγ', suffix: 'ω', task: 'prefix' },
-    { word: 'δυσλεξικός', prefix: 'δυσ', stem: 'λεξικ', suffix: 'ός', task: 'suffix' }
-  ];
+  const words = useMemo(() => game9Words, []);
 
   // Game state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -52,7 +47,7 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
     }
     
     const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
+    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
     // Track the result only for non-example questions
     if (!currentWord.isExample) {

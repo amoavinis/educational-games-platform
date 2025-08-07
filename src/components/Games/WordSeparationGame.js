@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Container, Card, Button, Row, Col } from "react-bootstrap";
 import { useNavigate } from 'react-router-dom';
 import QuestionProgressLights from '../QuestionProgressLights';
 import { addReport } from "../../services/reports";
+import { game5Compounds } from "../Data/Game5";
 
 const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -14,14 +15,7 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(null);
 
-  const compounds = [
-    { word: "μαυροσκούφης", correctPosition: 5, isExample: true },
-    { word: "σπιτόγατος", correctPosition: 5 },
-    { word: "ανθρωποφάγος", correctPosition: 7 },
-    { word: "αυτοκίνητο", correctPosition: 4 },
-    { word: "φωτογραφία", correctPosition: 4 },
-    { word: "τηλεόραση", correctPosition: 4 },
-  ];
+  const compounds = useMemo(() => game5Compounds, []);
 
   // Start timing when question loads
   useEffect(() => {
@@ -59,7 +53,7 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
     // Track the result only for non-example questions
     if (!current.isExample) {
       const questionEndTime = Date.now();
-      const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
+      const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
       
       setGameResults((prev) => [
         ...prev,

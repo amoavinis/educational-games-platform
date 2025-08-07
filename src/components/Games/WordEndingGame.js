@@ -7,6 +7,7 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
+import { game4Questions } from "../Data/Game4";
 
 const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -20,44 +21,7 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   const [questionStartTime, setQuestionStartTime] = useState(null);
   // const audioRef = useRef(null);
 
-  const questions = React.useMemo(
-    () => [
-      {
-        stem: "καλ",
-        correctSuffix: "ος",
-        word: "καλός",
-        options: ["ος", "ή", "ό"],
-        /* audioSlow: require("../../assets/sounds/game4/word1-slow.mp3"),
-        audioNormal: require("../../assets/sounds/game4/word1.mp3"), */
-        isExample: true,
-      },
-      {
-        stem: "τοπ",
-        correctSuffix: "ικός",
-        word: "τοπικός",
-        options: ["ιμός", "ικός", "ώνω"],
-      },
-      {
-        stem: "γυάλ",
-        correctSuffix: "ινος",
-        word: "γυάλινος",
-        options: ["ιμος", "ινος", "ικος"],
-      },
-      {
-        stem: "χρωματ",
-        correctSuffix: "ικός",
-        word: "χρωματικός",
-        options: ["ικός", "ιμός", "ώνω"],
-      },
-      {
-        stem: "μουσ",
-        correctSuffix: "ική",
-        word: "μουσική",
-        options: ["ική", "ιμή", "ωμένη"],
-      },
-    ],
-    []
-  );
+  const questions = React.useMemo(() => game4Questions, []);
 
   // Play audio automatically when question changes
   const playAudio = React.useCallback(
@@ -114,7 +78,7 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
     const currentQ = questions[currentQuestion];
     const questionEndTime = Date.now();
     const secondsForQuestion = questionStartTime
-      ? Math.round((questionEndTime - questionStartTime) / 1000)
+      ? (questionEndTime - questionStartTime) / 1000
       : 0;
 
     // Track the result only for non-example questions

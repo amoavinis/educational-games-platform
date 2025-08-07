@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
@@ -8,7 +8,7 @@ import { addReport } from "../../services/reports";
 
 const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = level11Words;
+  const words = useMemo(() => level11Words, []);
 
   const [wordPool, setWordPool] = useState([]);
   const [columns, setColumns] = useState({
@@ -233,7 +233,7 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
       String(now.getMinutes()).padStart(2, "0");
 
     const totalTime = gameStartTime
-      ? Math.round((Date.now() - gameStartTime) / 1000)
+      ? (Date.now() - gameStartTime) / 1000
       : 0;
 
     const results = {

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
+import { game13Questions } from "../Data/Game13";
 
 const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -13,63 +14,7 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
 
-  const questions = [
-    {
-      instruction: "Διάλεξε και φτιάξε επίθετο",
-      baseWord: "θάλασσα",
-      wordType: "ουσιαστικό",
-      targetType: "επίθετο",
-      options: ["-ιος", "-ικός", "-ινος", "-ωσης"],
-      correct: "-ιος",
-      result: "θαλάσσιος",
-      isExample: true,
-    },
-    {
-      instruction: "Διάλεξε και φτιάξε ουσιαστικό",
-      baseWord: "αναλύω",
-      wordType: "ρήμα",
-      targetType: "ουσιαστικό",
-      options: ["-της", "-ση", "-μα", "-ιμος"],
-      correct: "-ση",
-      result: "ανάλυση",
-    },
-    {
-      instruction: "Διάλεξε και φτιάξε επίθετο",
-      baseWord: "μέταλλο",
-      wordType: "ουσιαστικό",
-      targetType: "επίθετο",
-      options: ["-ικός", "-μα", "-της", "-μένος"],
-      correct: "-ικός",
-      result: "μεταλλικός",
-    },
-    {
-      instruction: "Διάλεξε και φτιάξε ουσιαστικό",
-      baseWord: "γλυκός",
-      wordType: "επίθετο",
-      targetType: "ουσιαστικό",
-      options: ["-ύτητα", "-ικός", "-ώνω", "-ιμος"],
-      correct: "-ύτητα",
-      result: "γλυκύτητα",
-    },
-    {
-      instruction: "Διάλεξε και φτιάξε ρήμα",
-      baseWord: "τέλος",
-      wordType: "ουσιαστικό",
-      targetType: "ρήμα",
-      options: ["-ώνω", "-ικός", "-ια", "-μα"],
-      correct: "-ώνω",
-      result: "τελειώνω",
-    },
-    {
-      instruction: "Διάλεξε και φτιάξε ουσιαστικό ",
-      baseWord: "διδάσκω",
-      wordType: "ρήμα",
-      targetType: "ουσιαστικό",
-      options: ["-αλος", "-ας", "-της", "-μα"],
-      correct: "-αλος",
-      result: "διδάσκαλος",
-    },
-  ];
+  const questions = useMemo(() => game13Questions, []);
 
   const handleAnswerSelect = (answer) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
@@ -78,7 +23,7 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
     const isCorrect = answer === question.correct;
     const questionEndTime = Date.now();
     const secondsForQuestion = questionStartTime
-      ? Math.round((questionEndTime - questionStartTime) / 1000)
+      ? (questionEndTime - questionStartTime) / 1000
       : 0;
 
     setSelectedAnswer(answer);

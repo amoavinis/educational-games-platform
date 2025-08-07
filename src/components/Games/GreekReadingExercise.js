@@ -1,56 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
+// import { uploadAudioRecording } from "../../services/audioStorage";
+import { game3Words } from "../Data/Game3";
 
 const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = useMemo(
-    () => [
-      {
-        word: "γραφείο",
-        root: "γραφ",
-        suffix: "είο",
-      },
-      {
-        word: "γραφέας",
-        root: "γραφ",
-        suffix: "έας",
-      },
-      {
-        word: "γραφίστας",
-        root: "γραφ",
-        suffix: "ίστας",
-      },
-      {
-        word: "γραφικός",
-        root: "γραφ",
-        suffix: "ικός",
-      },
-      {
-        word: "γνωρίζω",
-        root: "γνωρ",
-        suffix: "ίζω",
-      },
-      {
-        word: "γνώριμος",
-        root: "γνωρ",
-        suffix: "ιμος",
-      },
-      {
-        word: "γνώρισμα",
-        root: "γνωρ",
-        suffix: "ισμα",
-      },
-      {
-        word: "γνωριμία",
-        root: "γνωρ",
-        suffix: "ιμία",
-      },
-    ],
-    []
-  );
+  const words = useMemo(() => game3Words, []);
 
   // Game state
   const [gameStarted, setGameStarted] = useState(false);

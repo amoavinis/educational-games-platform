@@ -3,6 +3,7 @@ import { Button, Card, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import QuestionProgressLights from '../QuestionProgressLights';
 import { addReport } from '../../services/reports';
+import { game1Words } from '../Data/Game1';
 
 const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -19,15 +20,7 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   });
   const [questionStartTime, setQuestionStartTime] = useState(null);
 
-  const words = useMemo(() => [
-    { word: 'παίζω', stem: 'παίζ', suffix: 'ω', isExample: true }, // Example question
-    { word: 'τυχαίνω', stem: 'τυχ', suffix: 'αίνω' },
-    { word: 'Γράφω', stem: 'Γράφ', suffix: 'ω' },
-    { word: 'Διαβάζω', stem: 'Διαβάζ', suffix: 'ω' },
-    { word: 'Τρέχω', stem: 'Τρέχ', suffix: 'ω' },
-    { word: 'Σχολείο', stem: 'Σχολεί', suffix: 'ο' },
-    { word: 'μαθητής', stem: 'μαθητ', suffix: 'ής' }
-  ], []);
+  const words = useMemo(() => game1Words, []);
 
   // Initialize game stats
   useEffect(() => {
@@ -70,7 +63,7 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
     // Update game stats only for non-example questions
     if (!currentWord.isExample) {
       const questionEndTime = Date.now();
-      const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
+      const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
       
       setGameStats(prev => ({
         ...prev,

@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
+import { game15Questions } from "../Data/Game15";
 
 const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
   const navigate = useNavigate();
@@ -21,36 +22,7 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
   const marqueeRef = useRef(null);
   const containerRef = useRef(null);
 
-  const questions = useMemo(
-    () => [
-      {
-        sentence: "Η γάτα είναι μικρ",
-        options: ["-ή", "-ός", "-ό"],
-        correct: "-ή",
-        result: "Η γάτα είναι μικρή",
-        isExample: true,
-      },
-      {
-        sentence: "Ο καιρός σήμερα είναι πολύ ζεστ",
-        options: ["-ός", "-ή", "-ό"],
-        correct: "-ός",
-        result: "Ο καιρός σήμερα είναι πολύ ζεστός",
-      },
-      {
-        sentence: "Η θάλασσα φαίνεται πολύ γαλην",
-        options: ["-ια", "-ός", "-ό"],
-        correct: "-ια",
-        result: "Η θάλασσα φαίνεται πολύ γαλήνια",
-      },
-      {
-        sentence: "Το παιδί κοιμήθηκε ήσυχ",
-        options: ["-ο", "-ος", "-η"],
-        correct: "-ο",
-        result: "Το παιδί κοιμήθηκε ήσυχο",
-      },
-    ],
-    []
-  );
+  const questions = useMemo(() => game15Questions, []);
 
   useEffect(() => {
     if (!isMarqueeActive) return;
@@ -104,7 +76,7 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
     const isCorrect = answer === question.correct;
     const questionEndTime = Date.now();
     const secondsForQuestion = questionStartTime
-      ? Math.round((questionEndTime - questionStartTime) / 1000)
+      ? (questionEndTime - questionStartTime) / 1000
       : 0;
 
     setSelectedAnswer(answer);

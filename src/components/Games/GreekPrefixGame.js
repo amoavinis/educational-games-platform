@@ -4,33 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import "../../styles/Game.css";
 import "../../styles/Game6.css";
 import { addReport } from "../../services/reports";
+import { game7Words } from "../Data/Game7";
 
 const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = React.useMemo(
-    () => [
-      { id: "0", word: "αναδιπλώνω", prefix: "ανα", isExample: true },
-      { id: "1", word: "καταδικάζω", prefix: "κατα" },
-      { id: "2", word: "παρατείνω", prefix: "παρα" },
-      { id: "3", word: "διαφέρω", prefix: "δια" },
-      { id: "4", word: "αναγέννηση", prefix: "ανα" },
-      { id: "5", word: "παράνοια", prefix: "παρα" },
-      { id: "6", word: "καταβυθίζω", prefix: "κατα" },
-      { id: "7", word: "διαφωνώ", prefix: "δια" },
-      { id: "8", word: "παραμένω", prefix: "παρα" },
-      { id: "9", word: "καταδίωξη", prefix: "κατα" },
-      { id: "10", word: "διαγωνίζομαι", prefix: "δια" },
-      { id: "11", word: "αναθεώρηση", prefix: "ανα" },
-      { id: "12", word: "καταγγέλλω", prefix: "κατα" },
-      { id: "13", word: "διαπληκτίζομαι", prefix: "δια" },
-      { id: "14", word: "διανυκτερεύω", prefix: "δια" },
-      { id: "15", word: "κατασπαταλώ", prefix: "κατα" },
-      { id: "16", word: "αναρωτιέμαι", prefix: "ανα" },
-      { id: "17", word: "αναστροφή", prefix: "ανα" },
-      { id: "18", word: "παραφροσύνη", prefix: "παρα" },
-    ],
-    []
-  );
+  const words = React.useMemo(() => game7Words, []);
 
   const [wordPool, setWordPool] = useState([]);
   const [columns, setColumns] = useState({
@@ -229,7 +207,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
                      String(now.getHours()).padStart(2, '0') + ':' + 
                      String(now.getMinutes()).padStart(2, '0');
     
-    const totalTime = gameStartTime ? Math.round((Date.now() - gameStartTime) / 1000) : 0;
+    const totalTime = gameStartTime ? (Date.now() - gameStartTime) / 1000 : 0;
     
     const results = {
       studentId: studentId,

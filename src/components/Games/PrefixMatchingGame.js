@@ -9,6 +9,7 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
+import { game6Questions } from "../Data/Game6";
 
 const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -20,47 +21,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const [questionStartTime, setQuestionStartTime] = useState(null);
   // const audioRef = useRef(null);
 
-  const questions = useMemo(
-    () => [
-      {
-        stem: "γράφω",
-        correctPrefix: "επι",
-        word: "επιγράφω",
-        options: ["επι", "κατα", "παρα"],
-        audio: require("../../assets/sounds/game4/word1.mp3"),
-        isExample: true,
-      },
-      {
-        stem: "δικασμένος",
-        correctPrefix: "κατα",
-        word: "καταδικασμένος",
-        options: ["μετα", "κατα", "παρα"],
-        audio: require("../../assets/sounds/game4/word1.mp3"),
-      },
-      {
-        stem: "βάλλω",
-        correctPrefix: "δια",
-        word: "διαβάλλω",
-        options: ["δυσ", "ανα", "δια"],
-        audio: require("../../assets/sounds/game4/word1.mp3"),
-      },
-      {
-        stem: "φέρω",
-        correctPrefix: "μετα",
-        word: "μεταφέρω",
-        options: ["μετα", "παρα", "κατα"],
-        audio: require("../../assets/sounds/game4/word1.mp3"),
-      },
-      {
-        stem: "γράφω",
-        correctPrefix: "ανα",
-        word: "αναγράφω",
-        options: ["ανα", "κατα", "δια"],
-        audio: require("../../assets/sounds/game4/word1.mp3"),
-      },
-    ],
-    []
-  );
+  const questions = useMemo(() => game6Questions, []);
 
   const playAudio = useCallback(() => {
     // Console log for audio file identification
@@ -101,7 +62,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     const currentQ = questions[currentQuestion];
     const questionEndTime = Date.now();
     const secondsForQuestion = questionStartTime
-      ? Math.round((questionEndTime - questionStartTime) / 1000)
+      ? (questionEndTime - questionStartTime) / 1000
       : 0;
 
     // Track the result only for non-example questions

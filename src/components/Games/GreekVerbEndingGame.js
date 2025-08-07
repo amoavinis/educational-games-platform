@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Button,
   Card,
@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import QuestionProgressLights from '../QuestionProgressLights';
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
+import { game12Questions } from "../Data/Game12";
 
 const GreekVerbEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -19,51 +20,7 @@ const GreekVerbEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
 
-  const questions = [
-    {
-      sentence: "Εγώ κάθε μέρα γράφ______",
-      options: ["-ω", "-εις", "-ει"],
-      correct: "-ω",
-      explanation:
-        'Το 1ο ενικό πρόσωπο στον ενεστώτα παίρνει την κατάληξη -ω',
-      isExample: true,
-    },
-    {
-      sentence: "Εμείς τώρα γράφ______",
-      options: ["-ετε", "-ηκαμε", "-ουμε"],
-      correct: "-ουμε",
-      explanation:
-        'Το "εμείς" (1ο πληθυντικό πρόσωπο) στον ενεστώτα παίρνει την κατάληξη -ουμε',
-    },
-    {
-      sentence: "Εσείς χθες χαθ_____",
-      options: ["-ήκαμε", "-ήκατε", "-ω"],
-      correct: "-ήκατε",
-      explanation:
-        'Το "εσείς" (2ο πληθυντικό πρόσωπο) στον παρελθόντα παίρνει την κατάληξη -ήκατε',
-    },
-    {
-      sentence: "Αυτός χθες έτρεξ______",
-      options: ["-ε", "-αμε", "-ατε"],
-      correct: "-ε",
-      explanation:
-        "Το 3ο ενικό πρόσωπο στον παρελθόντα παίρνει την κατάληξη -ε",
-    },
-    {
-      sentence: "Εμείς χθες φάγ______",
-      options: ["-αμε", "-ατε", "-αν"],
-      correct: "-αμε",
-      explanation:
-        'Το "εμείς" (1ο πληθυντικό πρόσωπο) στον παρελθόντα παίρνει την κατάληξη -αμε',
-    },
-    {
-      sentence: "Αυτά τα βιβλί______",
-      options: ["-α", "-ων", "-ους"],
-      correct: "-ων",
-      explanation:
-        "Τα ουδέτερα ουσιαστικά στη γενική πληθυντικού παίρνουν την κατάληξη -ων",
-    },
-  ];
+  const questions = useMemo(() => game12Questions, []);
 
   const handleAnswerSelect = (answer) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
@@ -71,7 +28,7 @@ const GreekVerbEndingGame = ({ gameId, schoolId, studentId, classId }) => {
     const question = questions[currentQuestion];
     const isCorrect = answer === question.correct;
     const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime ? Math.round((questionEndTime - questionStartTime) / 1000) : 0;
+    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
     setSelectedAnswer(answer);
 

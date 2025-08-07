@@ -1,47 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
+// import { uploadAudioRecording } from "../../services/audioStorage";
+import { game10Words } from "../Data/Game10";
 
 const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = useMemo(
-    () => [
-      {
-        word: "αντίστροφος",
-        prefix: "αντί",
-        stem: "στροφ",
-        suffix: "ος",
-        isExample: true,
-      },
-      {
-        word: "καταστρέφω",
-        prefix: "κατα",
-        stem: "στρεφ",
-        suffix: "ω",
-      },
-      {
-        word: "επιχρωματισμένος",
-        prefix: "επι",
-        stem: "χρωματισμεν",
-        suffix: "ος",
-      },
-      {
-        word: "επιλέγω",
-        prefix: "επι",
-        stem: "λεγ",
-        suffix: "ω",
-      },
-      {
-        word: "δυσλεξικός",
-        prefix: "δυσ",
-        stem: "λεξικ",
-        suffix: "ός",
-      },
-    ],
-    []
-  );
+  const words = useMemo(() => game10Words, []);
 
   // Game state
   const [gameStarted, setGameStarted] = useState(false);
