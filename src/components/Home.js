@@ -11,6 +11,7 @@ import {
 } from "react-bootstrap";
 import { getUsers } from "../services/users";
 import { getStudents } from "../services/students";
+import { canStudentPlayGame } from "../services/gameAttempts";
 import "../styles/Home.css";
 import { games as allGames } from "./games";
 
@@ -69,12 +70,29 @@ const Home = () => {
     setShowModal(true);
   };
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     const selectedStudent = students.find((s) => s.id === selectedStudentId);
     const name = selectedStudent?.name || "";
     const classId = selectedStudent?.classId || "";
+    
+    // Check if student can play this game (has less than 2 attempts)
+    const canPlay = await canStudentPlayGame(selectedStudentId, selectedGame.id);
+    
+    if (!canPlay) {
+      alert("Ο μαθητής έχει ήδη παίξει αυτό το παιχνίδι 2 φορές. Δεν επιτρέπονται περισσότερες προσπάθειες.");
+      setShowModal(false);
+      return;
+    }
+    
     navigate(
-      `/games/game${selectedGame.id}?studentId=${selectedStudentId}&studentName=${name}&classId=${classId}`
+      `/games/game${selectedGame.id}`,
+      {
+        state: {
+          studentId: selectedStudentId,
+          studentName: name,
+          classId: classId
+        }
+      }
     );
   };
 

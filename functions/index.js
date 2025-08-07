@@ -356,11 +356,13 @@ exports.getReportsWithDetails = functions.https.onRequest(
         const db = admin.firestore();
         const schoolId = req.query.schoolId;
 
-        // Get all classes and students for the school to join with reports
-        const [classesSnapshot, schoolsSnapshot] = await Promise.all([
-          db.collection("classes").where("schoolId", "==", schoolId).get(),
-          db.collection("schools").get(),
-        ]);
+        // Get all classes, students, and schools for join with reports
+        const [classesSnapshot, schoolsSnapshot, studentsSnapshot] =
+          await Promise.all([
+            db.collection("classes").where("schoolId", "==", schoolId).get(),
+            db.collection("schools").get(),
+            db.collection("students").where("schoolId", "==", schoolId).get(),
+          ]);
 
         const classesMap = {};
         classesSnapshot.forEach((doc) => {
@@ -370,6 +372,16 @@ exports.getReportsWithDetails = functions.https.onRequest(
         const schoolsMap = {};
         schoolsSnapshot.forEach((doc) => {
           schoolsMap[doc.id] = doc.data().name;
+        });
+
+        const studentsMap = {};
+        studentsSnapshot.forEach((doc) => {
+          const studentData = doc.data();
+          studentsMap[doc.id] = {
+            gender: studentData.gender,
+            dateOfBirth: studentData.dateOfBirth,
+            diagnosis: studentData.diagnosis,
+          };
         });
 
         // Get reports
@@ -382,11 +394,15 @@ exports.getReportsWithDetails = functions.https.onRequest(
         const reports = [];
         reportsSnapshot.forEach((doc) => {
           const reportData = doc.data();
+          const studentData = studentsMap[reportData.studentId] || {};
           reports.push({
             id: doc.id,
             schoolName: schoolsMap[reportData.schoolId],
             className: classesMap[reportData.classId],
             studentId: reportData.studentId,
+            studentGender: studentData.gender,
+            studentDateOfBirth: studentData.dateOfBirth,
+            studentDiagnosis: studentData.diagnosis,
             gameId: reportData.gameId,
             results: reportData.results,
             createdAt: reportData.createdAt,

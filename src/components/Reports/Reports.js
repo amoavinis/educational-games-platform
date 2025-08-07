@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Container, Form, Button, Row, Col, Card } from "react-bootstrap";
+import { Container, Form, Button, Row, Col, Card, Table } from "react-bootstrap";
 import { getSchools } from "../../services/schools";
 import { getClasses } from "../../services/classes";
 import { getReportsWithDetails } from "../../services/reports";
 import { getUserRoleFromClaims } from "../../services/firebase";
 import * as XLSX from "xlsx";
+import { downloadReportsWithAudio } from "../../services/reportDownload";
 
 // Games list with IDs and names
 const games = [
@@ -192,8 +193,8 @@ const Reports = () => {
         );
     });
 
-    const questionGroupHeaders = ["", ""];
-    const detailedHeaders = ["ID Μαθητή", "Ημερομηνία/Ώρα"];
+    const questionGroupHeaders = ["", "", "", "", ""];
+    const detailedHeaders = ["Κωδικός Μαθητή", "Ημερομηνία/Ώρα", "Φύλο", "Ημερομηνία Γέννησης", "Διάγνωση"];
     for (let i = 1; i <= maxQuestions; i++) {
       questionGroupHeaders.push(`Ερώτηση ${i}`, "", "", "", "");
       detailedHeaders.push(
@@ -212,6 +213,9 @@ const Reports = () => {
       const row = [
         report.studentId,
         report.parsedResults?.datetime || "Δεν υπάρχει",
+        report.studentGender || "-",
+        report.studentDateOfBirth || "-",
+        report.studentDiagnosis === true ? "Ναι" : report.studentDiagnosis === false ? "Όχι" : "-",
       ];
       const questions = report.parsedResults?.questions || [];
       for (let i = 0; i < maxQuestions; i++) {
@@ -221,8 +225,8 @@ const Reports = () => {
             question.question || "",
             question.target || "",
             question.result || "",
-            question.isCorrect ? "Σωστό" : "Λάθος",
-            question.seconds || 0
+            question.isCorrect !== undefined ? (question.isCorrect ? "Σωστό" : "Λάθος") : "",
+            question.seconds !== undefined ? question.seconds : ""
           );
         } else {
           row.push("", "", "", "", "");
@@ -233,8 +237,8 @@ const Reports = () => {
 
     const ws = XLSX.utils.aoa_to_sheet(excelData);
 
-    // Κάνουμε τις πρώτες 2 σειρές να συγχωνευτούν σε κάθε group
-    for (let i = 2; i < 2 + maxQuestions * 5; i += 5) {
+    // Κάνουμε τις πρώτες σειρές να συγχωνευτούν σε κάθε group
+    for (let i = 5; i < 5 + maxQuestions * 5; i += 5) {
       ws["!merges"] = ws["!merges"] || [];
       ws["!merges"].push({ s: { r: 2, c: i }, e: { r: 2, c: i + 4 } });
     }
@@ -249,6 +253,24 @@ const Reports = () => {
     )}_${dateStr}.xlsx`;
 
     XLSX.writeFile(wb, filename);
+  };
+
+  // Export to ZIP with audio function
+  const exportToZipWithAudio = async () => {
+    if (reportData.length === 0) return;
+
+    try {
+      await downloadReportsWithAudio(
+        reportData,
+        schools,
+        games,
+        selectedSchool,
+        selectedGame
+      );
+    } catch (error) {
+      console.error("Error downloading reports with audio:", error);
+      alert("Error downloading reports with audio files. Please try again.");
+    }
   };
 
   const handleGenerateReport = async () => {
@@ -323,7 +345,7 @@ const Reports = () => {
                         <option value="">Επιλέξτε παιχνίδι</option>
                         {games.map((game) => (
                           <option key={game.id} value={game.id}>
-                            {game.name}
+                            {game.id} - {game.name}
                           </option>
                         ))}
                       </Form.Select>
@@ -381,29 +403,102 @@ const Reports = () => {
                   <hr />
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5>Αποτελέσματα Αναφοράς</h5>
-                    <Button
-                      variant="success"
-                      onClick={exportToXLSX}
-                      className="d-flex align-items-center gap-2"
-                    >
-                      📊 Εξαγωγή σε Excel
-                    </Button>
+                    <div className="d-flex gap-2">
+                      <Button
+                        variant="success"
+                        onClick={exportToXLSX}
+                        className="d-flex align-items-center gap-2"
+                      >
+                        📊 Εξαγωγή σε Excel
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={exportToZipWithAudio}
+                        className="d-flex align-items-center gap-2"
+                      >
+                        🎧 Εξαγωγή με Καταγραφές
+                      </Button>
+                    </div>
                   </div>
                   <p>
                     Βρέθηκαν {reportData.length} αναφορές για το επιλεγμένο
                     παιχνίδι.
                   </p>
-                  <div style={{ fontSize: "12px", color: "#666" }}>
-                    <strong>Δείγμα δεδομένων:</strong>
-                    <pre
-                      style={{
-                        fontSize: "10px",
-                        maxHeight: "200px",
-                        overflow: "auto",
-                      }}
-                    >
-                      {JSON.stringify(reportData[0], null, 2)}
-                    </pre>
+                  
+                  <div className="table-responsive">
+                    <Table striped bordered hover size="sm" className="reports-table">
+                      <thead>
+                        <tr style={{ backgroundColor: '#0d6efd', color: 'white' }}>
+                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                            Κωδικός Μαθητή
+                          </th>
+                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                            Σχολείο
+                          </th>
+                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                            Τάξη
+                          </th>
+                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                            Φύλο
+                          </th>
+                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                            Ημερομηνία Γέννησης
+                          </th>
+                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                            Διάγνωση
+                          </th>
+                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                            Ημερομηνία Αναφοράς
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#6c757d', fontStyle: 'italic' }}>
+                              Δεν βρέθηκαν αναφορές για τα επιλεγμένα κριτήρια
+                            </td>
+                          </tr>
+                        ) : (
+                          reportData.map((report, index) => (
+                            <tr key={report.id || index} style={{ fontSize: '14px' }}>
+                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', fontSize: '14px' }}>
+                                {report.studentId || "-"}
+                              </td>
+                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', fontSize: '14px' }}>
+                                {report.schoolName || "-"}
+                              </td>
+                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', fontSize: '14px' }}>
+                                {report.className || "-"}
+                              </td>
+                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', textAlign: 'center', fontSize: '14px' }}>
+                                {report.studentGender || "-"}
+                              </td>
+                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', textAlign: 'center', fontSize: '14px' }}>
+                                {report.studentDateOfBirth || "-"}
+                              </td>
+                              <td style={{ 
+                                padding: '10px 8px', 
+                                verticalAlign: 'middle', 
+                                textAlign: 'center',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: report.studentDiagnosis === true ? '#d63384' : report.studentDiagnosis === false ? '#198754' : '#6c757d'
+                              }}>
+                                {report.studentDiagnosis === true 
+                                  ? "Ναι" 
+                                  : report.studentDiagnosis === false 
+                                  ? "Όχι" 
+                                  : "-"}
+                              </td>
+                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', fontSize: '14px' }}>
+                                {report.parsedResults?.datetime || "-"}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </Table>
                   </div>
                 </div>
               )}

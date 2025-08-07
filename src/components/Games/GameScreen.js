@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { canStudentPlayGame } from "../../services/gameAttempts";
 import "../../styles/Game.css";
 import WordHighlightGame from "./WordHighlightGame";
 import RootSuffixGame from "./RootSuffixGame";
@@ -20,12 +21,29 @@ import GreekSuffixMarqueeGame from "./GreekSuffixMarqueeGame";
 const GameScreen = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [attemptsExceeded, setAttemptsExceeded] = useState(false);
 
-  const searchParams = new URLSearchParams(location.search);
-  const studentId = searchParams.get("studentId");
-  const classId = searchParams.get("classId");
+  // Get data from router state, with fallback to sessionStorage if needed
+  const routerState = location.state;
+  const studentId = routerState?.studentId || sessionStorage.getItem('gameStudentId');
+  const classId = routerState?.classId || sessionStorage.getItem('gameClassId');
+  // const studentName = routerState?.studentName || sessionStorage.getItem('gameStudentName'); // Available if needed
   const gameId = parseInt(location.pathname.split("/").pop().split("game")[1]);
   const schoolId = localStorage.getItem("school");
+
+  // Store in sessionStorage for page refresh scenarios
+  useEffect(() => {
+    if (routerState?.studentId) {
+      sessionStorage.setItem('gameStudentId', routerState.studentId);
+    }
+    if (routerState?.classId) {
+      sessionStorage.setItem('gameClassId', routerState.classId);
+    }
+    // Uncomment if studentName is needed in the future
+    // if (routerState?.studentName) {
+    //   sessionStorage.setItem('gameStudentName', routerState.studentName);
+    // }
+  }, [routerState]);
 
   const enterFullscreen = async () => {
     try {
@@ -61,10 +79,32 @@ const GameScreen = () => {
 
   const handleGoHome = () => {
     exitFullscreen();
+    // Clean up session storage
+    sessionStorage.removeItem('gameStudentId');
+    sessionStorage.removeItem('gameClassId');
+    // sessionStorage.removeItem('gameStudentName'); // Uncomment if used
     navigate('/');
   };
 
   useEffect(() => {
+    // Safety check: if no student data, redirect to home
+    if (!studentId || !classId) {
+      console.warn('Missing student data, redirecting to home');
+      navigate('/');
+      return;
+    }
+
+    // Check if student can play this game (has less than 2 attempts)
+    const checkGameAttempts = async () => {
+      const canPlay = await canStudentPlayGame(studentId, gameId);
+      if (!canPlay) {
+        setAttemptsExceeded(true);
+        return;
+      }
+    };
+
+    checkGameAttempts();
+
     let timeoutId;
     
     // Delay the fullscreen request slightly to avoid issues with React StrictMode
@@ -78,7 +118,35 @@ const GameScreen = () => {
       }
       exitFullscreen();
     };
-  }, []);
+  }, [studentId, classId, gameId, navigate]);
+
+  // If attempts exceeded, show blocking screen
+  if (attemptsExceeded) {
+    return (
+      <div className="game-screen-fullscreen" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+        <div style={{ backgroundColor: '#f8d7da', color: '#721c24', padding: '2rem', borderRadius: '10px', textAlign: 'center', maxWidth: '500px' }}>
+          <h2 style={{ marginBottom: '1rem' }}>⚠️ Έχετε ξεπεράσει τις επιτρεπόμενες προσπάθειες</h2>
+          <p style={{ fontSize: '18px', marginBottom: '1.5rem' }}>
+            Έχετε ήδη παίξει αυτό το παιχνίδι 2 φορές. Δεν επιτρέπονται περισσότερες προσπάθειες.
+          </p>
+          <button 
+            onClick={handleGoHome}
+            style={{
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              fontSize: '16px',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            🏠 Επιστροφή στην Αρχική
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="game-screen-fullscreen">
