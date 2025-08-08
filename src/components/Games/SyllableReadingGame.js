@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
-// import { uploadAudioRecording } from "../../services/audioStorage";
+import { uploadAudioRecording } from "../../services/audioStorage";
 import { game10Words } from "../Data/Game10";
 
 const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
@@ -13,15 +19,17 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
   // Game state
   const [gameStarted, setGameStarted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const mediaRecorderRef = useRef(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'prefix', 'stem', 'suffix', 'full'
   const [isSlowPhase, setIsSlowPhase] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [audioDownloadURL, setAudioDownloadURL] = useState(null);
   const [gameStats, setGameStats] = useState({
     rounds: [],
     totalRounds: 0,
   });
+  const [resultsSubmitted, setResultsSubmitted] = useState(false);
 
   const currentWord = words[currentWordIndex];
 
@@ -38,7 +46,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
   // Submit game results function
   const submitGameResults = useCallback(async () => {
     if (!studentId || !classId) {
-      console.log("Missing studentId or classId, cannot submit results");
+      console.error("Missing studentId or classId, cannot submit results");
       return;
     }
 
@@ -59,6 +67,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
       datetime: datetime,
       gameName: "SyllableReadingGame",
       questions: gameStats.rounds,
+      audioDownloadURL: audioDownloadURL,
     };
 
     try {
@@ -67,41 +76,117 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
-      // console.log("Game results submitted successfully");
     } catch (error) {
       console.error("Error submitting game results:", error);
     }
-  }, [gameStats.rounds, studentId, classId, schoolId, gameId]);
+  }, [
+    gameStats.rounds,
+    studentId,
+    classId,
+    schoolId,
+    gameId,
+    audioDownloadURL,
+  ]);
 
-  // Submit final results when game completes
-  useEffect(() => {
-    if (gameCompleted && gameStats.rounds.length > 0) {
-      submitGameResults();
+  // Audio recording functions
+  const stopRecording = useCallback(() => {
+    const mediaRecorder = mediaRecorderRef.current;
+
+    if (mediaRecorder && isRecording) {
+      if (mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+      setIsRecording(false);
+      mediaRecorderRef.current = null; // Clear the mediaRecorder reference
     }
-  }, [gameCompleted, gameStats.rounds, submitGameResults]);
+  }, [isRecording]);
+
+  // Submit final results when game completes and audio is available
+  useEffect(() => {
+    if (
+      gameCompleted &&
+      gameStats.rounds.length > 0 &&
+      !resultsSubmitted &&
+      audioDownloadURL
+    ) {
+      submitGameResults();
+      setResultsSubmitted(true);
+    }
+  }, [
+    gameCompleted,
+    gameStats.rounds,
+    submitGameResults,
+    resultsSubmitted,
+    audioDownloadURL,
+  ]);
+
+  // Ensure recording stops when game completes
+  useEffect(() => {
+    if (gameCompleted && isRecording) {
+      stopRecording();
+    }
+  }, [gameCompleted, isRecording, stopRecording]);
+
+  // Cleanup recording on component unmount (back button, navigation, etc.)
+  useEffect(() => {
+    return () => {
+      // Cleanup function called when component unmounts
+      const mediaRecorder = mediaRecorderRef.current;
+      if (mediaRecorder && isRecording) {
+        // Just stop the recording and clean up streams, don't trigger upload
+        if (mediaRecorder.state === "recording") {
+          // Remove event handlers to prevent onstop from firing
+          mediaRecorder.onstop = null;
+          mediaRecorder.stop();
+        }
+        mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [isRecording]);
 
   // Audio recording setup
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
-      setMediaRecorder(recorder);
-      recorder.start();
-      setIsRecording(true);
-      console.log("Recording started");
-    } catch (err) {
-      console.log("Microphone permission denied or not available");
-    }
-  };
 
-  const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
-      setIsRecording(false);
-      console.log("Recording stopped");
+      const chunks = [];
+
+      recorder.ondataavailable = (event) => {
+        if (recorder.state !== "inactive") {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: "audio/webm" });
+
+        // Store the audio blob for upload when game completes
+        if (audioBlob.size > 0) {
+          try {
+            const uploadResult = await uploadAudioRecording(audioBlob, {
+              studentId,
+            });
+            setAudioDownloadURL(uploadResult.downloadURL);
+          } catch (error) {
+            console.error("Error uploading audio:", error);
+          }
+        } else {
+          console.warn("Audio blob is empty, skipping upload");
+        }
+      };
+
+      mediaRecorderRef.current = recorder;
+      // Start recording with time slice to ensure ondataavailable is called
+      recorder.start(1000); // Request data every 1000ms
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Microphone permission denied or not available");
     }
   };
 
@@ -114,6 +199,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
 
   // Start highlighting sequence for current word
   const startWordHighlighting = (wordIndex, slowPhase) => {
+    // Immediately set to "prefix" highlight to avoid black text delay
     setHighlightStage("prefix");
     const duration = slowPhase ? 1000 : 500;
 
@@ -138,7 +224,6 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
     const wordToRecord = words[currentIndex];
     if (wordToRecord && !wordToRecord.isExample) {
       const round = currentSlowPhase ? "slow" : "fast";
-      // console.log('Recording word:', wordToRecord.word, 'phase:', round);
       setGameStats((prev) => ({
         ...prev,
         rounds: [
@@ -153,18 +238,22 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
     if (currentIndex < words.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentWordIndex(nextIndex);
-      setHighlightStage("none");
-      setTimeout(() => startWordHighlighting(nextIndex, currentSlowPhase), 500);
+      // Immediately set to prefix highlight to avoid black text during transitions
+      setHighlightStage("prefix");
+      setTimeout(() => startWordHighlighting(nextIndex, currentSlowPhase), 100);
     } else if (currentSlowPhase) {
       // Switch to fast phase - skip example word in second round
       setIsSlowPhase(false);
       setCurrentWordIndex(1); // Start from index 1 (skip example at index 0)
-      setHighlightStage("none");
-      setTimeout(() => startWordHighlighting(1, false), 500);
+      setHighlightStage("prefix");
+      setTimeout(() => startWordHighlighting(1, false), 100);
     } else {
       // Game completed
-      stopRecording();
       setGameCompleted(true);
+      // Stop recording after a slight delay to ensure proper cleanup
+      setTimeout(() => {
+        stopRecording();
+      }, 100);
     }
   };
 

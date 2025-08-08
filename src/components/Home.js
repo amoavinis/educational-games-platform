@@ -80,7 +80,7 @@ const Home = () => {
     
     if (!canPlay) {
       alert("Ο μαθητής έχει ήδη παίξει αυτό το παιχνίδι 2 φορές. Δεν επιτρέπονται περισσότερες προσπάθειες.");
-      setShowModal(false);
+      // setShowModal(false);
       return;
     }
     

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Container, Form, Button, Row, Col, Card, Table } from "react-bootstrap";
+import {
+  Container,
+  Form,
+  Button,
+  Row,
+  Col,
+  Card,
+  Table,
+} from "react-bootstrap";
 import { getSchools } from "../../services/schools";
 import { getClasses } from "../../services/classes";
 import { getReportsWithDetails } from "../../services/reports";
@@ -194,7 +202,13 @@ const Reports = () => {
     });
 
     const questionGroupHeaders = ["", "", "", "", ""];
-    const detailedHeaders = ["Κωδικός Μαθητή", "Ημερομηνία/Ώρα", "Φύλο", "Ημερομηνία Γέννησης", "Διάγνωση"];
+    const detailedHeaders = [
+      "Κωδικός Μαθητή",
+      "Ημερομηνία/Ώρα",
+      "Φύλο",
+      "Ημερομηνία Γέννησης",
+      "Διάγνωση",
+    ];
     for (let i = 1; i <= maxQuestions; i++) {
       questionGroupHeaders.push(`Ερώτηση ${i}`, "", "", "", "");
       detailedHeaders.push(
@@ -215,7 +229,11 @@ const Reports = () => {
         report.parsedResults?.datetime || "Δεν υπάρχει",
         report.studentGender || "-",
         report.studentDateOfBirth || "-",
-        report.studentDiagnosis === true ? "Ναι" : report.studentDiagnosis === false ? "Όχι" : "-",
+        report.studentDiagnosis === true
+          ? "Ναι"
+          : report.studentDiagnosis === false
+          ? "Όχι"
+          : "-",
       ];
       const questions = report.parsedResults?.questions || [];
       for (let i = 0; i < maxQuestions; i++) {
@@ -225,7 +243,11 @@ const Reports = () => {
             question.question || "",
             question.target || "",
             question.result || "",
-            question.isCorrect !== undefined ? (question.isCorrect ? "Σωστό" : "Λάθος") : "",
+            question.isCorrect !== undefined
+              ? question.isCorrect
+                ? "Σωστό"
+                : "Λάθος"
+              : "",
             question.seconds !== undefined ? question.seconds : ""
           );
         } else {
@@ -275,7 +297,7 @@ const Reports = () => {
 
   const handleGenerateReport = async () => {
     if (!selectedSchool || !selectedGame) {
-      console.log("School and Game are required");
+      console.error("School and Game are required");
       return;
     }
 
@@ -288,8 +310,6 @@ const Reports = () => {
         selectedGame
       );
       setReportData(reports);
-
-      console.log("Report data length:", reports.length);
     } catch (error) {
       console.error("Error generating report:", error);
     } finally {
@@ -424,30 +444,87 @@ const Reports = () => {
                     Βρέθηκαν {reportData.length} αναφορές για το επιλεγμένο
                     παιχνίδι.
                   </p>
-                  
+
                   <div className="table-responsive">
-                    <Table striped bordered hover size="sm" className="reports-table">
+                    <Table
+                      striped
+                      bordered
+                      hover
+                      size="sm"
+                      className="reports-table"
+                    >
                       <thead>
-                        <tr style={{ backgroundColor: '#0d6efd', color: 'white' }}>
-                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                        <tr
+                          style={{ backgroundColor: "#0d6efd", color: "white" }}
+                        >
+                          <th
+                            style={{
+                              fontWeight: "600",
+                              textAlign: "center",
+                              verticalAlign: "middle",
+                              padding: "12px 8px",
+                            }}
+                          >
                             Κωδικός Μαθητή
                           </th>
-                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                          <th
+                            style={{
+                              fontWeight: "600",
+                              textAlign: "center",
+                              verticalAlign: "middle",
+                              padding: "12px 8px",
+                            }}
+                          >
                             Σχολείο
                           </th>
-                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                          <th
+                            style={{
+                              fontWeight: "600",
+                              textAlign: "center",
+                              verticalAlign: "middle",
+                              padding: "12px 8px",
+                            }}
+                          >
                             Τάξη
                           </th>
-                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                          <th
+                            style={{
+                              fontWeight: "600",
+                              textAlign: "center",
+                              verticalAlign: "middle",
+                              padding: "12px 8px",
+                            }}
+                          >
                             Φύλο
                           </th>
-                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                          <th
+                            style={{
+                              fontWeight: "600",
+                              textAlign: "center",
+                              verticalAlign: "middle",
+                              padding: "12px 8px",
+                            }}
+                          >
                             Ημερομηνία Γέννησης
                           </th>
-                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                          <th
+                            style={{
+                              fontWeight: "600",
+                              textAlign: "center",
+                              verticalAlign: "middle",
+                              padding: "12px 8px",
+                            }}
+                          >
                             Διάγνωση
                           </th>
-                          <th style={{ fontWeight: '600', textAlign: 'center', verticalAlign: 'middle', padding: '12px 8px' }}>
+                          <th
+                            style={{
+                              fontWeight: "600",
+                              textAlign: "center",
+                              verticalAlign: "middle",
+                              padding: "12px 8px",
+                            }}
+                          >
                             Ημερομηνία Αναφοράς
                           </th>
                         </tr>
@@ -455,43 +532,99 @@ const Reports = () => {
                       <tbody>
                         {reportData.length === 0 ? (
                           <tr>
-                            <td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: '#6c757d', fontStyle: 'italic' }}>
+                            <td
+                              colSpan="7"
+                              style={{
+                                textAlign: "center",
+                                padding: "20px",
+                                color: "#6c757d",
+                                fontStyle: "italic",
+                              }}
+                            >
                               Δεν βρέθηκαν αναφορές για τα επιλεγμένα κριτήρια
                             </td>
                           </tr>
                         ) : (
                           reportData.map((report, index) => (
-                            <tr key={report.id || index} style={{ fontSize: '14px' }}>
-                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', fontSize: '14px' }}>
+                            <tr
+                              key={report.id || index}
+                              style={{ fontSize: "14px" }}
+                            >
+                              <td
+                                style={{
+                                  padding: "10px 8px",
+                                  verticalAlign: "middle",
+                                  fontSize: "14px",
+                                }}
+                              >
                                 {report.studentId || "-"}
                               </td>
-                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', fontSize: '14px' }}>
+                              <td
+                                style={{
+                                  padding: "10px 8px",
+                                  verticalAlign: "middle",
+                                  fontSize: "14px",
+                                }}
+                              >
                                 {report.schoolName || "-"}
                               </td>
-                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', fontSize: '14px' }}>
+                              <td
+                                style={{
+                                  padding: "10px 8px",
+                                  verticalAlign: "middle",
+                                  fontSize: "14px",
+                                }}
+                              >
                                 {report.className || "-"}
                               </td>
-                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', textAlign: 'center', fontSize: '14px' }}>
+                              <td
+                                style={{
+                                  padding: "10px 8px",
+                                  verticalAlign: "middle",
+                                  textAlign: "center",
+                                  fontSize: "14px",
+                                }}
+                              >
                                 {report.studentGender || "-"}
                               </td>
-                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', textAlign: 'center', fontSize: '14px' }}>
+                              <td
+                                style={{
+                                  padding: "10px 8px",
+                                  verticalAlign: "middle",
+                                  textAlign: "center",
+                                  fontSize: "14px",
+                                }}
+                              >
                                 {report.studentDateOfBirth || "-"}
                               </td>
-                              <td style={{ 
-                                padding: '10px 8px', 
-                                verticalAlign: 'middle', 
-                                textAlign: 'center',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                color: report.studentDiagnosis === true ? '#d63384' : report.studentDiagnosis === false ? '#198754' : '#6c757d'
-                              }}>
-                                {report.studentDiagnosis === true 
-                                  ? "Ναι" 
-                                  : report.studentDiagnosis === false 
-                                  ? "Όχι" 
+                              <td
+                                style={{
+                                  padding: "10px 8px",
+                                  verticalAlign: "middle",
+                                  textAlign: "center",
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  color:
+                                    report.studentDiagnosis === true
+                                      ? "#d63384"
+                                      : report.studentDiagnosis === false
+                                      ? "#198754"
+                                      : "#6c757d",
+                                }}
+                              >
+                                {report.studentDiagnosis === true
+                                  ? "Ναι"
+                                  : report.studentDiagnosis === false
+                                  ? "Όχι"
                                   : "-"}
                               </td>
-                              <td style={{ padding: '10px 8px', verticalAlign: 'middle', fontSize: '14px' }}>
+                              <td
+                                style={{
+                                  padding: "10px 8px",
+                                  verticalAlign: "middle",
+                                  fontSize: "14px",
+                                }}
+                              >
                                 {report.parsedResults?.datetime || "-"}
                               </td>
                             </tr>

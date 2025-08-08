@@ -3,7 +3,7 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
-// import { uploadAudioRecording } from "../../services/audioStorage";
+import { uploadAudioRecording } from "../../services/audioStorage";
 import { game3Words } from "../Data/Game3";
 
 const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
@@ -13,15 +13,17 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
   // Game state
   const [gameStarted, setGameStarted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const mediaRecorderRef = useRef(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'root', 'suffix', 'full'
   const [isFirstRound, setIsFirstRound] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [audioDownloadURL, setAudioDownloadURL] = useState(null);
   const [gameStats, setGameStats] = useState({
     rounds: [],
     totalRounds: 0,
   });
+  const [resultsSubmitted, setResultsSubmitted] = useState(false);
 
   const currentWord = words[currentWordIndex];
 
@@ -38,7 +40,6 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
   // Submit game results function
   const submitGameResults = useCallback(async () => {
     if (!studentId || !classId) {
-      console.log("Missing studentId or classId, cannot submit results");
       return;
     }
 
@@ -59,6 +60,7 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
       datetime: datetime,
       gameName: "GreekReadingExercise",
       questions: gameStats.rounds,
+      audioDownloadURL: audioDownloadURL,
     };
 
     try {
@@ -69,39 +71,93 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
         gameId,
         results: JSON.stringify(results)
       });
-      // console.log("Game results submitted successfully");
     } catch (error) {
       console.error("Error submitting game results:", error);
     }
-  }, [gameStats.rounds, studentId, classId, schoolId, gameId]);
+  }, [gameStats.rounds, studentId, classId, schoolId, gameId, audioDownloadURL]);
 
-  // Submit final results when game completes
-  useEffect(() => {
-    if (gameCompleted && gameStats.rounds.length > 0) {
-      submitGameResults();
+  // Audio recording functions
+  const stopRecording = useCallback(() => {
+    const mediaRecorder = mediaRecorderRef.current;
+
+    if (mediaRecorder && isRecording) {
+      if (mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+      }
+      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+      setIsRecording(false);
+      mediaRecorderRef.current = null;
     }
-  }, [gameCompleted, gameStats.rounds, submitGameResults]);
+  }, [isRecording]);
+
+  // Submit final results when game completes and audio is available
+  useEffect(() => {
+    if (gameCompleted && gameStats.rounds.length > 0 && !resultsSubmitted && audioDownloadURL) {
+      submitGameResults();
+      setResultsSubmitted(true);
+    }
+  }, [gameCompleted, gameStats.rounds, submitGameResults, resultsSubmitted, audioDownloadURL]);
+
+  // Ensure recording stops when game completes
+  useEffect(() => {
+    if (gameCompleted && isRecording) {
+      stopRecording();
+    }
+  }, [gameCompleted, isRecording, stopRecording]);
+
+  // Cleanup recording on component unmount (back button, navigation, etc.)
+  useEffect(() => {
+    return () => {
+      // Cleanup function called when component unmounts
+      const mediaRecorder = mediaRecorderRef.current;
+      if (mediaRecorder && isRecording) {
+        // Just stop the recording and clean up streams, don't trigger upload
+        if (mediaRecorder.state === "recording") {
+          // Remove event handlers to prevent onstop from firing
+          mediaRecorder.onstop = null;
+          mediaRecorder.stop();
+        }
+        mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [isRecording]);
 
   // Audio recording setup
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
-      setMediaRecorder(recorder);
-      recorder.start();
-      setIsRecording(true);
-      console.log("Recording started");
-    } catch (err) {
-      console.log("Microphone permission denied or not available");
-    }
-  };
+      
+      const chunks = [];
+      
+      recorder.ondataavailable = (event) => {
+        if (recorder.state !== "inactive") {
+          if (event.data.size > 0) {
+            chunks.push(event.data);
+          }
+        }
+      };
+      
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: "audio/webm" });
 
-  const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      mediaRecorder.stream.getTracks().forEach((track) => track.stop());
-      setIsRecording(false);
-      console.log("Recording stopped");
+        if (audioBlob.size > 0) {
+          try {
+            const uploadResult = await uploadAudioRecording(audioBlob, {
+              studentId,
+            });
+            setAudioDownloadURL(uploadResult.downloadURL);
+          } catch (error) {
+            console.error("Error uploading audio:", error);
+          }
+        }
+      };
+      
+      mediaRecorderRef.current = recorder;
+      recorder.start(1000);
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Microphone permission denied or not available");
     }
   };
 
@@ -115,6 +171,7 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
   // Start highlighting sequence for current word (only in first round)
   const startWordHighlighting = (wordIndex, firstRound) => {
     if (firstRound) {
+      // Ensure root highlight is set (may already be set from nextWord)
       setHighlightStage("root");
       const duration = 1000;
 
@@ -156,8 +213,14 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
     if (currentIndex < words.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentWordIndex(nextIndex);
-      setHighlightStage("none");
-      setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 500);
+      // For first round, immediately set to root highlight to avoid black text
+      if (currentFirstRound) {
+        setHighlightStage("root");
+        setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 100);
+      } else {
+        setHighlightStage("none");
+        setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 500);
+      }
     } else if (currentFirstRound) {
       // Switch to second round
       setIsFirstRound(false);
@@ -166,8 +229,10 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
       setTimeout(() => startWordHighlighting(0, false), 500);
     } else {
       // Game completed
-      stopRecording();
       setGameCompleted(true);
+      setTimeout(() => {
+        stopRecording();
+      }, 100);
     }
   };
 

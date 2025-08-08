@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
-import "../../styles/Game10And11.css";
+import "../../styles/Game11.css";
 import { level11Words } from "../Data/Game11";
 import { addReport } from "../../services/reports";
 
