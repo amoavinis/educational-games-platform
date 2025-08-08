@@ -418,31 +418,37 @@ const Reports = () => {
                 </div>
               )}
 
-              {!reportLoading && reportData.length > 0 && (
+              {!reportLoading && (selectedSchool && selectedGame) && (
                 <div className="mt-4">
                   <hr />
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h5>Αποτελέσματα Αναφοράς</h5>
-                    <div className="d-flex gap-2">
-                      <Button
-                        variant="success"
-                        onClick={exportToXLSX}
-                        className="d-flex align-items-center gap-2"
-                      >
-                        📊 Εξαγωγή σε Excel
-                      </Button>
-                      <Button
-                        variant="primary"
-                        onClick={exportToZipWithAudio}
-                        className="d-flex align-items-center gap-2"
-                      >
-                        🎧 Εξαγωγή με Καταγραφές
-                      </Button>
-                    </div>
+                    {reportData.length > 0 && (
+                      <div className="d-flex gap-2">
+                        <Button
+                          variant="success"
+                          onClick={exportToXLSX}
+                          className="d-flex align-items-center gap-2"
+                        >
+                          📊 Εξαγωγή σε Excel
+                        </Button>
+                        {(parseInt(selectedGame) === 3 || parseInt(selectedGame) === 10) && (
+                          <Button
+                            variant="primary"
+                            onClick={exportToZipWithAudio}
+                            className="d-flex align-items-center gap-2"
+                          >
+                            🎧 Εξαγωγή με καταγραφές
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <p>
-                    Βρέθηκαν {reportData.length} αναφορές για το επιλεγμένο
-                    παιχνίδι.
+                    {reportData.length > 0 
+                      ? `Βρέθηκαν ${reportData.length} αναφορές για το επιλεγμένο παιχνίδι.`
+                      : "Δεν βρέθηκαν αναφορές για τα επιλεγμένα κριτήρια."
+                    }
                   </p>
 
                   <div className="table-responsive">

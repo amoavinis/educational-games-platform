@@ -121,7 +121,6 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
         gameId,
         results: JSON.stringify(results)
       });
-      console.log('Report submitted successfully');
     } catch (error) {
       console.error('Error submitting report:', error);
     }
