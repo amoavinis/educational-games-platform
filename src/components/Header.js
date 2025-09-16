@@ -62,6 +62,15 @@ const Header = () => {
                 Χρήστες
               </Nav.Link>
             )}
+            {role === 1 && (
+              <Nav.Link
+                as={Link}
+                to="/material-management"
+                className={isActive("/material-management") ? "active fw-bold" : ""}
+              >
+                Επεξεργασία Υλικού
+              </Nav.Link>
+            )}
             <Nav.Link
               as={Link}
               to="/students"

@@ -16,6 +16,7 @@ import Classes from "./components/Classes/Classes";
 import Users from "./components/Users/Users";
 import GameScreen from "./components/Games/GameScreen";
 import Reports from "./components/Reports/Reports";
+import MaterialManagement from "./components/MaterialManagement/MaterialManagement";
 
 // Wrapper component to handle header display logic
 const AppWrapper = () => {
@@ -73,6 +74,14 @@ const AppWrapper = () => {
             element={
               <PrivateRoute>
                 <Reports />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/material-management"
+            element={
+              <PrivateRoute>
+                <MaterialManagement />
               </PrivateRoute>
             }
           />

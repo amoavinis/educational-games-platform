@@ -44,6 +44,7 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportData, setReportData] = useState([]);
+  const [queryExecuted, setQueryExecuted] = useState(false);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -95,6 +96,7 @@ const Reports = () => {
     setSelectedSchool(schoolId);
     setSelectedClass("");
     setClasses([]);
+    setQueryExecuted(false);
 
     if (schoolId) {
       try {
@@ -118,11 +120,13 @@ const Reports = () => {
   const handleClassChange = (e) => {
     const classId = e.target.value;
     setSelectedClass(classId);
+    setQueryExecuted(false);
   };
 
   const handleGameChange = (e) => {
     const gameId = e.target.value;
     setSelectedGame(gameId);
+    setQueryExecuted(false);
   };
 
   // Index function to filter and fetch report data
@@ -310,6 +314,7 @@ const Reports = () => {
         selectedGame
       );
       setReportData(reports);
+      setQueryExecuted(true);
     } catch (error) {
       console.error("Error generating report:", error);
     } finally {
@@ -418,7 +423,7 @@ const Reports = () => {
                 </div>
               )}
 
-              {!reportLoading && (selectedSchool && selectedGame) && (
+              {!reportLoading && queryExecuted && (
                 <div className="mt-4">
                   <hr />
                   <div className="d-flex justify-content-between align-items-center mb-3">

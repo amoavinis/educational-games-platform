@@ -195,7 +195,10 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
@@ -228,11 +231,8 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
           )}
           <Card className="main-card">
             <Card.Header
-              className={`text-center ${
-                questions[currentQuestion].isExample
-                  ? "bg-warning text-dark"
-                  : "bg-primary text-white"
-              }`}
+              className="text-center"
+              style={{ backgroundColor: "#2F4F4F", color: "white" }}
             >
               <h4 className="mb-0">
                 {questions[currentQuestion].isExample && (
@@ -275,39 +275,48 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
 
                 {selectedAnswer && (
                   <div className="mt-3 mb-4">
-                    <h4 className="font-weight-bold">
-                      {selectedAnswer === question.correct ? (
-                        <span className="text-success">✓</span>
-                      ) : (
-                        <span className="text-danger">✗</span>
-                      )}
-                    </h4>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <span className="fs-1" style={{ color: selectedAnswer === question.correct ? "#28a745" : "#dc3545" }}>
+                        {selectedAnswer === question.correct ? "✓" : "✗"}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
 
               {!isMarqueeActive && (
                 <Row className="g-3 mb-4">
-                  {question.options.map((option, index) => (
-                    <Col key={index} xs={4}>
-                      <Button
-                        variant={
-                          selectedAnswer === option
-                            ? option === question.correct
-                              ? "success"
-                              : "danger"
-                            : selectedAnswer && option === question.correct
-                            ? "success"
-                            : "outline-primary"
-                        }
-                        onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null}
-                        className="w-100 py-3"
-                      >
-                        {option}
-                      </Button>
-                    </Col>
-                  ))}
+                  {question.options.map((option, index) => {
+                    let variant = "outline-primary";
+                    let customStyle = {};
+
+                    if (selectedAnswer === option) {
+                      if (option === question.correct) {
+                        variant = "success";
+                        customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                      } else {
+                        variant = "danger";
+                        customStyle = { backgroundColor: "#00CED1", borderColor: "#00CED1", color: "white" };
+                      }
+                    } else if (selectedAnswer && option === question.correct) {
+                      variant = "success";
+                      customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                    }
+
+                    return (
+                      <Col key={index} xs={4}>
+                        <Button
+                          variant={variant}
+                          style={customStyle}
+                          onClick={() => handleAnswerSelect(option)}
+                          disabled={selectedAnswer !== null}
+                          className="w-100 py-3"
+                        >
+                          {option}
+                        </Button>
+                      </Col>
+                    );
+                  })}
                 </Row>
               )}
             </Card.Body>

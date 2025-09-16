@@ -283,23 +283,41 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header className="text-center bg-primary text-white">
-                <h4 className="mb-0">Άσκηση Ανάγνωσης</h4>
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
+                <h4 className="mb-0">Διάβασε την κάθε λέξη όσο καλύτερα μπορείς</h4>
               </Card.Header>
               <Card.Body className="text-center">
-                <div className="mb-4">
-                  <p className="lead">
-                    Πάτησε Έναρξη και διάβασε τις λέξεις με προσοχή.
-                  </p>
+                <div className="d-flex justify-content-center">
+                  <Button
+                    variant="dark"
+                    size="lg"
+                    onClick={startGame}
+                    className="mb-4 rounded-circle"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "2rem",
+                      backgroundColor: "#000000",
+                      border: "none"
+                    }}
+                  >
+                    <svg
+                      width="40"
+                      height="40"
+                      fill="white"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V14h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-1.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
+                      <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0v5zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3z"/>
+                    </svg>
+                  </Button>
                 </div>
-                <Button
-                  variant="success"
-                  size="lg"
-                  onClick={startGame}
-                  className="mb-4"
-                >
-                  Έναρξη
-                </Button>
               </Card.Body>
             </Card>
           </Col>
@@ -315,7 +333,10 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
@@ -345,9 +366,12 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
           <Card className="main-card">
-            <Card.Header className="text-center bg-primary text-white">
+            <Card.Header
+              className="text-center"
+              style={{ backgroundColor: "#2F4F4F", color: "white" }}
+            >
               <h4 className="mb-0">
-                Άσκηση Ανάγνωσης - {isFirstRound ? "Πρώτος" : "Δεύτερος"} Γύρος
+                Άσκηση Ανάγνωσης{isFirstRound ? null : " - ΠΑΜΕ ΞΑΝΑ"}
               </h4>
             </Card.Header>
             <Card.Body className="text-center">

@@ -166,7 +166,10 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameResults.map(r => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
@@ -198,10 +201,13 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
             />
           )}
           <Card className="main-card">
-            <Card.Header className={`text-center ${compounds[currentWordIndex].isExample ? 'bg-warning text-dark' : 'bg-primary text-white'}`}>
+            <Card.Header
+              className="text-center"
+              style={{ backgroundColor: "#2F4F4F", color: "white" }}
+            >
               <h4 className="mb-0">
                 {compounds[currentWordIndex].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
-                Χώρισε τη λέξη
+                Χώρισε τις σύνθετες λέξεις με κάθετες γραμμές
               </h4>
             </Card.Header>
             <Card.Body className="text-center">

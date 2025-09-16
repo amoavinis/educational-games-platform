@@ -1,9 +1,9 @@
 export const game4Questions = [
   {
     stem: "καλ",
-    correctSuffix: "ος",
+    correctSuffix: "ός",
     word: "καλός",
-    options: ["ος", "ή", "ό"],
+    options: ["ός", "ή", "ό"],
     /* audioSlow: require("../../assets/sounds/game4/word1-slow.mp3"),
     audioNormal: require("../../assets/sounds/game4/word1.mp3"), */
     isExample: true,

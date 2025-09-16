@@ -120,7 +120,10 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
@@ -153,15 +156,12 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header
-              className={`text-center ${
-                questions[currentQuestion].isExample
-                  ? "bg-warning"
-                  : "bg-primary"
-              } text-white`}
+              className="text-center"
+              style={{ backgroundColor: "#2F4F4F", color: "white" }}
             >
               <h4 className="mb-0">
                 {questions[currentQuestion].isExample && (
-                  <span className="badge badge-light text-dark mr-2">
+                  <span className="badge badge-dark me-2">
                     Παράδειγμα
                   </span>
                 )}
@@ -183,16 +183,13 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
                   
                   {selectedAnswer && (
                     <div className="mt-4 p-3 bg-light rounded">
+                      <div className="d-flex align-items-center justify-content-center mb-3">
+                        <span className="fs-1" style={{ color: selectedAnswer === question.correct ? "#28a745" : "#dc3545" }}>
+                          {selectedAnswer === question.correct ? "✓" : "✗"}
+                        </span>
+                      </div>
                       <h3 className="font-weight-bold">
-                        {selectedAnswer === question.correct ? (
-                          <span className="text-success">
-                            ✓ {question.result}
-                          </span>
-                        ) : (
-                          <span className="text-danger">
-                            ✗ {question.result}
-                          </span>
-                        )}
+                        {question.result}
                       </h3>
                     </div>
                   )}
@@ -200,32 +197,43 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
               </Card>
 
               <Row className="justify-content-center mb-4">
-                {question.options.map((option, index) => (
-                  <Col
-                    key={index}
-                    xs={3}
-                    className="mb-3 d-flex justify-content-center"
-                  >
-                    <Button
-                      block
-                      onClick={() => handleAnswerSelect(option)}
-                      disabled={selectedAnswer !== null}
-                      variant={
-                        selectedAnswer === option
-                          ? option === question.correct
-                            ? "success"
-                            : "danger"
-                          : selectedAnswer && option === question.correct
-                          ? "outline-success"
-                          : "outline-primary"
-                      }
-                      size="lg"
-                      className="py-3"
+                {question.options.map((option, index) => {
+                  let variant = "outline-primary";
+                  let customStyle = {};
+
+                  if (selectedAnswer === option) {
+                    if (option === question.correct) {
+                      variant = "success";
+                      customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                    } else {
+                      variant = "danger";
+                      customStyle = { backgroundColor: "#00CED1", borderColor: "#00CED1", color: "white" };
+                    }
+                  } else if (selectedAnswer && option === question.correct) {
+                    variant = "success";
+                    customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                  }
+
+                  return (
+                    <Col
+                      key={index}
+                      xs={3}
+                      className="mb-3 d-flex justify-content-center"
                     >
-                      {option}
-                    </Button>
-                  </Col>
-                ))}
+                      <Button
+                        block
+                        onClick={() => handleAnswerSelect(option)}
+                        disabled={selectedAnswer !== null}
+                        variant={variant}
+                        style={customStyle}
+                        size="lg"
+                        className="py-3"
+                      >
+                        {option}
+                      </Button>
+                    </Col>
+                  );
+                })}
               </Row>
             </Card.Body>
           </Card>

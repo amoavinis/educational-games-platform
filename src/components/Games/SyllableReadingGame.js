@@ -316,7 +316,10 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header className="text-center bg-primary text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h4 className="mb-0">Προθήματα και Επιθήματα</h4>
               </Card.Header>
               <Card.Body className="text-center">
@@ -348,7 +351,10 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
@@ -379,11 +385,8 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
         <Col md={12} lg={10}>
           <Card className="main-card">
             <Card.Header
-              className={`text-center ${
-                currentWord.isExample
-                  ? "bg-warning text-dark"
-                  : "bg-primary text-white"
-              }`}
+              className="text-center"
+              style={{ backgroundColor: "#2F4F4F", color: "white" }}
             >
               <h4 className="mb-0">
                 {currentWord.isExample && (

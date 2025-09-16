@@ -1,3 +1,9 @@
+* {
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 0.5px;
+  word-spacing: 5px;
+}
+
 .App {
   text-align: center;
 }

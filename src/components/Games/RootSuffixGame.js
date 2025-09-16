@@ -138,7 +138,7 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
       // console.log("Game results submitted successfully");
     } catch (error) {
@@ -215,7 +215,10 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameStats.rounds.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
@@ -248,17 +251,16 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header
-              className={`text-center ${
-                currentWord.isExample
-                  ? "bg-warning text-dark"
-                  : "bg-primary text-white"
-              }`}
+              className={`text-center`}
+              style={{backgroundColor: "#2F4F4F", color: "white"}}
             >
               <h4 className="mb-0">
                 {currentWord.isExample && (
                   <span className="badge badge-dark me-2">Παράδειγμα</span>
                 )}
-                Υπογράμμισε το επίθημα
+                <span style={{ fontSize: 20 }}>
+                  Βρες και χρωμάτισε τα επιθήματα των λέξεων
+                </span>
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
@@ -278,8 +280,10 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
 
               {feedback && (
                 <div className="mb-4 text-center">
-                  <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>
-                    {feedback.isCorrect ? "✅" : "❌"}
+                  <div className="d-flex align-items-center justify-content-center">
+                    <span className="fs-1" style={{ color: feedback.isCorrect ? "#28a745" : "#dc3545" }}>
+                      {feedback.isCorrect ? "✓" : "✗"}
+                    </span>
                   </div>
                 </div>
               )}

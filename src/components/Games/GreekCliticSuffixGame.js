@@ -300,7 +300,10 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
       onDragLeave={handleDragLeave}
       onDrop={(e) => handleDrop(e, suffix)}
     >
-      <Card.Header className={`text-center text-dark`}>
+      <Card.Header
+        className="text-center"
+        style={{ backgroundColor: "#2F4F4F", color: "white" }}
+      >
         {getSuffixTitle(suffix)}
       </Card.Header>
       <Card.Body
@@ -325,7 +328,10 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
@@ -350,7 +356,10 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
       <Row className="justify-content-center">
         <Col md={12} lg={12}>
           <Card className="main-card">
-            <Card.Header className="text-center bg-primary text-white">
+            <Card.Header
+              className="text-center"
+              style={{ backgroundColor: "#2F4F4F", color: "white" }}
+            >
               <h4 className="mb-0">Βάλε τις λέξεις στη σωστή θέση</h4>
             </Card.Header>
             <Card.Body>
@@ -358,7 +367,10 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
                 {/* Word Pool */}
                 <Col md={2} lg={2} className="mb-4">
                   <Card className="word-pool-card">
-                    <Card.Header className="text-center">
+                    <Card.Header
+                      className="text-center"
+                      style={{ backgroundColor: "#2F4F4F", color: "white" }}
+                    >
                       Λέξεις προς ταξινόμηση
                     </Card.Header>
                     <Card.Body className="word-pool-body">

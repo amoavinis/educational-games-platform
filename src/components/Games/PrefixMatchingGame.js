@@ -140,7 +140,10 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center full-height">
         <Card className="w-100" style={{ maxWidth: "600px" }}>
-          <Card.Header className="text-center bg-success text-white">
+          <Card.Header
+            className="text-center"
+            style={{ backgroundColor: "#2F4F4F", color: "white" }}
+          >
             <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
           </Card.Header>
           <Card.Body className="text-center">
@@ -180,43 +183,65 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header
-              className={`text-center ${
-                questions[currentQuestion].isExample
-                  ? "bg-warning text-dark"
-                  : "bg-primary text-white"
-              }`}
+              className="text-center"
+              style={{ backgroundColor: "#2F4F4F", color: "white" }}
             >
               <h4 className="mb-0">
                 {questions[currentQuestion].isExample && (
                   <span className="badge badge-dark me-2">Παράδειγμα</span>
                 )}
-                Επίλεξε το σωστό πρόθημα
+                Άκου και διάλεξε το σωστό πρόθημα
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="p-4 bg-light rounded mb-4">
                 <div className="display-4 font-weight-bold mb-3">
-                  _____{currentQ.stem}
+                  {selectedAnswer ? currentQ.correctPrefix : "_____"}{currentQ.stem}
                 </div>
 
-                <Button variant="primary" onClick={playAudio} className="mb-3">
-                  Ακούστε τη λέξη
-                </Button>
+                <div className="d-flex justify-content-center">
+                  <Button
+                    variant="light"
+                    onClick={playAudio}
+                    className="mb-3 rounded-circle"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "white",
+                      border: "2px solid #6c757d"
+                    }}
+                  >
+                    <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
+                  </Button>
+                </div>
               </div>
 
               <Row className="g-3 mb-4">
-                {currentQ.options.map((option, index) => (
+                {currentQ.options.map((option, index) => {
+                  let variant = "outline-primary";
+                  let customStyle = {};
+
+                  if (selectedAnswer === option) {
+                    if (option === currentQ.correctPrefix) {
+                      variant = "success";
+                      customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                    } else {
+                      variant = "danger";
+                      customStyle = { backgroundColor: "#00CED1", borderColor: "#00CED1", color: "white" };
+                    }
+                  } else if (selectedAnswer && option === currentQ.correctPrefix) {
+                    variant = "success";
+                    customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                  }
+
+                  return (
                   <Col key={index} xs={4}>
                     <Button
-                      variant={
-                        selectedAnswer === option
-                          ? option === currentQ.correctPrefix
-                            ? "success"
-                            : "danger"
-                          : selectedAnswer && option === currentQ.correctPrefix
-                          ? "success"
-                          : "outline-primary"
-                      }
+                      variant={variant}
+                      style={customStyle}
                       onClick={() => handleAnswerSelect(option)}
                       disabled={selectedAnswer !== null}
                       className="w-100 py-3"
@@ -224,7 +249,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                       {option}
                     </Button>
                   </Col>
-                ))}
+                )})}
               </Row>
             </Card.Body>
           </Card>

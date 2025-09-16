@@ -140,17 +140,14 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
             />
             <Card className="main-card">
               <Card.Header
-                className={`text-center ${
-                  questions[currentQuestion].isExample
-                    ? "bg-warning"
-                    : "bg-primary"
-                } text-white`}
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
               >
                 <h4 className="mb-0">
-                  Διάλεξε τη σωστή απάντηση
                   {questions[currentQuestion].isExample && (
-                    <span className="badge bg-dark ms-2">Παράδειγμα</span>
+                    <span className="badge badge-dark me-2">Παράδειγμα</span>
                   )}
+                  Επίλεξε τη σωστή ανάλυση της λέξης
                 </h4>
               </Card.Header>
               <Card.Body>
@@ -158,19 +155,19 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
                   <div className="display-4 font-weight-bold mb-3">
                     {currentQ.word}
                   </div>
-                  <p className="text-muted">
-                    Επίλεξε τη σωστή μορφολογική ανάλυση
-                  </p>
                 </div>
 
                 <Row className="mb-4 w-100">
                   {currentQ.choices.map((choice, index) => {
                     let variant = "outline-primary";
+                    let customStyle = {};
                     if (selectedChoice !== null) {
                       if (index === currentQ.correct) {
                         variant = "success";
+                        customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
                       } else if (index === selectedChoice) {
                         variant = "danger";
+                        customStyle = { backgroundColor: "#00CED1", borderColor: "#00CED1", color: "white" };
                       }
                     }
 
@@ -179,6 +176,7 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
                         <Button
                           className="w-100 py-3"
                           variant={variant}
+                          style={customStyle}
                           onClick={() => handleChoiceSelect(index)}
                           disabled={selectedChoice !== null}
                         >
@@ -207,7 +205,10 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header className="text-center bg-success text-white">
+              <Card.Header
+                className="text-center"
+                style={{ backgroundColor: "#2F4F4F", color: "white" }}
+              >
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
