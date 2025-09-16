@@ -14,7 +14,8 @@ const games = [
   {id: 12, name: "Πολλαπλής επιλογής", description: "", color: `hsl(275, 80%, 70%)`},
   {id: 13, name: "Κανόνες παραγωγής λέξεων", description: "", color: `hsl(300, 80%, 70%)`},
   {id: 14, name: "Πολλαπλής επιλογής", description: "", color: `hsl(325, 80%, 70%)`},
-  {id: 15, name: "Συμπλήρωση επιθήματος φράσης", description: "", color: `hsl(350, 80%, 70%)`}
+  {id: 15, name: "Συμπλήρωση επιθήματος φράσης", description: "", color: `hsl(350, 80%, 70%)`},
+  {id: 16, name: "Τεστ Χρόνου Αντίδρασης", description: "", color: `hsl(375, 80%, 70%)`}
 ];
 
 export { games };

@@ -17,6 +17,7 @@ import GreekVerbEndingGame from "./GreekVerbEndingGame";
 import GreekWordFormationGame from "./GreekWordFormationGame";
 import GreekAdjectiveEndingGame from "./GreekAdjectiveEndingGame";
 import GreekSuffixMarqueeGame from "./GreekSuffixMarqueeGame";
+import ReactionTimeGame from "./ReactionTimeGame";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -174,6 +175,7 @@ const GameScreen = () => {
         {gameId === 13 && <GreekWordFormationGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
         {gameId === 14 && <GreekAdjectiveEndingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
         {gameId === 15 && <GreekSuffixMarqueeGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 16 && <ReactionTimeGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
       </div>
     </div>
   );
