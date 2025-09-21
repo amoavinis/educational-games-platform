@@ -67,6 +67,7 @@ const Header = () => {
                 as={Link}
                 to="/material-management"
                 className={isActive("/material-management") ? "active fw-bold" : ""}
+                style={{textAlign: "center"}}
               >
                 Επεξεργασία Υλικού
               </Nav.Link>
