@@ -14,25 +14,7 @@ import { getReportsWithDetails } from "../../services/reports";
 import { getUserRoleFromClaims } from "../../services/firebase";
 import * as XLSX from "xlsx";
 import { downloadReportsWithAudio } from "../../services/reportDownload";
-
-// Games list with IDs and names
-const games = [
-  { id: 1, name: "Υπογράμμιση Λέξεων" },
-  { id: 2, name: "Παιχνίδι Ρίζας και Κατάληξης" },
-  { id: 3, name: "Άσκηση Ελληνικής Ανάγνωσης" },
-  { id: 4, name: "Παιχνίδι Κατάληξης Λέξεων" },
-  { id: 5, name: "Παιχνίδι Διαχωρισμού Λέξεων" },
-  { id: 6, name: "Παιχνίδι Ταιριάσματος Προθημάτων" },
-  { id: 7, name: "Παιχνίδι Ελληνικών Προθημάτων" },
-  { id: 8, name: "Παιχνίδι Ελληνικής Μορφολογίας" },
-  { id: 9, name: "Παιχνίδι Υπογράμμισης Προθημάτων-Καταλήξεων" },
-  { id: 10, name: "Παιχνίδι Ανάγνωσης Συλλαβών" },
-  { id: 11, name: "Παιχνίδι Ελληνικών Κλιτικών Καταλήξεων" },
-  { id: 12, name: "Παιχνίδι Ελληνικών Ρηματικών Καταλήξεων" },
-  { id: 13, name: "Παιχνίδι Ελληνικού Σχηματισμού Λέξεων" },
-  { id: 14, name: "Παιχνίδι Ελληνικών Επιθετικών Καταλήξεων" },
-  { id: 15, name: "Παιχνίδι Ελληνικών Καταλήξεων Marquee" },
-];
+import { games } from "../games";
 
 const Reports = () => {
   const [schools, setSchools] = useState([]);
@@ -205,6 +187,9 @@ const Reports = () => {
         );
     });
 
+    // Check if this is the reaction time game (ID 16)
+    const isReactionTimeGame = parseInt(selectedGame) === 16;
+
     const questionGroupHeaders = ["", "", "", "", ""];
     const detailedHeaders = [
       "Κωδικός Μαθητή",
@@ -213,15 +198,27 @@ const Reports = () => {
       "Ημερομηνία Γέννησης",
       "Διάγνωση",
     ];
+
     for (let i = 1; i <= maxQuestions; i++) {
-      questionGroupHeaders.push(`Ερώτηση ${i}`, "", "", "", "");
-      detailedHeaders.push(
-        "Ερώτημα",
-        "Στόχος",
-        "Απάντηση",
-        "Σωστό",
-        "Δευτερόλεπτα"
-      );
+      if (isReactionTimeGame) {
+        // For reaction time game, exclude "Στόχος" and "Απάντηση" columns
+        questionGroupHeaders.push(`Ερώτηση ${i}`, "", "");
+        detailedHeaders.push(
+          "Ερώτημα",
+          "Σωστό",
+          "Δευτερόλεπτα"
+        );
+      } else {
+        // For other games, include all columns
+        questionGroupHeaders.push(`Ερώτηση ${i}`, "", "", "", "");
+        detailedHeaders.push(
+          "Ερώτημα",
+          "Στόχος",
+          "Απάντηση",
+          "Σωστό",
+          "Δευτερόλεπτα"
+        );
+      }
     }
 
     excelData.push(questionGroupHeaders);
@@ -243,19 +240,37 @@ const Reports = () => {
       for (let i = 0; i < maxQuestions; i++) {
         const question = questions[i];
         if (question) {
-          row.push(
-            question.question || "",
-            question.target || "",
-            question.result || "",
-            question.isCorrect !== undefined
-              ? question.isCorrect
-                ? "Σωστό"
-                : "Λάθος"
-              : "",
-            question.seconds !== undefined ? question.seconds : ""
-          );
+          if (isReactionTimeGame) {
+            // For reaction time game, exclude target and result columns
+            row.push(
+              question.question || "",
+              question.isCorrect !== undefined
+                ? question.isCorrect
+                  ? "Σωστό"
+                  : "Λάθος"
+                : "",
+              question.seconds !== undefined ? question.seconds : ""
+            );
+          } else {
+            // For other games, include all columns
+            row.push(
+              question.question || "",
+              question.target || "",
+              question.result || "",
+              question.isCorrect !== undefined
+                ? question.isCorrect
+                  ? "Σωστό"
+                  : "Λάθος"
+                : "",
+              question.seconds !== undefined ? question.seconds : ""
+            );
+          }
         } else {
-          row.push("", "", "", "", "");
+          if (isReactionTimeGame) {
+            row.push("", "", "");
+          } else {
+            row.push("", "", "", "", "");
+          }
         }
       }
       excelData.push(row);
@@ -264,9 +279,10 @@ const Reports = () => {
     const ws = XLSX.utils.aoa_to_sheet(excelData);
 
     // Κάνουμε τις πρώτες σειρές να συγχωνευτούν σε κάθε group
-    for (let i = 5; i < 5 + maxQuestions * 5; i += 5) {
+    const columnsPerQuestion = isReactionTimeGame ? 3 : 5;
+    for (let i = 5; i < 5 + maxQuestions * columnsPerQuestion; i += columnsPerQuestion) {
       ws["!merges"] = ws["!merges"] || [];
-      ws["!merges"].push({ s: { r: 2, c: i }, e: { r: 2, c: i + 4 } });
+      ws["!merges"].push({ s: { r: 2, c: i }, e: { r: 2, c: i + columnsPerQuestion - 1 } });
     }
 
     XLSX.utils.book_append_sheet(wb, ws, "Αναφορά");

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
+import { addReport } from "../../services/reports";
 import "../../styles/Game.css";
 
 const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
@@ -12,30 +13,118 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   const [currentRound, setCurrentRound] = useState(0);
   const [isShape, setIsShape] = useState("rectangle"); // rectangle or circle
   const [reactionTimes, setReactionTimes] = useState([]);
+  const [gameStats, setGameStats] = useState({
+    rounds: [],
+    totalRounds: 0,
+  });
   const [shapeChangeTime, setShapeChangeTime] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [timeoutId, setTimeoutId] = useState(null);
   const [currentReactionTime, setCurrentReactionTime] = useState(null);
+  const [resultsSubmitted, setResultsSubmitted] = useState(false);
+  // const [liveCounter, setLiveCounter] = useState(0);
+  const [counterInterval, setCounterInterval] = useState(null);
 
   const totalRounds = 5;
+
+  // Initialize game stats
+  useEffect(() => {
+    if (gameStats.totalRounds === 0) {
+      setGameStats((prev) => ({
+        ...prev,
+        totalRounds: totalRounds,
+      }));
+    }
+  }, [gameStats.totalRounds]);
+
+  // Submit game results function
+  const submitGameResults = useCallback(async () => {
+    if (!studentId || !classId || !schoolId || !gameId) {
+      return;
+    }
+
+    const now = new Date();
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
+    const results = {
+      studentId: studentId,
+      datetime: datetime,
+      gameName: "ReactionTimeGame",
+      questions: gameStats.rounds,
+    };
+
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results),
+      });
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
+  }, [gameStats.rounds, studentId, classId, schoolId, gameId]);
+
+  // Submit final results when game completes
+  useEffect(() => {
+    if (gameState === "completed" && gameStats.rounds.length > 0 && !resultsSubmitted) {
+      submitGameResults();
+      setResultsSubmitted(true);
+    }
+  }, [gameState, gameStats.rounds, submitGameResults, resultsSubmitted]);
+
+  // Start the live counter when circle appears
+  const startLiveCounter = useCallback(() => {
+    // setLiveCounter(0);
+    const interval = setInterval(() => {
+      // setLiveCounter(prev => prev + 10);
+    }, 10);
+    setCounterInterval(interval);
+  }, []);
+
+  // Stop the live counter
+  const stopLiveCounter = useCallback(() => {
+    if (counterInterval) {
+      clearInterval(counterInterval);
+      setCounterInterval(null);
+    }
+  }, [counterInterval]);
+
+  // Reset the live counter
+  const resetLiveCounter = useCallback(() => {
+    stopLiveCounter();
+    // setLiveCounter(0);
+  }, [stopLiveCounter]);
 
   // Start a new round with random delay
   const startNewRound = useCallback(() => {
     setIsShape("rectangle");
     setGameState("waiting");
     setCurrentReactionTime(null);
+    resetLiveCounter(); // Reset counter when square appears
 
-    // Random delay between 2-5 seconds
-    const delay = Math.random() * 3000 + 2000;
+    // Random delay between 2-3 seconds
+    const delay = Math.random() * 1000 + 2000;
 
     const timeout = setTimeout(() => {
       setIsShape("circle");
       setShapeChangeTime(Date.now());
       setGameState("ready");
+      startLiveCounter(); // Start counter when circle appears
     }, delay);
 
     setTimeoutId(timeout);
-  }, []);
+  }, [resetLiveCounter, startLiveCounter]);
 
   // Handle clicking anywhere to start the game
   const handleInitialClick = useCallback(() => {
@@ -52,20 +141,15 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
       const averageTime =
         finalTimes.reduce((sum, time) => sum + time, 0) / finalTimes.length;
 
-      const reportData = {
-        studentId: studentId,
-        datetime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        gameName: "ReactionTimeGame",
+      console.log("Reaction Time Game Results:", {
         reactionTimes: finalTimes,
         averageReactionTime: Math.round(averageTime),
         totalRounds: totalRounds,
-      };
-
-      console.log("Reaction Time Game Results:", reportData);
+      });
 
       setGameState("completed");
     },
-    [studentId]
+    []
   );
 
   // Handle shape click (only when it's a circle)
@@ -74,9 +158,25 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
       const clickTime = Date.now();
       const reactionTime = clickTime - shapeChangeTime;
 
+      stopLiveCounter(); // Stop counter when circle is clicked
       setCurrentReactionTime(reactionTime);
       setReactionTimes((prev) => [...prev, reactionTime]);
       setGameState("clicked");
+
+      // Update game stats with proper question format
+      setGameStats((prev) => ({
+        ...prev,
+        rounds: [
+          ...prev.rounds,
+          {
+            question: `Προσπάθεια ${currentRound + 1}`,
+            target: "",
+            result: "",
+            isCorrect: true,
+            seconds: (reactionTime / 1000).toFixed(3),
+          },
+        ],
+      }));
 
       // Clear any existing timeout
       if (timeoutId) {
@@ -104,36 +204,9 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
     currentRound,
     completeGame,
     reactionTimes,
+    stopLiveCounter,
   ]);
 
-  // Handle premature click (before circle appears)
-  const handlePrematureClick = useCallback(() => {
-    if (gameState === "waiting") {
-      // User clicked too early
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        setTimeoutId(null);
-      }
-
-      // Record a penalty time (e.g., 5000ms)
-      const penaltyTime = 5000;
-      setCurrentReactionTime(penaltyTime);
-      setReactionTimes((prev) => [...prev, penaltyTime]);
-      setGameState("clicked");
-
-      // Check if game is completed
-      if (currentRound >= totalRounds - 1) {
-        setTimeout(() => {
-          completeGame([...reactionTimes, penaltyTime]);
-        }, 1500);
-      } else {
-        setTimeout(() => {
-          setCurrentRound((prev) => prev + 1);
-          setGameState("next");
-        }, 1500);
-      }
-    }
-  }, [gameState, timeoutId, currentRound, completeGame, reactionTimes]);
 
   // Continue to next round
   const continueToNextRound = useCallback(() => {
@@ -150,14 +223,17 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [gameState, handleInitialClick]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeout and counter on unmount
   useEffect(() => {
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
+      if (counterInterval) {
+        clearInterval(counterInterval);
+      }
     };
-  }, [timeoutId]);
+  }, [timeoutId, counterInterval]);
 
   // Shape style based on current state
   const getShapeStyle = () => {
@@ -179,13 +255,13 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
     if (isShape === "rectangle") {
       return {
         ...baseStyle,
-        backgroundColor: "#000",
+        backgroundColor: "#444",
         borderRadius: "20px",
       };
     } else {
       return {
         ...baseStyle,
-        backgroundColor: "#000",
+        backgroundColor: "#444",
         borderRadius: "50%",
       };
     }
@@ -275,7 +351,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
                   <QuestionProgressLights
                     totalQuestions={totalRounds}
                     currentQuestion={currentRound}
-                    answeredQuestions={reactionTimes.map(() => true)}
+                    answeredQuestions={gameStats.rounds.map(() => true)}
                   />
                 </div>
               )}
@@ -323,11 +399,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
               {gameStarted && (
                 <div
                   style={getShapeStyle()}
-                  onClick={
-                    isShape === "circle"
-                      ? handleShapeClick
-                      : handlePrematureClick
-                  }
+                  onClick={isShape === "circle" ? handleShapeClick : undefined}
                 ></div>
               )}
 
