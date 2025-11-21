@@ -255,13 +255,13 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
     if (isShape === "rectangle") {
       return {
         ...baseStyle,
-        backgroundColor: "#444",
+        backgroundColor: "rgb(130, 19, 19)",
         borderRadius: "20px",
       };
     } else {
       return {
         ...baseStyle,
-        backgroundColor: "#444",
+        backgroundColor: "rgb(130, 19, 19)",
         borderRadius: "50%",
       };
     }
