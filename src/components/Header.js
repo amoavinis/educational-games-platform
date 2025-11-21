@@ -41,7 +41,7 @@ const Header = () => {
     <Navbar expand="lg" className="header-navbar mb-4">
       <Container>
         <Navbar.Brand as={Link} to="/">
-          Εκπαιδευτική πλατφόρμα παιχνιδιών
+          Morpho-Game
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">

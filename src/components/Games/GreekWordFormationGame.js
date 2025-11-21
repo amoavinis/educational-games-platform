@@ -1,3 +1,4 @@
+// Game 13
 import React, { useState, useEffect, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -150,7 +151,7 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length}
-              currentQuestion={currentQuestion - 1} // Subtract 1 for example
+              currentQuestion={questions.slice(0, currentQuestion).filter((q) => !q.isExample).length}
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
@@ -207,7 +208,7 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
                       customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
                     } else {
                       variant = "danger";
-                      customStyle = { backgroundColor: "#00CED1", borderColor: "#00CED1", color: "white" };
+                      customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
                     }
                   } else if (selectedAnswer && option === question.correct) {
                     variant = "success";

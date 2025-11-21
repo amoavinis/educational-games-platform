@@ -1,3 +1,4 @@
+// Game 1
 import React, { useState, useEffect, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -145,6 +146,9 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   const handleTextSelection = () => {
+    // Prevent selection if feedback has already been given
+    if (feedback) return;
+
     const selection = window.getSelection();
     if (selection.toString() && selection.rangeCount > 0) {
       const selectedText = selection.toString();
@@ -233,7 +237,7 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
           {!currentWord.isExample && (
             <QuestionProgressLights
               totalQuestions={words.filter((w) => !w.isExample).length}
-              currentQuestion={currentWordIndex - 1}
+              currentQuestion={gameStats.rounds.length}
               answeredQuestions={gameStats.rounds.map((r) => r.isCorrect)}
             />
           )}
@@ -247,7 +251,7 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
                   <span className="badge badge-dark me-2">Παράδειγμα</span>
                 )}
                 <span style={{ fontSize: 20 }}>
-                  Βρες και χρωμάτισε τη βάση των λέξεων
+                  Βρίσκω και χρωματίζω τη βάση της λέξης
                 </span>
               </h4>
             </Card.Header>

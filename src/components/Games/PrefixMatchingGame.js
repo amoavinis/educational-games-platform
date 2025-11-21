@@ -1,3 +1,4 @@
+// Game 6
 import React, {
   useState,
   // useRef,
@@ -177,7 +178,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length}
-              currentQuestion={currentQuestion - 1}
+              currentQuestion={questions.slice(0, currentQuestion).filter((q) => !q.isExample).length}
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
@@ -230,7 +231,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                       customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
                     } else {
                       variant = "danger";
-                      customStyle = { backgroundColor: "#00CED1", borderColor: "#00CED1", color: "white" };
+                      customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
                     }
                   } else if (selectedAnswer && option === currentQ.correctPrefix) {
                     variant = "success";

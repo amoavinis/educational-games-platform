@@ -1,3 +1,4 @@
+// Game 15
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -225,7 +226,7 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length}
-              currentQuestion={currentQuestion - 1} // Subtract 1 for example
+              currentQuestion={questions.slice(0, currentQuestion).filter((q) => !q.isExample).length}
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
@@ -296,7 +297,7 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
                         customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
                       } else {
                         variant = "danger";
-                        customStyle = { backgroundColor: "#00CED1", borderColor: "#00CED1", color: "white" };
+                        customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
                       }
                     } else if (selectedAnswer && option === question.correct) {
                       variant = "success";

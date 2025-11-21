@@ -1,3 +1,4 @@
+// Game 2
 import React, { useState, useEffect, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -72,9 +73,7 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
     // Update game stats only for non-example questions
     if (!currentWord.isExample) {
       const questionEndTime = Date.now();
-      const secondsForQuestion = questionStartTime
-        ? (questionEndTime - questionStartTime) / 1000
-        : 0;
+      const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
       setGameStats((prev) => ({
         ...prev,
@@ -88,9 +87,7 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
             seconds: secondsForQuestion,
           },
         ],
-        correctAnswers: isCorrect
-          ? prev.correctAnswers + 1
-          : prev.correctAnswers,
+        correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers,
       }));
     }
   };
@@ -215,19 +212,11 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameStats.rounds.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -250,32 +239,15 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
             />
           )}
           <Card className="main-card">
-            <Card.Header
-              className={`text-center`}
-              style={{backgroundColor: "#2F4F4F", color: "white"}}
-            >
+            <Card.Header className={`text-center`} style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">
-                {currentWord.isExample && (
-                  <span className="badge badge-dark me-2">Παράδειγμα</span>
-                )}
-                <span style={{ fontSize: 20 }}>
-                  Βρες και χρωμάτισε τα επιθήματα των λέξεων
-                </span>
+                {currentWord.isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                <span style={{ fontSize: 20 }}>Βρες και χρωμάτισε τα επιθήματα των λέξεων</span>
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
-              <div
-                className="display-4 font-weight-bold mb-4 p-4"
-                style={{ cursor: "pointer", userSelect: "text" }}
-                onMouseUp={handleTextSelection}
-              >
-                {highlightedText
-                  ? highlightText(
-                      currentWord.word,
-                      highlightedText,
-                      highlightPosition
-                    )
-                  : currentWord.word}
+              <div className="display-4 font-weight-bold mb-4 p-4" style={{ cursor: "pointer", userSelect: "text" }} onMouseUp={handleTextSelection}>
+                {highlightedText ? highlightText(currentWord.word, highlightedText, highlightPosition) : currentWord.word}
               </div>
 
               {feedback && (
@@ -293,12 +265,7 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
           {/* Action Buttons */}
           {!feedback && (
             <div className="d-flex gap-3 mt-4 mb-4 justify-content-center">
-              <Button
-                variant={selectedText ? "primary" : "secondary"}
-                size="lg"
-                onClick={submitAnswer}
-                disabled={!selectedText || feedback}
-              >
+              <Button variant={selectedText ? "primary" : "secondary"} size="lg" onClick={submitAnswer} disabled={!selectedText || feedback}>
                 Υποβολή
               </Button>
             </div>
@@ -308,9 +275,7 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
           {feedback && (
             <div className="text-center mt-4">
               <Button variant="primary" size="lg" onClick={nextWord}>
-                {currentWordIndex < words.length - 1
-                  ? "Επόμενη Λέξη"
-                  : "Ολοκλήρωση"}
+                {currentWordIndex < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
               </Button>
             </div>
           )}

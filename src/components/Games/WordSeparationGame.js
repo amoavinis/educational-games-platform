@@ -1,12 +1,14 @@
+// Game 5
 import React, { useState, useEffect, useMemo } from "react";
 import { Container, Card, Button, Row, Col } from "react-bootstrap";
-import { useNavigate } from 'react-router-dom';
-import QuestionProgressLights from '../QuestionProgressLights';
+import { useNavigate } from "react-router-dom";
+import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game5Compounds } from "../Data/Game5";
 
 const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
+  const [gameStarted, setGameStarted] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [separatorPosition, setSeparatorPosition] = useState(null);
   const [gameResults, setGameResults] = useState([]);
@@ -32,19 +34,13 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
     const current = compounds[currentWordIndex];
     const correct = separatorPosition === current.correctPosition;
 
-    const selectedWord =
-      current.word.slice(0, separatorPosition) +
-      "|" +
-      current.word.slice(separatorPosition);
+    const selectedWord = current.word.slice(0, separatorPosition) + "|" + current.word.slice(separatorPosition);
 
-    const correctWord =
-      current.word.slice(0, current.correctPosition) +
-      "|" +
-      current.word.slice(current.correctPosition);
+    const correctWord = current.word.slice(0, current.correctPosition) + "|" + current.word.slice(current.correctPosition);
 
     setIsAnswered(true);
     setIsCorrect(correct);
-    
+
     // If wrong, show the correct separator position
     if (!correct) {
       setSeparatorPosition(current.correctPosition);
@@ -54,7 +50,7 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
     if (!current.isExample) {
       const questionEndTime = Date.now();
       const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
-      
+
       setGameResults((prev) => [
         ...prev,
         {
@@ -62,7 +58,7 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
           result: selectedWord,
           target: correctWord,
           isCorrect: correct,
-          seconds: secondsForQuestion
+          seconds: secondsForQuestion,
         },
       ]);
     }
@@ -89,32 +85,69 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
     }
 
     const now = new Date();
-    const datetime = now.getFullYear() + '-' + 
-                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                     String(now.getDate()).padStart(2, '0') + ' ' + 
-                     String(now.getHours()).padStart(2, '0') + ':' + 
-                     String(now.getMinutes()).padStart(2, '0');
-    
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
     const results = {
       studentId: studentId,
       datetime: datetime,
       gameName: "WordSeparationGame",
-      questions: gameResults
+      questions: gameResults,
     };
-    
+
     try {
       await addReport({
         schoolId,
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
       // console.log("Game results submitted successfully");
     } catch (error) {
       console.error("Error submitting game results:", error);
     }
   };
+
+  // Show start screen before game begins
+  if (!gameStarted) {
+    return (
+      <Container fluid className="game-container">
+        <Row className="justify-content-center">
+          <Col md={12} lg={10}>
+            <Card className="main-card">
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+                <h4 className="mb-0">Χωρίζω τη σύνθετη λέξη με κάθετη γραμμή</h4>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <div className="bg-light p-4 rounded border mb-4">
+                  <div className="d-flex justify-content-center gap-3 flex-wrap">
+                    <Button
+                      variant="success"
+                      size="lg"
+                      onClick={() => setGameStarted(true)}
+                      className="px-5 py-3"
+                      style={{ fontSize: "1.5rem", fontWeight: "bold" }}
+                    >
+                      ΠΑΜΕ!
+                    </Button>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
 
   const current = compounds[currentWordIndex];
 
@@ -139,7 +172,7 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
               width: "20px",
               textAlign: "center",
               color: separatorPosition === i + 1 ? "#dc3545" : "transparent",
-              userSelect: "none"
+              userSelect: "none",
             }}
           >
             |
@@ -148,11 +181,7 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
       }
     }
 
-    return (
-      <div className="d-flex justify-content-center align-items-center">
-        {spans}
-      </div>
-    );
+    return <div className="d-flex justify-content-center align-items-center">{spans}</div>;
   };
 
   if (showResults) {
@@ -161,24 +190,16 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <QuestionProgressLights
-              totalQuestions={compounds.filter(c => !c.isExample).length}
-              currentQuestion={compounds.filter(c => !c.isExample).length}
-              answeredQuestions={gameResults.map(r => r.isCorrect)}
+              totalQuestions={compounds.filter((c) => !c.isExample).length}
+              currentQuestion={compounds.filter((c) => !c.isExample).length}
+              answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button 
-                  variant="primary" 
-                  size="lg" 
-                  onClick={() => navigate('/')}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -195,55 +216,44 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
         <Col md={12} lg={10}>
           {!compounds[currentWordIndex].isExample && (
             <QuestionProgressLights
-              totalQuestions={compounds.filter(c => !c.isExample).length}
+              totalQuestions={compounds.filter((c) => !c.isExample).length}
               currentQuestion={currentWordIndex - 1}
-              answeredQuestions={gameResults.map(r => r.isCorrect)}
+              answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">
                 {compounds[currentWordIndex].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
-                Χώρισε τις σύνθετες λέξεις με κάθετες γραμμές
+                Χωρίζω τη σύνθετη λέξη με κάθετη γραμμή
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
-          <div className="bg-light p-4 rounded border mb-4">
-          <div className="mb-3">{renderWord()}</div>
+              <div className="bg-light p-4 rounded border mb-4">
+                <div className="mb-3">{renderWord()}</div>
 
-          <div className="d-flex justify-content-center gap-3 flex-wrap">
-            {!isAnswered ? (
-              <>
-                <button
-                  onClick={handleSubmit}
-                  disabled={separatorPosition === null}
-                  className="btn btn-primary px-4 py-2 text-white rounded"
-                >
-                  Υποβολή
-                </button>
+                <div className="d-flex justify-content-center gap-3 flex-wrap">
+                  {!isAnswered ? (
+                    <>
+                      <button onClick={handleSubmit} disabled={separatorPosition === null} className="btn btn-primary px-4 py-2 text-white rounded">
+                        Υποβολή
+                      </button>
 
-                <button
-                  onClick={() => setSeparatorPosition(null)}
-                  className="btn px-4 py-2 text-white rounded btn-dark"
-                >
-                  Καθαρισμός
-                </button>
-              </>
-            ) : (
-              <div className="d-flex align-items-center justify-content-center">
-                <span className="fs-1" style={{ color: isCorrect ? "#28a745" : "#dc3545" }}>
-                  {isCorrect ? "✓" : "✗"}
-                </span>
+                      <button onClick={() => setSeparatorPosition(null)} className="btn px-4 py-2 text-white rounded btn-dark">
+                        Καθαρισμός
+                      </button>
+                    </>
+                  ) : (
+                    <div className="d-flex align-items-center justify-content-center">
+                      <span className="fs-1" style={{ color: isCorrect ? "#28a745" : "#dc3545" }}>
+                        {isCorrect ? "✓" : "✗"}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
 
-
-        {/* <div className="text-center">
+              {/* <div className="text-center">
           <button onClick={resetGame} className="btn btn-secondary px-4 py-2">
             Επανάληψη
           </button>

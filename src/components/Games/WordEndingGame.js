@@ -1,3 +1,4 @@
+// Game 4
 import React, {
   useState,
   useEffect,
@@ -21,7 +22,21 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   const [questionStartTime, setQuestionStartTime] = useState(null);
   // const audioRef = useRef(null);
 
-  const questions = React.useMemo(() => game4Questions, []);
+  const questions = React.useMemo(() => {
+    // Separate example questions from regular questions
+    const examples = game4Questions.filter((q) => q.isExample);
+    const regularQuestions = game4Questions.filter((q) => !q.isExample);
+
+    // Shuffle regular questions using Fisher-Yates algorithm
+    const shuffled = [...regularQuestions];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Return examples first, then shuffled questions
+    return [...examples, ...shuffled];
+  }, []);
 
   // Play audio automatically when question changes
   const playAudio = React.useCallback(
@@ -77,9 +92,7 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
     const isCorrect = answer === questions[currentQuestion].correctSuffix;
     const currentQ = questions[currentQuestion];
     const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime
-      ? (questionEndTime - questionStartTime) / 1000
-      : 0;
+    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
     // Track the result only for non-example questions
     if (!currentQ.isExample) {
@@ -150,7 +163,7 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
       // console.log("Game results submitted successfully");
     } catch (error) {
@@ -162,26 +175,16 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center full-height">
         <Card className="w-100" style={{ maxWidth: "600px" }}>
-          <Card.Header
-            className="text-center"
-            style={{ backgroundColor: "#2F4F4F", color: "white" }}
-          >
+          <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
             <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
           </Card.Header>
           <Card.Body className="text-center">
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length * 2}
               currentQuestion={questions.filter((q) => !q.isExample).length * 2}
-              answeredQuestions={gameResults
-                .filter((r) => !r.isExample)
-                .map((r) => r.isCorrect)}
+              answeredQuestions={gameResults.filter((r) => !r.isExample).map((r) => r.isCorrect)}
             />
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => navigate("/")}
-              className="mt-4"
-            >
+            <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
               Τέλος Άσκησης
             </Button>
           </Card.Body>
@@ -199,27 +202,15 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length * 2}
-              currentQuestion={
-                currentRound * questions.filter((q) => !q.isExample).length +
-                (currentQuestion - 1)
-              }
-              answeredQuestions={gameResults
-                .filter(
-                  (r) => !questions.find((q) => q.word === r.word)?.isExample
-                )
-                .map((r) => r.isCorrect)}
+              currentQuestion={currentRound * questions.filter((q) => !q.isExample).length + questions.slice(0, currentQuestion).filter((q) => !q.isExample).length}
+              answeredQuestions={gameResults.filter((r) => !questions.find((q) => q.word === r.word)?.isExample).map((r) => r.isCorrect)}
             />
           )}
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">
-                {questions[currentQuestion].isExample && (
-                  <span className="badge badge-dark me-2">Παράδειγμα</span>
-                )}
-                Άκου και διάλεξε το σωστό επίθημα
+                {questions[currentQuestion].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                Ακούω και διαλέγω το σωστό επίθημα
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
@@ -244,7 +235,7 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: "white",
-                      border: "2px solid #6c757d"
+                      border: "2px solid #6c757d",
                     }}
                   >
                     <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
@@ -263,7 +254,7 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
                       customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
                     } else {
                       variant = "danger";
-                      customStyle = { backgroundColor: "#00CED1", borderColor: "#00CED1", color: "white" };
+                      customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
                     }
                   } else if (selectedAnswer && option === currentQ.correctSuffix) {
                     variant = "success";
@@ -271,18 +262,26 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
                   }
 
                   return (
-                  <Col key={index} xs={4}>
-                    <Button
-                      variant={variant}
-                      style={customStyle}
-                      onClick={() => handleAnswerSelect(option)}
-                      disabled={selectedAnswer !== null}
-                      className="w-100 py-3"
-                    >
-                      {option}
-                    </Button>
-                  </Col>
-                )})}
+                    <Col key={index} xs={4}>
+                      <Button
+                        variant={variant}
+                        style={customStyle}
+                        onClick={() => handleAnswerSelect(option)}
+                        disabled={selectedAnswer !== null}
+                        className="w-100 py-3"
+                      >
+                        <div className="d-flex align-items-center justify-content-center">
+                          {selectedAnswer !== null && (
+                            <span className="me-2" style={{ fontSize: "1.5rem" }}>
+                              {option === currentQ.correctSuffix ? "✓" : "✗"}
+                            </span>
+                          )}
+                          <span>{option}</span>
+                        </div>
+                      </Button>
+                    </Col>
+                  );
+                })}
               </Row>
             </Card.Body>
           </Card>

@@ -1,3 +1,4 @@
+// Game 16
 import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +21,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   const [shapeChangeTime, setShapeChangeTime] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [timeoutId, setTimeoutId] = useState(null);
-  const [currentReactionTime, setCurrentReactionTime] = useState(null);
+  // const [currentReactionTime, setCurrentReactionTime] = useState(null);
   const [resultsSubmitted, setResultsSubmitted] = useState(false);
   // const [liveCounter, setLiveCounter] = useState(0);
   const [counterInterval, setCounterInterval] = useState(null);
@@ -110,7 +111,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   const startNewRound = useCallback(() => {
     setIsShape("rectangle");
     setGameState("waiting");
-    setCurrentReactionTime(null);
+    // setCurrentReactionTime(null);
     resetLiveCounter(); // Reset counter when square appears
 
     // Random delay between 2-3 seconds
@@ -159,7 +160,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
       const reactionTime = clickTime - shapeChangeTime;
 
       stopLiveCounter(); // Stop counter when circle is clicked
-      setCurrentReactionTime(reactionTime);
+      // setCurrentReactionTime(reactionTime);
       setReactionTimes((prev) => [...prev, reactionTime]);
       setGameState("clicked");
 
@@ -271,15 +272,13 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   const getInstructionText = () => {
     switch (gameState) {
       case "initial":
-        return "Κάνε κλικ οπουδήποτε για ξεκινήσεις";
+        return "Κάνε κλικ οπουδήποτε για ξεκινήσεις.";
       case "waiting":
         return "Περίμενε να γίνει κύκλος…";
       case "ready":
         return "ΤΩΡΑ!";
       case "clicked":
-        return currentReactionTime
-          ? `Χρόνος αντίδρασης: ${currentReactionTime}ms`
-          : "Καταγράφηκε!";
+        return "Καταγράφηκε!";
       case "next":
         return `Επόμενη προσπάθεια! (${currentRound + 1}/${totalRounds})`;
       case "completed":
@@ -290,9 +289,6 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   if (gameState === "completed") {
-    const averageTime =
-      reactionTimes.reduce((sum, time) => sum + time, 0) / reactionTimes.length;
-
     return (
       <Container fluid className="game-container">
         <Row className="justify-content-center">
@@ -302,22 +298,9 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
                 className="text-center"
                 style={{ backgroundColor: "#2F4F4F", color: "white" }}
               >
-                <h3 className="mb-0">Μπράβο! Ολοκληρώσατε το τεστ!</h3>
+                <h3 className="mb-0">Μπράβο! Φοβεροί χρόνοι!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <div className="mb-4">
-                  <h5>Αποτελέσματα:</h5>
-                  <div className="mb-3">
-                    {reactionTimes.map((time, index) => (
-                      <div key={index} className="mb-1">
-                        <strong>Προσπάθεια {index + 1}:</strong> {time}ms
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3">
-                    <strong>Μέσος όρος: {Math.round(averageTime)}ms</strong>
-                  </div>
-                </div>
                 <Button
                   variant="primary"
                   size="lg"
@@ -343,7 +326,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
               className="text-center"
               style={{ backgroundColor: "#2F4F4F", color: "white" }}
             >
-              <h4 className="mb-0">Τεστ Χρόνου Αντίδρασης</h4>
+              <h4 className="mb-0">Χρόνος Αντίδρασης</h4>
             </Card.Header>
             <Card.Body className="text-center">
               {gameStarted && (

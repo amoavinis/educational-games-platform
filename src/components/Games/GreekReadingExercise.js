@@ -1,3 +1,4 @@
+// Game 3
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -69,7 +70,7 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
     } catch (error) {
       console.error("Error submitting game results:", error);
@@ -127,9 +128,9 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
-      
+
       const chunks = [];
-      
+
       recorder.ondataavailable = (event) => {
         if (recorder.state !== "inactive") {
           if (event.data.size > 0) {
@@ -137,7 +138,7 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
           }
         }
       };
-      
+
       recorder.onstop = async () => {
         const audioBlob = new Blob(chunks, { type: "audio/webm" });
 
@@ -152,7 +153,7 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
           }
         }
       };
-      
+
       mediaRecorderRef.current = recorder;
       recorder.start(1000);
       setIsRecording(true);
@@ -170,9 +171,12 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
 
   // Start highlighting sequence for current word (only in first round)
   const startWordHighlighting = (wordIndex, firstRound) => {
+    const fullHighlightDuration = 10000;
+
     if (firstRound) {
       // Ensure root highlight is set (may already be set from nextWord)
       setHighlightStage("root");
+
       const duration = 1000;
 
       setTimeout(() => {
@@ -181,7 +185,7 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
           setHighlightStage("full");
           setTimeout(() => {
             nextWord(wordIndex, firstRound);
-          }, 2000); // Full highlight duration
+          }, fullHighlightDuration); // Full highlight duration
         }, duration);
       }, duration);
     } else {
@@ -189,7 +193,7 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
       setHighlightStage("none");
       setTimeout(() => {
         nextWord(wordIndex, firstRound);
-      }, 2000);
+      }, fullHighlightDuration);
     }
   };
 
@@ -283,11 +287,8 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
-                <h4 className="mb-0">Διάβασε την κάθε λέξη όσο καλύτερα μπορείς</h4>
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+                <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
               </Card.Header>
               <Card.Body className="text-center">
                 <div className="d-flex justify-content-center">
@@ -304,17 +305,12 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
                       justifyContent: "center",
                       fontSize: "2rem",
                       backgroundColor: "#000000",
-                      border: "none"
+                      border: "none",
                     }}
                   >
-                    <svg
-                      width="40"
-                      height="40"
-                      fill="white"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V14h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-1.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
-                      <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0v5zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3z"/>
+                    <svg width="40" height="40" fill="white" viewBox="0 0 16 16">
+                      <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V14h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-1.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z" />
+                      <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0v5zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3z" />
                     </svg>
                   </Button>
                 </div>
@@ -333,19 +329,11 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -366,13 +354,8 @@ const GreekReadingExercise = ({ gameId, schoolId, studentId, classId }) => {
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
-              <h4 className="mb-0">
-                Άσκηση Ανάγνωσης{isFirstRound ? null : " - ΠΑΜΕ ΞΑΝΑ"}
-              </h4>
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+              <h4 className="mb-0">Άσκηση Ανάγνωσης{isFirstRound ? null : " - ΠΑΜΕ ΞΑΝΑ"}</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div

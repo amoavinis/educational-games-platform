@@ -1,6 +1,7 @@
 export const game1Words = [
   { word: 'γράφω', stem: 'γράφ', suffix: 'ω', isExample: true }, // Example question
   { word: 'βαφή', stem: 'βαφ', suffix: 'ή', isExample: true }, // Example question
+  { word: 'ραφείο', stem: 'ραφ', suffix: 'είο', isExample: true }, // Example question
   { word: 'καθαρίζω', stem: 'καθαρ', suffix: 'ίζω' },
   { word: 'καθάρισα', stem: 'καθάρ', suffix: 'ισα' },
   { word: 'καθάρισμα', stem: 'καθάρ', suffix: 'ισμα' },
