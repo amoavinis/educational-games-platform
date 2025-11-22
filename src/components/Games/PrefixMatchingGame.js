@@ -22,7 +22,19 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const [questionStartTime, setQuestionStartTime] = useState(null);
   // const audioRef = useRef(null);
 
-  const questions = useMemo(() => game6Questions, []);
+  const questions = useMemo(() => {
+    const examples = game6Questions.filter(q => q.isExample);
+    const nonExamples = game6Questions.filter(q => !q.isExample);
+
+    // Shuffle non-examples using Fisher-Yates algorithm
+    const shuffled = [...nonExamples];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return [...examples, ...shuffled];
+  }, []);
 
   const playAudio = useCallback(() => {
     // Console log for audio file identification
@@ -62,9 +74,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     const isCorrect = answer === questions[currentQuestion].correctPrefix;
     const currentQ = questions[currentQuestion];
     const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime
-      ? (questionEndTime - questionStartTime) / 1000
-      : 0;
+    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
     // Track the result only for non-example questions
     if (!currentQ.isExample) {
@@ -141,26 +151,16 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center full-height">
         <Card className="w-100" style={{ maxWidth: "600px" }}>
-          <Card.Header
-            className="text-center"
-            style={{ backgroundColor: "#2F4F4F", color: "white" }}
-          >
+          <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
             <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
           </Card.Header>
           <Card.Body className="text-center">
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length}
               currentQuestion={questions.filter((q) => !q.isExample).length}
-              answeredQuestions={gameResults
-                .filter((r) => !r.isExample)
-                .map((r) => r.isCorrect)}
+              answeredQuestions={gameResults.filter((r) => !r.isExample).map((r) => r.isCorrect)}
             />
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => navigate("/")}
-              className="mt-4"
-            >
+            <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
               Τέλος Άσκησης
             </Button>
           </Card.Body>
@@ -183,21 +183,17 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
             />
           )}
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">
-                {questions[currentQuestion].isExample && (
-                  <span className="badge badge-dark me-2">Παράδειγμα</span>
-                )}
-                Άκου και διάλεξε το σωστό πρόθημα
+                {questions[currentQuestion].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                Ακούω και διαλέγω το σωστό πρόθημα
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="p-4 bg-light rounded mb-4">
                 <div className="display-4 font-weight-bold mb-3">
-                  {selectedAnswer ? currentQ.correctPrefix : "_____"}{currentQ.stem}
+                  {selectedAnswer ? currentQ.correctPrefix : "_____"}
+                  {currentQ.stem}
                 </div>
 
                 <div className="d-flex justify-content-center">
@@ -212,7 +208,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: "white",
-                      border: "2px solid #6c757d"
+                      border: "2px solid #6c757d",
                     }}
                   >
                     <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
@@ -224,33 +220,43 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                 {currentQ.options.map((option, index) => {
                   let variant = "outline-primary";
                   let customStyle = {};
+                  let showIcon = null;
 
                   if (selectedAnswer === option) {
                     if (option === currentQ.correctPrefix) {
                       variant = "success";
                       customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                      showIcon = "✓";
                     } else {
                       variant = "danger";
                       customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
+                      showIcon = "✗";
                     }
                   } else if (selectedAnswer && option === currentQ.correctPrefix) {
                     variant = "success";
                     customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                    showIcon = "✓";
                   }
 
                   return (
-                  <Col key={index} xs={4}>
-                    <Button
-                      variant={variant}
-                      style={customStyle}
-                      onClick={() => handleAnswerSelect(option)}
-                      disabled={selectedAnswer !== null}
-                      className="w-100 py-3"
-                    >
-                      {option}
-                    </Button>
-                  </Col>
-                )})}
+                    <Col key={index} xs={4}>
+                      <Button
+                        variant={variant}
+                        style={customStyle}
+                        onClick={() => handleAnswerSelect(option)}
+                        disabled={selectedAnswer !== null}
+                        className="w-100 py-3"
+                      >
+                        {option}
+                        {showIcon && (
+                          <span className="ms-2 fs-4">
+                            {showIcon}
+                          </span>
+                        )}
+                      </Button>
+                    </Col>
+                  );
+                })}
               </Row>
             </Card.Body>
           </Card>
