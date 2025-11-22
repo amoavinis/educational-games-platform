@@ -1,14 +1,26 @@
 // Game 9
 import React, { useState, useEffect, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
-import { useNavigate } from 'react-router-dom';
-import QuestionProgressLights from '../QuestionProgressLights';
+import { useNavigate } from "react-router-dom";
+import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game9Words } from "../Data/Game9";
 
 const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = useMemo(() => game9Words, []);
+  const words = useMemo(() => {
+    const examples = game9Words.filter(w => w.isExample);
+    const nonExamples = game9Words.filter(w => !w.isExample);
+
+    // Shuffle non-examples using Fisher-Yates algorithm
+    const shuffled = [...nonExamples];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return [...examples, ...shuffled];
+  }, []);
 
   // Game state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -17,25 +29,25 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
-  const [highlightedText, setHighlightedText] = useState('');
+  const [highlightedText, setHighlightedText] = useState("");
   const [highlightPosition, setHighlightPosition] = useState({ start: -1, end: -1 });
   const [feedback, setFeedback] = useState(null);
 
   // Current word data
   const currentWord = words[currentQuestion];
-  const targetPart = currentWord.task === 'prefix' ? currentWord.prefix : currentWord.suffix;
+  const targetPart = currentWord.task === "prefix" ? currentWord.prefix : currentWord.suffix;
 
   // Handle answer selection
   const handleAnswerSelect = () => {
     if (!selectedText || selectedAnswer !== null) return;
-    
+
     const isCorrect = selectedText === targetPart;
     setSelectedAnswer(selectedText);
-    
+
     setFeedback({
       isCorrect,
       targetPart: targetPart,
-      selectedText
+      selectedText,
     });
 
     // If answer is wrong, highlight the correct answer instead
@@ -46,13 +58,13 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
       setHighlightedText(correctPart);
       setHighlightPosition({ start: correctIndex, end: correctIndex + correctPart.length });
     }
-    
+
     const questionEndTime = Date.now();
     const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
     // Track the result only for non-example questions
     if (!currentWord.isExample) {
-      const taskType = currentWord.task === 'prefix' ? 'πρόθεμα' : 'επίθημα';
+      const taskType = currentWord.task === "prefix" ? "πρόθεμα" : "επίθημα";
       setGameResults((prev) => [
         ...prev,
         {
@@ -60,7 +72,7 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
           result: selectedText,
           target: targetPart,
           isCorrect: isCorrect,
-          seconds: secondsForQuestion
+          seconds: secondsForQuestion,
         },
       ]);
     }
@@ -81,9 +93,9 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
 
   // Reset word state
   const resetWord = () => {
-    setSelectedText('');
+    setSelectedText("");
     setFeedback(null);
-    setHighlightedText('');
+    setHighlightedText("");
     setHighlightPosition({ start: -1, end: -1 });
   };
 
@@ -95,26 +107,31 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
     }
 
     const now = new Date();
-    const datetime = now.getFullYear() + '-' + 
-                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                     String(now.getDate()).padStart(2, '0') + ' ' + 
-                     String(now.getHours()).padStart(2, '0') + ':' + 
-                     String(now.getMinutes()).padStart(2, '0');
-    
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
     const results = {
       studentId: studentId,
       datetime: datetime,
       gameName: "PrefixSuffixHighlightGame",
-      questions: gameResults
+      questions: gameResults,
     };
-    
+
     try {
       await addReport({
         schoolId,
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
       // console.log("Game results submitted successfully");
     } catch (error) {
@@ -128,16 +145,16 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
     if (selection.toString() && selection.rangeCount > 0 && selectedAnswer === null) {
       const selectedText = selection.toString().toLowerCase();
       const word = currentWord.word;
-      
+
       const targetIndex = word.toLowerCase().indexOf(selectedText);
-      
+
       if (targetIndex !== -1) {
         setSelectedText(selectedText);
         setHighlightedText(selectedText);
         setHighlightPosition({ start: targetIndex, end: targetIndex + selectedText.length });
         setFeedback(null);
       }
-      
+
       selection.removeAllRanges();
     }
   };
@@ -145,24 +162,22 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
   // Highlight text function like Game 1
   const highlightText = (text, highlight, position) => {
     if (!highlight || position.start === -1) return text;
-    
+
     const start = Math.max(0, Math.min(position.start, text.length));
     const end = Math.max(start, Math.min(position.end, text.length));
-    
+
     // Use purple for suffix, green for prefix
-    const backgroundColor = currentWord.task === 'suffix' ? '#6f42c1' : '#28a745';
-    
+    const backgroundColor = currentWord.task === "suffix" ? "#6f42c1" : "#28a745";
+
     return (
       <>
         {text.substring(0, start)}
-        <span style={{ backgroundColor: backgroundColor, color: 'white', padding: '2px 4px', borderRadius: '3px' }}>
-          {text.substring(start, end)}
-        </span>
+        <span style={{ backgroundColor: backgroundColor, color: "white", padding: "2px 4px", borderRadius: "3px" }}>{text.substring(start, end)}</span>
         {text.substring(end)}
       </>
     );
   };
-  
+
   // Start timing when question begins
   useEffect(() => {
     if (!gameCompleted) {
@@ -171,33 +186,23 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
   }, [currentQuestion, gameCompleted]);
 
   const getTaskTitle = () => {
-    return currentWord.task === 'prefix' 
-      ? 'Επιλέξτε το ΠΡΟΘΗΜΑ της λέξης' 
-      : 'Επιλέξτε το ΕΠΙΘΗΜΑ της λέξης';
+    return currentWord.task === "prefix" ? "Βρίσκω και χρωματίζω το πρόθημα της λέξης" : "Βρίσκω και χρωματίζω το επίθημα της λέξης";
   };
 
   if (gameCompleted) {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center full-height">
         <Card className="w-100" style={{ maxWidth: "600px" }}>
-          <Card.Header
-            className="text-center"
-            style={{ backgroundColor: "#2F4F4F", color: "white" }}
-          >
+          <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
             <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
           </Card.Header>
           <Card.Body className="text-center">
             <QuestionProgressLights
-              totalQuestions={words.filter(q => !q.isExample).length}
-              currentQuestion={words.filter(q => !q.isExample).length}
-              answeredQuestions={gameResults.map(r => r.isCorrect)}
+              totalQuestions={words.filter((q) => !q.isExample).length}
+              currentQuestion={words.filter((q) => !q.isExample).length}
+              answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
-            <Button 
-              variant="primary" 
-              size="lg" 
-              onClick={() => navigate('/')}
-              className="mt-4"
-            >
+            <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
               Τέλος Άσκησης
             </Button>
           </Card.Body>
@@ -212,16 +217,13 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
         <Col md={12} lg={10}>
           {!words[currentQuestion].isExample && (
             <QuestionProgressLights
-              totalQuestions={words.filter(q => !q.isExample).length}
+              totalQuestions={words.filter((q) => !q.isExample).length}
               currentQuestion={currentQuestion - 1}
-              answeredQuestions={gameResults.map(r => r.isCorrect)}
+              answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">
                 {words[currentQuestion].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
                 {getTaskTitle()}
@@ -231,19 +233,13 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
               <div className="mb-4"></div>
 
               <div className="p-4 bg-light rounded mb-4">
-                <div 
-                  className="display-4 font-weight-bold mb-3" 
-                  style={{ userSelect: "text", cursor: "pointer" }}
-                  onMouseUp={handleTextSelection}
-                >
+                <div className="display-4 font-weight-bold mb-3" style={{ userSelect: "text", cursor: "pointer" }} onMouseUp={handleTextSelection}>
                   {highlightedText ? highlightText(currentWord.word, highlightedText, highlightPosition) : currentWord.word}
                 </div>
 
                 {feedback && (
                   <div className="mb-4 text-center">
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-                      {feedback.isCorrect ? '✅' : '❌'}
-                    </div>
+                    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>{feedback.isCorrect ? "✅" : "❌"}</div>
                   </div>
                 )}
               </div>
@@ -265,23 +261,17 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
               {/* Next Question Button (only show after feedback) */}
               {feedback && (
                 <div className="text-center mt-4">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    onClick={nextQuestion}
-                  >
-                    {currentQuestion < words.length - 1 ? 'Επόμενη Λέξη' : 'Ολοκλήρωση'}
+                  <Button variant="primary" size="lg" onClick={nextQuestion}>
+                    {currentQuestion < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
                   </Button>
                 </div>
               )}
-
             </Card.Body>
           </Card>
         </Col>
       </Row>
     </Container>
   );
-
 };
 
 export default PrefixSuffixHighlightGame;

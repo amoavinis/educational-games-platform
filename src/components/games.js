@@ -9,7 +9,7 @@ const games = [
   { id: 6, name: "Βρες τη σωστή αρχή! (Πολλαπλής επιλογής)", description: "", color: `hsl(125, 80%, 70%)` },
   { id: 7, name: "Ταξίδι στα προθήματα (Ταξινόμηση)", description: "", color: `hsl(150, 80%, 70%)` },
   { id: 8, name: "Μορφολογικό παζλ (Πολλαπλής επιλογής)", description: "", color: `hsl(175, 80%, 70%)` },
-  { id: 9, name: "Χρωματισμός προθημάτων και επιθημάτων", description: "", color: `hsl(200, 80%, 70%)` },
+  { id: 9, name: "Κυνήγι διπλής όψης", description: "", color: `hsl(200, 80%, 70%)` },
   { id: 10, name: "Ανάγνωση λέξεων", description: "", color: `hsl(225, 80%, 70%)` },
   { id: 11, name: "Ταξινόμηση λέξεων", description: "", color: `hsl(250, 80%, 70%)` },
   { id: 12, name: "Πολλαπλής επιλογής", description: "", color: `hsl(275, 80%, 70%)` },
