@@ -9,7 +9,19 @@ import { game7Words } from "../Data/Game7";
 
 const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = React.useMemo(() => game7Words, []);
+  const words = React.useMemo(() => {
+    const examples = game7Words.filter(w => w.isExample);
+    const nonExamples = game7Words.filter(w => !w.isExample);
+
+    // Shuffle non-examples using Fisher-Yates algorithm
+    const shuffled = [...nonExamples];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return [...examples, ...shuffled];
+  }, []);
 
   // Yellow color shades for each prefix column
   const getPrefixColor = (prefix) => {
@@ -46,9 +58,9 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const [gameCompleted, setGameCompleted] = useState(false);
 
   const initializeGame = React.useCallback(() => {
-    const exampleWord = words.find((w) => w.isExample);
-    // Show only the example word initially
-    setWordPool([exampleWord]);
+    const exampleWords = words.filter((w) => w.isExample);
+    // Show all example words initially
+    setWordPool(exampleWords);
     setColumns({ κατα: [], ανα: [], παρα: [], δια: [] });
     setWordAttempts({});
     setGameStartTime(Date.now());
@@ -103,23 +115,26 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
       // Remove from any existing column
       const newColumns = { ...columns };
       Object.keys(newColumns).forEach((prefix) => {
-        newColumns[prefix] = newColumns[prefix].filter(
-          (w) => w.id !== wordData.id
-        );
+        newColumns[prefix] = newColumns[prefix].filter((w) => w.id !== wordData.id);
       });
 
       // Add to correct column
-      newColumns[targetPrefix] = [
-        ...newColumns[targetPrefix],
-        { ...wordData, placedPrefix: targetPrefix },
-      ];
+      newColumns[targetPrefix] = [...newColumns[targetPrefix], { ...wordData, placedPrefix: targetPrefix }];
 
       setColumns(newColumns);
 
-      // If this was the example word, add all remaining words to the pool
+      // If this was an example word, check if all examples are placed
       if (wordData.isExample) {
-        const regularWords = words.filter((w) => !w.isExample);
-        setWordPool((prev) => [...prev, ...regularWords]);
+        const exampleWords = words.filter((w) => w.isExample);
+        const placedExamples = Object.values(newColumns)
+          .flat()
+          .filter((w) => w.isExample);
+
+        // If all examples are placed, add all regular words to the pool
+        if (placedExamples.length === exampleWords.length) {
+          const regularWords = words.filter((w) => !w.isExample);
+          setWordPool((prev) => [...prev, ...regularWords]);
+        }
       } else {
         // Check if all regular words are placed
         const regularWords = words.filter((w) => !w.isExample);
@@ -151,23 +166,26 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
         // Remove from any existing column
         const newColumns = { ...columns };
         Object.keys(newColumns).forEach((prefix) => {
-          newColumns[prefix] = newColumns[prefix].filter(
-            (w) => w.id !== wordData.id
-          );
+          newColumns[prefix] = newColumns[prefix].filter((w) => w.id !== wordData.id);
         });
 
         // Add to correct column
-        newColumns[wordData.prefix] = [
-          ...newColumns[wordData.prefix],
-          { ...wordData, placedPrefix: wordData.prefix },
-        ];
+        newColumns[wordData.prefix] = [...newColumns[wordData.prefix], { ...wordData, placedPrefix: wordData.prefix }];
 
         setColumns(newColumns);
 
-        // If this was the example word, add all remaining words to the pool
+        // If this was an example word, check if all examples are placed
         if (wordData.isExample) {
-          const regularWords = words.filter((w) => !w.isExample);
-          setWordPool((prev) => [...prev, ...regularWords]);
+          const exampleWords = words.filter((w) => w.isExample);
+          const placedExamples = Object.values(newColumns)
+            .flat()
+            .filter((w) => w.isExample);
+
+          // If all examples are placed, add all regular words to the pool
+          if (placedExamples.length === exampleWords.length) {
+            const regularWords = words.filter((w) => !w.isExample);
+            setWordPool((prev) => [...prev, ...regularWords]);
+          }
         } else {
           // Check if all regular words are placed
           const regularWords = words.filter((w) => !w.isExample);
@@ -188,9 +206,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
         // Word is already in pool, just need to remove from any column
         const newColumns = { ...columns };
         Object.keys(newColumns).forEach((prefix) => {
-          newColumns[prefix] = newColumns[prefix].filter(
-            (w) => w.id !== wordData.id
-          );
+          newColumns[prefix] = newColumns[prefix].filter((w) => w.id !== wordData.id);
         });
         setColumns(newColumns);
       }
@@ -241,7 +257,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
       questions: gameResults,
       totalTime: totalTime,
     };
-    
+
     try {
       await addReport({
         schoolId,
@@ -273,24 +289,14 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
 
     return (
       <div
-        className={`word-card ${isDraggable ? "draggable" : ""} ${
-          wordData.isExample ? "example-word" : ""
-        }`}
+        className={`word-card ${isDraggable ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""}`}
         style={getCardStyle()}
         draggable={isDraggable}
-        onDragStart={
-          isDraggable ? (e) => handleDragStart(e, wordData) : undefined
-        }
+        onDragStart={isDraggable ? (e) => handleDragStart(e, wordData) : undefined}
         onDragEnd={isDraggable ? handleDragEnd : undefined}
-        onClick={
-          !isDraggable
-            ? () => returnToPool(wordData, wordData.placedPrefix)
-            : undefined
-        }
+        onClick={!isDraggable ? () => returnToPool(wordData, wordData.placedPrefix) : undefined}
       >
-        {wordData.isExample && (
-          <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>
-        )}
+        {wordData.isExample && <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>}
         {wordData.word}
       </div>
     );
@@ -319,11 +325,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
       </Card.Header>
       <Card.Body className="column-body" onDragOver={handleDragOver}>
         {words.map((wordData) => (
-          <WordCard
-            key={`${wordData.id}-${prefix}`}
-            wordData={wordData}
-            isDraggable={false}
-          />
+          <WordCard key={`${wordData.id}-${prefix}`} wordData={wordData} isDraggable={false} />
         ))}
       </Card.Body>
     </Card>
@@ -335,19 +337,11 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -363,30 +357,21 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
       <Row className="justify-content-center">
         <Col md={12} lg={12}>
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
-              <h4 className="mb-0">Τοποθέτησε τη λέξη στη σωστή στήλη</h4>
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+              <h4 className="mb-0">Τοποθετώ τη κάθε λέξη στη σωστή στήλη</h4>
             </Card.Header>
             <Card.Body>
               <Row>
                 {/* Word Pool */}
                 <Col md={2} lg={2} className="mb-4">
                   <Card className="word-pool-card">
-                    <Card.Header
-                      className="text-center"
-                      style={{ backgroundColor: "#2F4F4F", color: "white" }}
-                    >
+                    <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                       Λέξεις προς ταξινόμηση
                     </Card.Header>
                     <Card.Body className="word-pool-body">
                       <div className="word-pool-grid">
                         {wordPool.map((wordData) => (
-                          <WordCard
-                            key={`pool-${wordData.id}`}
-                            wordData={wordData}
-                          />
+                          <WordCard key={`pool-${wordData.id}`} wordData={wordData} />
                         ))}
                       </div>
                     </Card.Body>
@@ -397,13 +382,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
                 <Col md={10} lg={10}>
                   <Row className="flex-nowrap overflow-auto  mb-4">
                     {Object.entries(columns).map(([prefix, words]) => (
-                      <Col
-                        key={prefix}
-                        xs={6}
-                        sm={3}
-                        md={3}
-                        style={{ minWidth: "250px" }}
-                      >
+                      <Col key={prefix} xs={6} sm={3} md={3} style={{ minWidth: "250px" }}>
                         <PrefixColumn prefix={prefix} words={words} />
                       </Col>
                     ))}
