@@ -13,7 +13,7 @@ const games = [
   { id: 10, name: "Λεξο-κομματάκια", description: "", color: `hsl(225, 80%, 70%)` },
   { id: 11, name: "Ταξίδι στα επιθήματα", description: "", color: `hsl(250, 80%, 70%)` },
   { id: 12, name: "Πώς τελειώνει;", description: "", color: `hsl(275, 80%, 70%)` },
-  { id: 13, name: "Κανόνες παραγωγής λέξεων", description: "", color: `hsl(300, 80%, 70%)` },
+  { id: 13, name: "Λεξοπλασία", description: "", color: `hsl(300, 80%, 70%)` },
   { id: 14, name: "Πολλαπλής επιλογής", description: "", color: `hsl(325, 80%, 70%)` },
   { id: 15, name: "Συμπλήρωση επιθήματος φράσης", description: "", color: `hsl(350, 80%, 70%)` },
 ];

@@ -43,10 +43,10 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
       ]);
     }
 
-    // Auto advance after 1 second
+    // Auto advance after 10 seconds
     setTimeout(() => {
       nextQuestion();
-    }, 1000);
+    }, 10000);
   };
 
   const nextQuestion = () => {
@@ -166,59 +166,72 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
                     Παράδειγμα
                   </span>
                 )}
-                Φτιάξε νέες λέξεις
+                Διαλέγω το κατάλληλο επίθημα και φτιάχνω…
               </h4>
             </Card.Header>
             <Card.Body>
-              <Card className="mb-4 border-primary">
-                <Card.Body className="text-center">
-                  <h3 className="display-6 mb-3 text-primary">
-                    {question.instruction}
-                  </h3>
-                  <h4 className="mb-4 text-muted">
-                    για τη λέξη{" "}
-                    <span className="text-primary font-weight-bold">
-                      {question.baseWord}
-                    </span>
-                  </h4>
-                  
-                  {selectedAnswer && (
-                    <div className="mt-4 p-3 bg-light rounded">
-                      <div className="d-flex align-items-center justify-content-center mb-3">
-                        <span className="fs-1" style={{ color: selectedAnswer === question.correct ? "#28a745" : "#dc3545" }}>
-                          {selectedAnswer === question.correct ? "✓" : "✗"}
-                        </span>
-                      </div>
-                      <h3 className="font-weight-bold">
-                        {question.result}
-                      </h3>
+              {/* Visual flow diagram */}
+              <div className="mb-4 p-4">
+                <div className="d-flex align-items-center justify-content-center gap-3 flex-wrap">
+                  {/* Base word in oval */}
+                  <div
+                    className="px-4 py-3 bg-primary text-white rounded-pill"
+                    style={{ fontSize: "1.5rem", fontWeight: "bold", minWidth: "150px", textAlign: "center" }}
+                  >
+                    {question.baseWord}
+                  </div>
+
+                  {/* Arrow with instruction above */}
+                  <div className="d-flex flex-column align-items-center justify-content-center">
+                    <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2F4F4F", marginBottom: "0.5rem", height: "1.5rem" }}>
+                      {question.instruction}
                     </div>
-                  )}
-                </Card.Body>
-              </Card>
+                    <i className="bi bi-arrow-right" style={{ fontSize: "2rem", color: "#2F4F4F" }}></i>
+                    <div style={{ height: "1.5rem", marginTop: "0.5rem" }}></div>
+                  </div>
+
+                  {/* Result oval - shows result after answer */}
+                  <div
+                    className={`px-4 py-3 rounded-pill ${
+                      selectedAnswer
+                        ? selectedAnswer === question.correct
+                          ? "bg-success"
+                          : "bg-danger"
+                        : "bg-light border border-secondary"
+                    } text-white`}
+                    style={{ fontSize: "1.5rem", fontWeight: "bold", minWidth: "150px", textAlign: "center" }}
+                  >
+                    {selectedAnswer ? question.result : "?"}
+                  </div>
+                </div>
+              </div>
 
               <Row className="justify-content-center mb-4">
                 {question.options.map((option, index) => {
                   let variant = "outline-primary";
                   let customStyle = {};
+                  let showIcon = null;
 
                   if (selectedAnswer === option) {
                     if (option === question.correct) {
                       variant = "success";
                       customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                      showIcon = "✓";
                     } else {
                       variant = "danger";
                       customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
+                      showIcon = "✗";
                     }
                   } else if (selectedAnswer && option === question.correct) {
                     variant = "success";
                     customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                    showIcon = "✓";
                   }
 
                   return (
                     <Col
                       key={index}
-                      xs={3}
+                      xs={4}
                       className="mb-3 d-flex justify-content-center"
                     >
                       <Button
@@ -231,6 +244,11 @@ const GreekWordFormationGame = ({ gameId, schoolId, studentId, classId }) => {
                         className="py-3"
                       >
                         {option}
+                        {showIcon && (
+                          <span className="ms-2 fs-4">
+                            {showIcon}
+                          </span>
+                        )}
                       </Button>
                     </Col>
                   );
