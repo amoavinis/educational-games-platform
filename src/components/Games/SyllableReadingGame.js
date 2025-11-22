@@ -1,11 +1,5 @@
 // Game 10
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
@@ -82,14 +76,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
     } catch (error) {
       console.error("Error submitting game results:", error);
     }
-  }, [
-    gameStats.rounds,
-    studentId,
-    classId,
-    schoolId,
-    gameId,
-    audioDownloadURL,
-  ]);
+  }, [gameStats.rounds, studentId, classId, schoolId, gameId, audioDownloadURL]);
 
   // Audio recording functions
   const stopRecording = useCallback(() => {
@@ -107,22 +94,11 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
 
   // Submit final results when game completes and audio is available
   useEffect(() => {
-    if (
-      gameCompleted &&
-      gameStats.rounds.length > 0 &&
-      !resultsSubmitted &&
-      audioDownloadURL
-    ) {
+    if (gameCompleted && gameStats.rounds.length > 0 && !resultsSubmitted && audioDownloadURL) {
       submitGameResults();
       setResultsSubmitted(true);
     }
-  }, [
-    gameCompleted,
-    gameStats.rounds,
-    submitGameResults,
-    resultsSubmitted,
-    audioDownloadURL,
-  ]);
+  }, [gameCompleted, gameStats.rounds, submitGameResults, resultsSubmitted, audioDownloadURL]);
 
   // Ensure recording stops when game completes
   useEffect(() => {
@@ -210,7 +186,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
         setHighlightStage("suffix");
         setTimeout(() => {
           setHighlightStage("full");
-          const fullDuration = slowPhase ? 2000 : 1500;
+          const fullDuration = 10000;
           setTimeout(() => {
             nextWord(wordIndex, slowPhase);
           }, fullDuration);
@@ -317,24 +293,14 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
-                <h4 className="mb-0">Προθήματα και Επιθήματα</h4>
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+                <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ.</h4>
               </Card.Header>
               <Card.Body className="text-center">
                 <div className="mb-4">
-                  <p className="lead">
-                    Πάτησε Έναρξη και διάβασε τις συλλαβές και τις λέξεις.
-                  </p>
+                  <p className="lead">Πάτησε Έναρξη και διάβασε τις συλλαβές και τις λέξεις.</p>
                 </div>
-                <Button
-                  variant="success"
-                  size="lg"
-                  onClick={startGame}
-                  className="mb-4"
-                >
+                <Button variant="success" size="lg" onClick={startGame} className="mb-4">
                   Έναρξη
                 </Button>
               </Card.Body>
@@ -352,19 +318,11 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -385,15 +343,10 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">
-                {currentWord.isExample && (
-                  <span className="badge badge-dark me-2">Παράδειγμα</span>
-                )}
-                Προθήματα και Επιθήματα {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
+                {currentWord.isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
               </h4>
             </Card.Header>
             <Card.Body className="text-center">

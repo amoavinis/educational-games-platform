@@ -1,4 +1,5 @@
 export const game10Words = [
+  // Παραδείγματα
   {
     word: "αντίστροφος",
     prefix: "αντί",
@@ -11,7 +12,17 @@ export const game10Words = [
     prefix: "κατα",
     stem: "στρεφ",
     suffix: "ω",
+    isExample: true,
   },
+  {
+    word: "επιλέγω",
+    prefix: "επι",
+    stem: "λεγ",
+    suffix: "ω",
+    isExample: true,
+  },
+
+  // Existing words
   {
     word: "επιχρωματισμένος",
     prefix: "επι",
@@ -19,15 +30,95 @@ export const game10Words = [
     suffix: "ος",
   },
   {
-    word: "επιλέγω",
-    prefix: "επι",
-    stem: "λεγ",
-    suffix: "ω",
-  },
-  {
     word: "δυσλεξικός",
     prefix: "δυσ",
     stem: "λεξικ",
     suffix: "ός",
+  },
+
+  // Νέο υλικό
+  {
+    word: "υπερφόρτωση",
+    prefix: "υπερ",
+    stem: "φόρτ",
+    suffix: "ωση",
+  },
+  {
+    word: "αντιστάθμιση",
+    prefix: "αντι",
+    stem: "στάθμ",
+    suffix: "ιση",
+  },
+  {
+    word: "επικεντρώνω",
+    prefix: "επι",
+    stem: "κεντρ",
+    suffix: "ώνω",
+  },
+  {
+    word: "απονευρωμένος",
+    prefix: "απο",
+    stem: "νευρ",
+    suffix: "ωμένος",
+  },
+  {
+    word: "παράπλευρος",
+    prefix: "παρά",
+    stem: "πλευρ",
+    suffix: "ος",
+  },
+  {
+    word: "καταπιεστική",
+    prefix: "κατα",
+    stem: "πιεστ",
+    suffix: "ική",
+  },
+  {
+    word: "δυστροπία",
+    prefix: "δυσ",
+    stem: "τροπ",
+    suffix: "ία",
+  },
+  {
+    word: "δυστύχησα",
+    prefix: "δυσ",
+    stem: "τύχ",
+    suffix: "ησα",
+  },
+  {
+    word: "αναδασώνομαι",
+    prefix: "ανα",
+    stem: "δασ",
+    suffix: "ώνομαι",
+  },
+  {
+    word: "υποτίμηση",
+    prefix: "υπο",
+    stem: "τίμ",
+    suffix: "ηση",
+  },
+  {
+    word: "διαφωτισμός",
+    prefix: "δια",
+    stem: "φωτ",
+    suffix: "ισμός",
+  },
+  {
+    word: "δυσαρμονικό",
+    prefix: "δυσ",
+    stem: "αρμον",
+    suffix: "ικό",
+  },
+  {
+    word: "υπερτονίζω",
+    prefix: "υπερ",
+    stem: "τον",
+    suffix: "ίζω",
+  },
+  {
+    word: "αντιστοιχώ",
+    prefix: "αντι",
+    stem: "στοιχ",
+    suffix: "ώ",
   },
 ];
