@@ -11,7 +11,7 @@ const games = [
   { id: 8, name: "Μορφολογικό παζλ (Πολλαπλής επιλογής)", description: "", color: `hsl(175, 80%, 70%)` },
   { id: 9, name: "Κυνήγι διπλής όψης", description: "", color: `hsl(200, 80%, 70%)` },
   { id: 10, name: "Λεξο-κομματάκια", description: "", color: `hsl(225, 80%, 70%)` },
-  { id: 11, name: "Ταξινόμηση λέξεων", description: "", color: `hsl(250, 80%, 70%)` },
+  { id: 11, name: "Ταξίδι στα επιθήματα", description: "", color: `hsl(250, 80%, 70%)` },
   { id: 12, name: "Πολλαπλής επιλογής", description: "", color: `hsl(275, 80%, 70%)` },
   { id: 13, name: "Κανόνες παραγωγής λέξεων", description: "", color: `hsl(300, 80%, 70%)` },
   { id: 14, name: "Πολλαπλής επιλογής", description: "", color: `hsl(325, 80%, 70%)` },

@@ -1,6 +1,8 @@
 export const level11Words = [
-  // Example word
+  // Example words
   { id: "0", word: "κρύβω", suffix: "ω", isExample: true },
+  { id: "0a", word: "γραφτήκατε", suffix: "ηκατε", isExample: true },
+  { id: "0b", word: "σκουπίζουμε", suffix: "ουμε", isExample: true },
   // -ων words (Genitive plural)
   { id: "1", word: "βιβλίων", suffix: "ων" },
   { id: "2", word: "παιχνιδιών", suffix: "ων" },

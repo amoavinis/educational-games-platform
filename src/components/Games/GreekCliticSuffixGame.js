@@ -32,9 +32,9 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
       .map(({ value }) => value);
 
   const initializeGame = React.useCallback(() => {
-    const exampleWord = words.find((w) => w.isExample);
-    // Show only the example word initially
-    setWordPool([exampleWord]);
+    const exampleWords = words.filter((w) => w.isExample);
+    // Show all example words initially
+    setWordPool(exampleWords);
     setColumns({
       ων: [],
       ω: [],
@@ -104,23 +104,26 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
       // Remove from any existing column
       const newColumns = { ...columns };
       Object.keys(newColumns).forEach((suffix) => {
-        newColumns[suffix] = newColumns[suffix].filter(
-          (w) => w.id !== wordData.id
-        );
+        newColumns[suffix] = newColumns[suffix].filter((w) => w.id !== wordData.id);
       });
 
       // Add to correct column
-      newColumns[targetSuffix] = [
-        ...newColumns[targetSuffix],
-        { ...wordData, placedSuffix: targetSuffix },
-      ];
+      newColumns[targetSuffix] = [...newColumns[targetSuffix], { ...wordData, placedSuffix: targetSuffix }];
 
       setColumns(newColumns);
 
-      // If this was the example word, add all remaining words to the pool
+      // If this was an example word, check if all examples are placed
       if (wordData.isExample) {
-        const regularWords = shuffle(words.filter((w) => !w.isExample));
-        setWordPool((prev) => [...prev, ...regularWords]);
+        const exampleWords = words.filter((w) => w.isExample);
+        const placedExamples = Object.values(newColumns)
+          .flat()
+          .filter((w) => w.isExample);
+
+        // If all examples are placed, add all regular words to the pool
+        if (placedExamples.length === exampleWords.length) {
+          const regularWords = shuffle(words.filter((w) => !w.isExample));
+          setWordPool((prev) => [...prev, ...regularWords]);
+        }
       } else {
         // Check if all regular words are placed
         const regularWords = words.filter((w) => !w.isExample);
@@ -152,23 +155,26 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
         // Remove from any existing column
         const newColumns = { ...columns };
         Object.keys(newColumns).forEach((suffix) => {
-          newColumns[suffix] = newColumns[suffix].filter(
-            (w) => w.id !== wordData.id
-          );
+          newColumns[suffix] = newColumns[suffix].filter((w) => w.id !== wordData.id);
         });
 
         // Add to correct column
-        newColumns[wordData.suffix] = [
-          ...newColumns[wordData.suffix],
-          { ...wordData, placedSuffix: wordData.suffix },
-        ];
+        newColumns[wordData.suffix] = [...newColumns[wordData.suffix], { ...wordData, placedSuffix: wordData.suffix }];
 
         setColumns(newColumns);
 
-        // If this was the example word, add all remaining words to the pool
+        // If this was an example word, check if all examples are placed
         if (wordData.isExample) {
-          const regularWords = shuffle(words.filter((w) => !w.isExample));
-          setWordPool((prev) => [...prev, ...regularWords]);
+          const exampleWords = words.filter((w) => w.isExample);
+          const placedExamples = Object.values(newColumns)
+            .flat()
+            .filter((w) => w.isExample);
+
+          // If all examples are placed, add all regular words to the pool
+          if (placedExamples.length === exampleWords.length) {
+            const regularWords = shuffle(words.filter((w) => !w.isExample));
+            setWordPool((prev) => [...prev, ...regularWords]);
+          }
         } else {
           // Check if all regular words are placed
           const regularWords = words.filter((w) => !w.isExample);
@@ -189,9 +195,7 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
         // Word is already in pool, just need to remove from any column
         const newColumns = { ...columns };
         Object.keys(newColumns).forEach((suffix) => {
-          newColumns[suffix] = newColumns[suffix].filter(
-            (w) => w.id !== wordData.id
-          );
+          newColumns[suffix] = newColumns[suffix].filter((w) => w.id !== wordData.id);
         });
         setColumns(newColumns);
       }
@@ -233,9 +237,7 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
       ":" +
       String(now.getMinutes()).padStart(2, "0");
 
-    const totalTime = gameStartTime
-      ? (Date.now() - gameStartTime) / 1000
-      : 0;
+    const totalTime = gameStartTime ? (Date.now() - gameStartTime) / 1000 : 0;
 
     const results = {
       studentId: studentId,
@@ -251,7 +253,7 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
       // console.log("Game results submitted successfully");
     } catch (error) {
@@ -273,51 +275,25 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
 
   const WordCard = ({ wordData, isDraggable = true }) => (
     <div
-      className={`word-card ${isDraggable ? "draggable" : ""} ${
-        wordData.isExample ? "example-word" : ""
-      }`}
+      className={`word-card ${isDraggable ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""}`}
       draggable={isDraggable}
-      onDragStart={
-        isDraggable ? (e) => handleDragStart(e, wordData) : undefined
-      }
+      onDragStart={isDraggable ? (e) => handleDragStart(e, wordData) : undefined}
       onDragEnd={isDraggable ? handleDragEnd : undefined}
-      onClick={
-        !isDraggable
-          ? () => returnToPool(wordData, wordData.placedSuffix)
-          : undefined
-      }
+      onClick={!isDraggable ? () => returnToPool(wordData, wordData.placedSuffix) : undefined}
     >
-      {wordData.isExample && (
-        <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>
-      )}
+      {wordData.isExample && <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>}
       {wordData.word}
     </div>
   );
 
   const SuffixColumn = ({ suffix, words }) => (
-    <Card
-      className={`suffix-column`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={(e) => handleDrop(e, suffix)}
-    >
-      <Card.Header
-        className="text-center"
-        style={{ backgroundColor: "#2F4F4F", color: "white" }}
-      >
+    <Card className={`suffix-column`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, suffix)}>
+      <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
         {getSuffixTitle(suffix)}
       </Card.Header>
-      <Card.Body
-        className="column-body column-body-1012"
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-      >
+      <Card.Body className="column-body column-body-1012" onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
         {words.map((wordData) => (
-          <WordCard
-            key={`${wordData.id}-${suffix}`}
-            wordData={wordData}
-            isDraggable={false}
-          />
+          <WordCard key={`${wordData.id}-${suffix}`} wordData={wordData} isDraggable={false} />
         ))}
       </Card.Body>
     </Card>
@@ -329,19 +305,11 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -357,30 +325,21 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
       <Row className="justify-content-center">
         <Col md={12} lg={12}>
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
-              <h4 className="mb-0">Βάλε τις λέξεις στη σωστή θέση</h4>
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+              <h4 className="mb-0">Τοποθετώ την κάθε λέξη στη σωστή στήλη</h4>
             </Card.Header>
             <Card.Body>
               <Row>
                 {/* Word Pool */}
                 <Col md={2} lg={2} className="mb-4">
                   <Card className="word-pool-card">
-                    <Card.Header
-                      className="text-center"
-                      style={{ backgroundColor: "#2F4F4F", color: "white" }}
-                    >
+                    <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                       Λέξεις προς ταξινόμηση
                     </Card.Header>
                     <Card.Body className="word-pool-body">
                       <div className="word-pool-grid">
                         {wordPool.map((wordData) => (
-                          <WordCard
-                            key={`pool-${wordData.id}`}
-                            wordData={wordData}
-                          />
+                          <WordCard key={`pool-${wordData.id}`} wordData={wordData} />
                         ))}
                       </div>
                     </Card.Body>
@@ -393,14 +352,7 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
                   <div className="columns-container">
                     <Row className="d-flex flex-wrap m-0">
                       {Object.entries(columns).map(([suffix, words]) => (
-                        <Col
-                          key={suffix}
-                          xs={6}
-                          sm={4}
-                          md={2}
-                          lg={2}
-                          className="mb-3"
-                        >
+                        <Col key={suffix} xs={6} sm={4} md={2} lg={2} className="mb-3">
                           <SuffixColumn suffix={suffix} words={words} />
                         </Col>
                       ))}
