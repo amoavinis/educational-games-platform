@@ -15,7 +15,7 @@ const games = [
   { id: 12, name: "Πώς τελειώνει;", description: "", color: `hsl(275, 80%, 70%)` },
   { id: 13, name: "Λεξοπλασία", description: "", color: `hsl(300, 80%, 70%)` },
   { id: 14, name: "Κυνήγι επιθημάτων", description: "", color: `hsl(325, 80%, 70%)` },
-  { id: 15, name: "Συμπλήρωση επιθήματος φράσης", description: "", color: `hsl(350, 80%, 70%)` },
+  { id: 15, name: "Κατάληξέ το!", description: "", color: `hsl(350, 80%, 70%)` },
 ];
 
 export { games };

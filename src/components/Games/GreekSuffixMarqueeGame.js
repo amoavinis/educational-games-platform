@@ -76,9 +76,7 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
     const question = questions[currentQuestion];
     const isCorrect = answer === question.correct;
     const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime
-      ? (questionEndTime - questionStartTime) / 1000
-      : 0;
+    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
     setSelectedAnswer(answer);
 
@@ -129,7 +127,6 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
         return;
       }
 
-
       const now = new Date();
       const datetime =
         now.getFullYear() +
@@ -155,14 +152,14 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
           studentId,
           classId,
           gameId,
-          results: JSON.stringify(results)
+          results: JSON.stringify(results),
         });
         // console.log("Game results submitted successfully");
       } catch (error) {
         console.error("Error submitting game results:", error);
       }
     };
-    
+
     if (gameCompleted) {
       submitGameResults(gameResults);
     }
@@ -196,19 +193,11 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -231,15 +220,10 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
             />
           )}
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">
-                {questions[currentQuestion].isExample && (
-                  <span className="badge badge-dark me-2">Παράδειγμα</span>
-                )}
-                Επιθήματα
+                {questions[currentQuestion].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                Διαλέγω το κατάλληλο επίθημα όσο πιο γρήγορα μπορώ
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
@@ -258,50 +242,43 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
                     overflow: "hidden",
                   }}
                 >
-                  <div
-                    ref={marqueeRef}
-                    className="marquee-text"
-                    style={{
-                      position: "absolute",
-                      whiteSpace: "nowrap",
-                      transition: "left 3s ease-out",
-                      fontSize: "1.5rem",
-                      fontWeight: "bold",
-                      visibility: "visible",
-                    }}
-                  >
-                    {selectedAnswer ? question.result : question.sentence}
-                  </div>
-                </div>
-
-                {selectedAnswer && (
-                  <div className="mt-3 mb-4">
-                    <div className="d-flex align-items-center justify-content-center">
-                      <span className="fs-1" style={{ color: selectedAnswer === question.correct ? "#28a745" : "#dc3545" }}>
-                        {selectedAnswer === question.correct ? "✓" : "✗"}
-                      </span>
+                    <div
+                      ref={marqueeRef}
+                      className="marquee-text"
+                      style={{
+                        position: "absolute",
+                        whiteSpace: "nowrap",
+                        transition: "left 3s ease-out",
+                        fontSize: "1.5rem",
+                        fontWeight: "bold",
+                        visibility: "visible",
+                      }}
+                    >
+                      {selectedAnswer ? question.result : question.sentence}
                     </div>
                   </div>
-                )}
-              </div>
 
               {!isMarqueeActive && (
                 <Row className="g-3 mb-4">
                   {question.options.map((option, index) => {
                     let variant = "outline-primary";
                     let customStyle = {};
+                    let showIcon = null;
 
                     if (selectedAnswer === option) {
                       if (option === question.correct) {
                         variant = "success";
                         customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                        showIcon = "✓";
                       } else {
                         variant = "danger";
                         customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
+                        showIcon = "✗";
                       }
                     } else if (selectedAnswer && option === question.correct) {
                       variant = "success";
                       customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                      showIcon = "✓";
                     }
 
                     return (
@@ -314,12 +291,18 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
                           className="w-100 py-3"
                         >
                           {option}
+                          {showIcon && (
+                            <span className="ms-2 fs-4">
+                              {showIcon}
+                            </span>
+                          )}
                         </Button>
                       </Col>
                     );
                   })}
                 </Row>
               )}
+              </div>
             </Card.Body>
           </Card>
         </Col>
