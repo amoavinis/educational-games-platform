@@ -1,14 +1,11 @@
 // Game 4
-import React, {
-  useState,
-  useEffect,
-  // useRef
-} from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game4Questions } from "../Data/Game4";
+import { play } from "../../services/audioPlayer";
 
 const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -20,7 +17,6 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
-  // const audioRef = useRef(null);
 
   const questions = React.useMemo(() => {
     // Separate example questions from regular questions
@@ -40,43 +36,25 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
 
   // Play audio automatically when question changes
   const playAudio = React.useCallback(
-    (slow = false) => {
-      // Console log for audio file identification
+    async (slow = false) => {
       console.log(4, currentQuestion + 1, slow ? "slow" : "fast");
 
-      // if (audioRef.current) {
-      //   audioRef.current.pause();
-      //   audioRef.current.currentTime = 0;
-      // }
+      try {
+        setIsPlaying(true);
+        const speed = slow ? "slow" : "fast";
+        await play(`04/${String(currentQuestion + 1).padStart(2, '0')}-${speed}.mp3`);
 
-      // const audioFile = slow
-      //   ? questions[currentQuestion].audioSlow
-      //   : questions[currentQuestion].audioNormal;
-      // audioRef.current = new Audio(audioFile);
+        if (!questionStartTime) {
+          setQuestionStartTime(Date.now());
+        }
 
-      // audioRef.current
-      //   .play()
-      //   .then(() => {
-      setIsPlaying(true);
-
-      // Start timing when audio plays (or when question starts)
-      if (!questionStartTime) {
-        setQuestionStartTime(Date.now());
+        setTimeout(() => setIsPlaying(false), 1000);
+      } catch (error) {
+        console.error("Audio playback failed:", error);
+        setIsPlaying(false);
       }
-
-      const timeoutId = setTimeout(() => setIsPlaying(false), 1000); // Simulate audio duration
-      return () => clearTimeout(timeoutId);
-      //   })
-      //   .catch((error) => {
-      //     console.error("Audio playback failed:", error);
-      //     setIsPlaying(false);
-      //   });
     },
-    [
-      //questions,
-      currentQuestion,
-      questionStartTime,
-    ]
+    [currentQuestion, questionStartTime]
   );
 
   useEffect(() => {

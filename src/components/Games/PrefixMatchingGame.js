@@ -1,7 +1,6 @@
 // Game 6
 import React, {
   useState,
-  // useRef,
   useEffect,
   useCallback,
   useMemo,
@@ -11,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game6Questions } from "../Data/Game6";
+import { play } from "../../services/audioPlayer";
 
 const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -20,7 +20,6 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
-  // const audioRef = useRef(null);
 
   const questions = useMemo(() => {
     const examples = game6Questions.filter(q => q.isExample);
@@ -36,29 +35,19 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     return [...examples, ...shuffled];
   }, []);
 
-  const playAudio = useCallback(() => {
-    // Console log for audio file identification
+  const playAudio = useCallback(async () => {
     console.log(6, currentQuestion + 1);
 
-    /* if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    } */
+    try {
+      await play(`06/${String(currentQuestion + 1).padStart(2, '0')}.mp3`);
+    } catch (error) {
+      console.error("Audio error:", error);
+    }
 
-    /* audioRef.current = new Audio(questions[currentQuestion].audio);
-    audioRef.current
-      .play()
-      .catch((error) => console.error("Audio error:", error)); */
-
-    // Start timing when audio plays (or when question starts)
     if (!questionStartTime) {
       setQuestionStartTime(Date.now());
     }
-  }, [
-    currentQuestion,
-    questionStartTime,
-    // questions
-  ]);
+  }, [currentQuestion, questionStartTime]);
 
   // Auto-play audio when question changes
   useEffect(() => {

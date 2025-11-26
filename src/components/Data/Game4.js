@@ -4,8 +4,6 @@ export const game4Questions = [
     correctSuffix: "ότητα",
     word: "δυνατότητα",
     options: ["ότητα", "ιότητα", "οσύνη"],
-    /* audioSlow: require("../../assets/sounds/game4/word1-slow.mp3"),
-    audioNormal: require("../../assets/sounds/game4/word1.mp3"), */
     isExample: true,
   },
   {
