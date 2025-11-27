@@ -5,18 +5,118 @@ import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game4Questions } from "../Data/Game4Data";
-import { play } from "../../services/audioPlayer";
+import useAudio from "../../hooks/useAudio";
+import titleInstructionsAudio from "../../assets/sounds/04/title-instructions.mp3";
+
+// Import word audio files
+import agapimenosAudio from "../../assets/sounds/04/αγαπημένος.mp3";
+import agnotitaAudio from "../../assets/sounds/04/αγνότητα.mp3";
+import gnisiotitaAudio from "../../assets/sounds/04/γνησιότητα.mp3";
+import dikaiosyniAudio from "../../assets/sounds/04/δικαιοσύνη.mp3";
+import egkymosyniAudio from "../../assets/sounds/04/εγκυμοσύνη.mp3";
+import kalosyniAudio from "../../assets/sounds/04/καλοσύνη.mp3";
+import kleidomenosAudio from "../../assets/sounds/04/κλειδωμένος.mp3";
+import kourastikosAudio from "../../assets/sounds/04/κουραστικός.mp3";
+import paragogikosAudio from "../../assets/sounds/04/παραγωγικός.mp3";
+import semnotitaAudio from "../../assets/sounds/04/σεμνότητα.mp3";
+import skalistosAudio from "../../assets/sounds/04/σκαλιστός.mp3";
+import sxoleioAudio from "../../assets/sounds/04/σχολείο.mp3";
+import fortismenosAudio from "../../assets/sounds/04/φορτισμένος.mp3";
+import fortomenosAudio from "../../assets/sounds/04/φορτωμένος.mp3";
+import xorismenosAudio from "../../assets/sounds/04/χωρισμένος.mp3";
+import xoristosAudio from "../../assets/sounds/04/χωριστός.mp3";
+
+// Import example audio files
+import exampleGrafikosAudio from "../../assets/sounds/04/example-γραφικός.mp3";
+import exampleDynatotitaAudio from "../../assets/sounds/04/example-δυνατότητα.mp3";
+import exampleKoureioAudio from "../../assets/sounds/04/example-κουρείο.mp3";
 
 const Game4 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
+
+  // Map words to their audio files
+  const wordAudioMap = React.useMemo(
+    () => ({
+      "δυνατότητα": exampleDynatotitaAudio,
+      "κουρείο": exampleKoureioAudio,
+      "γραφικός": exampleGrafikosAudio,
+      "κουραστικός": kourastikosAudio,
+      "παραγωγικός": paragogikosAudio,
+      "σκαλιστός": skalistosAudio,
+      "χωριστός": xoristosAudio,
+      "φαρμακείο": null, // No audio file
+      "σχολείο": sxoleioAudio,
+      "φορτισμένος": fortismenosAudio,
+      "χωρισμένος": xorismenosAudio,
+      "αγαπημένος": agapimenosAudio,
+      "φορτωμένος": fortomenosAudio,
+      "κλειδωμένος": kleidomenosAudio,
+      "αγνότητα": agnotitaAudio,
+      "σεμνότητα": semnotitaAudio,
+      "γνησιότητα": gnisiotitaAudio,
+      "δικαιοσύνη": dikaiosyniAudio,
+      "καλοσύνη": kalosyniAudio,
+      "εγκυμοσύνη": egkymosyniAudio,
+    }),
+    []
+  );
+
   // Game state
   const [currentRound, setCurrentRound] = useState(0); // 0 = slow, 1 = normal
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(false);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [currentWordAudio, setCurrentWordAudio] = useState(null);
+
+  // Initial title-instructions audio
+  const { audioRef: titleAudioRef } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  // Word-specific audio
+  const { audioRef: wordAudioRef } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
+
+  // Listen for title audio ended
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      setIsInitialAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef]);
+
+  // Play title-instructions audio on mount
+  useEffect(() => {
+    if (!hasPlayedInitialAudio && titleAudioRef.current) {
+      setIsInitialAudioPlaying(true);
+      const timer = setTimeout(() => {
+        titleAudioRef.current
+          .play()
+          .then(() => {
+            setHasPlayedInitialAudio(true);
+          })
+          .catch((error) => {
+            console.error("Error playing title audio:", error);
+            setIsInitialAudioPlaying(false);
+            setHasPlayedInitialAudio(true);
+          });
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedInitialAudio, titleAudioRef]);
 
   const questions = React.useMemo(() => {
     // Separate example questions from regular questions
@@ -34,37 +134,36 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
     return [...examples, ...shuffled];
   }, []);
 
-  // Play audio automatically when question changes
-  const playAudio = React.useCallback(
-    async (slow = false) => {
-      console.log(4, currentQuestion + 1, slow ? "slow" : "fast");
+  // Function to play current word audio
+  const playWordAudio = React.useCallback(() => {
+    if (questions[currentQuestion]) {
+      const word = questions[currentQuestion].word;
+      const audioFile = wordAudioMap[word];
 
-      try {
-        setIsPlaying(true);
-        const speed = slow ? "slow" : "fast";
-        await play(`04/${String(currentQuestion + 1).padStart(2, '0')}-${speed}.mp3`);
+      if (audioFile) {
+        setCurrentWordAudio(audioFile);
 
-        if (!questionStartTime) {
-          setQuestionStartTime(Date.now());
-        }
-
-        setTimeout(() => setIsPlaying(false), 1000);
-      } catch (error) {
-        console.error("Audio playback failed:", error);
-        setIsPlaying(false);
+        // Wait for React to update the audio element, then play
+        setTimeout(() => {
+          if (wordAudioRef.current) {
+            wordAudioRef.current.play().catch((error) => {
+              console.error("Error playing word audio:", error);
+            });
+          }
+        }, 150);
       }
-    },
-    [currentQuestion, questionStartTime]
-  );
-
-  useEffect(() => {
-    if (!gameCompleted) {
-      playAudio(currentRound === 0); // Slow for first round, normal for second
     }
-  }, [currentQuestion, currentRound, gameCompleted, playAudio]);
+  }, [currentQuestion, questions, wordAudioMap, wordAudioRef]);
+
+  // Start question timer when question changes (but don't play audio)
+  useEffect(() => {
+    if (!gameCompleted && !isInitialAudioPlaying && !questionStartTime) {
+      setQuestionStartTime(Date.now());
+    }
+  }, [currentQuestion, gameCompleted, isInitialAudioPlaying, questionStartTime]);
 
   const handleAnswerSelect = (answer) => {
-    if (selectedAnswer !== null) return; // Prevent multiple selections
+    if (selectedAnswer !== null || isInitialAudioPlaying) return; // Prevent multiple selections and block during initial audio
 
     setSelectedAnswer(answer);
     const isCorrect = answer === questions[currentQuestion].correctSuffix;
@@ -86,7 +185,10 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
       ]);
     }
 
-    // Auto advance after 1 second
+    // Play word audio after selection
+    playWordAudio();
+
+    // Auto advance after 4 seconds
     setTimeout(() => {
       nextQuestion();
     }, 4000);
@@ -203,8 +305,8 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
                 <div className="d-flex justify-content-center">
                   <Button
                     variant="light"
-                    onClick={() => playAudio(currentRound === 0)}
-                    disabled={isPlaying}
+                    onClick={playWordAudio}
+                    disabled={isInitialAudioPlaying}
                     className="mb-3 rounded-circle"
                     style={{
                       width: "80px",
@@ -245,7 +347,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
                         variant={variant}
                         style={customStyle}
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null}
+                        disabled={selectedAnswer !== null || isInitialAudioPlaying}
                         className="w-100 py-3"
                       >
                         <div className="d-flex align-items-center justify-content-center">
@@ -261,6 +363,8 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
                   );
                 })}
               </Row>
+              <audio ref={titleAudioRef} src={titleInstructionsAudio} />
+              <audio ref={wordAudioRef} src={currentWordAudio} />
             </Card.Body>
           </Card>
         </Col>
