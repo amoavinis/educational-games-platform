@@ -8,7 +8,7 @@ import "../../styles/Game.css";
 import titleInstructionsAudio from "../../assets/sounds/response-time/title-instructions.mp3";
 import useAudio from "../../hooks/useAudio";
 
-const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
 
   // Game states
@@ -394,4 +394,4 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default ReactionTimeGame;
+export default Game16;

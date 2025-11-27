@@ -4,10 +4,10 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
-import { game4Questions } from "../Data/Game4";
+import { game4Questions } from "../Data/Game4Data";
 import { play } from "../../services/audioPlayer";
 
-const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game4 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   // Game state
   const [currentRound, setCurrentRound] = useState(0); // 0 = slow, 1 = normal
@@ -269,4 +269,4 @@ const WordEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default WordEndingGame;
+export default Game4;

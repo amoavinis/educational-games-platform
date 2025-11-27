@@ -5,9 +5,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
-import { game15Questions } from "../Data/Game15";
+import { game15Questions } from "../Data/Game15Data";
 
-const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
+const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -311,4 +311,4 @@ const GreekSuffixMarqueeGame = ({ gameId, schoolId, studentId: propStudentId, cl
   );
 };
 
-export default GreekSuffixMarqueeGame;
+export default Game15;

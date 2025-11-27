@@ -4,13 +4,13 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
-import { game2Words } from "../Data/Game2";
+import { game2Words } from "../Data/Game2Data";
 import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/02/title-instructions.mp3";
 import exampleIzoAudio from "../../assets/sounds/02/example-ιζω.mp3";
 import exampleOnoAudio from "../../assets/sounds/02/example-ωνω.mp3";
 
-const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game2 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [selectedText, setSelectedText] = useState("");
@@ -407,4 +407,4 @@ const RootSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default RootSuffixGame;
+export default Game2;

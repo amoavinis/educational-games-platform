@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
-import { game14Questions } from "../Data/Game14";
+import { game14Questions } from "../Data/Game14Data";
 
-const GreekAdjectiveEndingGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game14 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -214,4 +214,4 @@ const GreekAdjectiveEndingGame = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default GreekAdjectiveEndingGame;
+export default Game14;

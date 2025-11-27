@@ -1,19 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Card,
-  Form,
-  Button,
-  Table,
-  Modal,
-  Alert,
-  Badge,
-} from "react-bootstrap";
+import { Card, Form, Button, Table, Modal, Alert, Badge } from "react-bootstrap";
 
 // Import game data
-import { game1Words } from "../Data/Game1";
-import { game3Words } from "../Data/Game3";
-import { game6Questions } from "../Data/Game6";
-import { game10Words } from "../Data/Game10";
+import { game1Words } from "../Data/Game1Data";
+import { game3Words } from "../Data/Game3Data";
+import { game6Questions } from "../Data/Game6Data";
+import { game10Words } from "../Data/Game10Data";
 
 const GameMaterialEditor = ({ gameData }) => {
   const [materials, setMaterials] = useState([]);
@@ -110,11 +102,7 @@ const GameMaterialEditor = ({ gameData }) => {
   };
 
   const handleDelete = (index) => {
-    if (
-      window.confirm(
-        "Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το στοιχείο;"
-      )
-    ) {
+    if (window.confirm("Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το στοιχείο;")) {
       const newMaterials = materials.filter((_, i) => i !== index);
       setMaterials(newMaterials);
     }
@@ -193,19 +181,10 @@ const GameMaterialEditor = ({ gameData }) => {
             </td>
           ))}
         <td>
-          <Button
-            variant="outline-primary"
-            size="sm"
-            onClick={() => handleEdit(item, index)}
-            className="me-2"
-          >
+          <Button variant="outline-primary" size="sm" onClick={() => handleEdit(item, index)} className="me-2">
             Επεξεργασία
           </Button>
-          <Button
-            variant="outline-danger"
-            size="sm"
-            onClick={() => handleDelete(index)}
-          >
+          <Button variant="outline-danger" size="sm" onClick={() => handleDelete(index)}>
             Διαγραφή
           </Button>
         </td>
@@ -228,16 +207,8 @@ const GameMaterialEditor = ({ gameData }) => {
         return (
           <div>
             <Form.Label>{field.label}</Form.Label>
-            <Form.Control
-              type="file"
-              accept="audio/*"
-              onChange={(e) => handleInputChange(field.key, e.target.files[0])}
-            />
-            {gameData.hasAudio && (
-              <Form.Text className="text-muted">
-                Επιτρεπόμενοι τύποι: MP3, WAV, OGG
-              </Form.Text>
-            )}
+            <Form.Control type="file" accept="audio/*" onChange={(e) => handleInputChange(field.key, e.target.files[0])} />
+            {gameData.hasAudio && <Form.Text className="text-muted">Επιτρεπόμενοι τύποι: MP3, WAV, OGG</Form.Text>}
           </div>
         );
       case "text":
@@ -245,23 +216,14 @@ const GameMaterialEditor = ({ gameData }) => {
         return (
           <div>
             <Form.Label>
-              {field.label}{" "}
-              {field.required && <span className="text-danger">*</span>}
+              {field.label} {field.required && <span className="text-danger">*</span>}
             </Form.Label>
             <Form.Control
               type="text"
-              value={
-                field.key === "options" && Array.isArray(formData[field.key])
-                  ? formData[field.key].join(", ")
-                  : formData[field.key] || ""
-              }
+              value={field.key === "options" && Array.isArray(formData[field.key]) ? formData[field.key].join(", ") : formData[field.key] || ""}
               onChange={(e) => handleInputChange(field.key, e.target.value)}
               required={field.required}
-              placeholder={
-                field.key === "options"
-                  ? "π.χ. επι, κατα, παρα"
-                  : `Εισάγετε ${field.label.toLowerCase()}`
-              }
+              placeholder={field.key === "options" ? "π.χ. επι, κατα, παρα" : `Εισάγετε ${field.label.toLowerCase()}`}
             />
           </div>
         );
@@ -288,19 +250,14 @@ const GameMaterialEditor = ({ gameData }) => {
         </Card.Header>
         <Card.Body>
           {materials.length === 0 ? (
-            <Alert variant="info">
-              Δεν υπάρχει υλικό για αυτό το παιχνίδι. Κάντε κλικ στο "Προσθήκη
-              Νέου" για να αρχίσετε.
-            </Alert>
+            <Alert variant="info">Δεν υπάρχει υλικό για αυτό το παιχνίδι. Κάντε κλικ στο "Προσθήκη Νέου" για να αρχίσετε.</Alert>
           ) : (
             <div className="table-responsive">
               <Table striped bordered hover>
                 <thead>
                   <tr>{renderTableHeaders()}</tr>
                 </thead>
-                <tbody>
-                  {materials.map((item, index) => renderTableRow(item, index))}
-                </tbody>
+                <tbody>{materials.map((item, index) => renderTableRow(item, index))}</tbody>
               </Table>
             </div>
           )}
@@ -310,11 +267,7 @@ const GameMaterialEditor = ({ gameData }) => {
       {/* Edit/Add Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>
-            {editingItem !== null
-              ? "Επεξεργασία Στοιχείου"
-              : "Προσθήκη Νέου Στοιχείου"}
-          </Modal.Title>
+          <Modal.Title>{editingItem !== null ? "Επεξεργασία Στοιχείου" : "Προσθήκη Νέου Στοιχείου"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>

@@ -9,7 +9,7 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
-import { game6Questions } from "../Data/Game6";
+import { game6Questions } from "../Data/Game6Data";
 import { play } from "../../services/audioPlayer";
 
 const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {

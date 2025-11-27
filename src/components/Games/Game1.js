@@ -4,14 +4,14 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
-import { game1Words } from "../Data/Game1";
+import { game1Words } from "../Data/Game1Data";
 import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/01/title-instructions.mp3";
 import exampleGrafAudio from "../../assets/sounds/01/example-γραφ.mp3";
 import exampleVafAudio from "../../assets/sounds/01/example-βαφ.mp3";
 import exampleRafAudio from "../../assets/sounds/01/example-ραφ.mp3";
 
-const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game1 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [selectedText, setSelectedText] = useState("");
@@ -390,4 +390,4 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default WordHighlightGame;
+export default Game1;

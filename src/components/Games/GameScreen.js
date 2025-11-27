@@ -2,22 +2,22 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { canStudentPlayGame } from "../../services/gameAttempts";
 import "../../styles/Game.css";
-import WordHighlightGame from "./WordHighlightGame";
-import RootSuffixGame from "./RootSuffixGame";
-import GreekReadingExercise from "./GreekReadingExercise";
-import WordEndingGame from "./WordEndingGame";
-import WordSeparationGame from "./WordSeparationGame";
-import PrefixMatchingGame from "./PrefixMatchingGame";
-import GreekPrefixGame from "./GreekPrefixGame";
-import GreekMorphologyGame from "./GreekMorphologyGame";
-import PrefixSuffixHighlightGame from "./PrefixSuffixHighlightGame";
-import SyllableReadingGame from "./SyllableReadingGame";
-import GreekCliticSuffixGame from "./GreekCliticSuffixGame";
-import GreekVerbEndingGame from "./GreekVerbEndingGame";
-import GreekWordFormationGame from "./GreekWordFormationGame";
-import GreekAdjectiveEndingGame from "./GreekAdjectiveEndingGame";
-import GreekSuffixMarqueeGame from "./GreekSuffixMarqueeGame";
-import ReactionTimeGame from "./ReactionTimeGame";
+import Game1 from "./Game1";
+import Game2 from "./Game2";
+import Game3 from "./Game3";
+import Game4 from "./Game4";
+import Game5 from "./Game5";
+import Game6 from "./Game6";
+import Game7 from "./Game7";
+import Game8 from "./Game8";
+import Game9 from "./Game9";
+import Game10 from "./Game10";
+import Game11 from "./Game11";
+import Game12 from "./Game12";
+import Game13 from "./Game13";
+import Game14 from "./Game14";
+import Game15 from "./Game15";
+import Game16 from "./Game16";
 
 const GameScreen = () => {
   const location = useLocation();
@@ -160,22 +160,22 @@ const GameScreen = () => {
       </button>
       
       <div className="game-body-fullscreen">
-        {gameId === 1 && <WordHighlightGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 2 && <RootSuffixGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 3 && <GreekReadingExercise gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 4 && <WordEndingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 5 && <WordSeparationGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 6 && <PrefixMatchingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 7 && <GreekPrefixGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 8 && <GreekMorphologyGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 9 && <PrefixSuffixHighlightGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 10 && <SyllableReadingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 11 && <GreekCliticSuffixGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 12 && <GreekVerbEndingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 13 && <GreekWordFormationGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 14 && <GreekAdjectiveEndingGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 15 && <GreekSuffixMarqueeGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 16 && <ReactionTimeGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 1 && <Game1 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 2 && <Game2 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 3 && <Game3 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 4 && <Game4 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 5 && <Game5 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 6 && <Game6 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 7 && <Game7 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 8 && <Game8 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 9 && <Game9 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 10 && <Game10 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 11 && <Game11 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 12 && <Game12 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 13 && <Game13 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 14 && <Game14 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 15 && <Game15 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {gameId === 16 && <Game16 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
       </div>
     </div>
   );

@@ -4,10 +4,10 @@ import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import "../../styles/Game11.css";
-import { level11Words } from "../Data/Game11";
+import { level11Words } from "../Data/Game11Data";
 import { addReport } from "../../services/reports";
 
-const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = useMemo(() => level11Words, []);
 
@@ -368,4 +368,4 @@ const GreekCliticSuffixGame = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default GreekCliticSuffixGame;
+export default Game11;

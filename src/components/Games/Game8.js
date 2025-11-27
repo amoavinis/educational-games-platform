@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
-import { game8Questions } from "../Data/Game8";
+import { game8Questions } from "../Data/Game8Data";
 
-const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const questions = useMemo(() => game8Questions, []);
 
@@ -205,4 +205,4 @@ const GreekMorphologyGame = ({ gameId, schoolId, studentId, classId }) => {
   }
 };
 
-export default GreekMorphologyGame;
+export default Game8;

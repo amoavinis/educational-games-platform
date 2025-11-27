@@ -4,9 +4,9 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
-import { game9Words } from "../Data/Game9";
+import { game9Words } from "../Data/Game9Data";
 
-const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = useMemo(() => {
     const examples = game9Words.filter(w => w.isExample);
@@ -274,4 +274,4 @@ const PrefixSuffixHighlightGame = ({ gameId, schoolId, studentId, classId }) => 
   );
 };
 
-export default PrefixSuffixHighlightGame;
+export default Game9;

@@ -1,23 +1,23 @@
-// Game 10
+// Game 3
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
-import { game10Words } from "../Data/Game10";
+import { game3Words } from "../Data/Game3Data";
 
-const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = useMemo(() => game10Words, []);
+  const words = useMemo(() => game3Words, []);
 
   // Game state
   const [gameStarted, setGameStarted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'prefix', 'stem', 'suffix', 'full'
-  const [isSlowPhase, setIsSlowPhase] = useState(true);
+  const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'root', 'suffix', 'full'
+  const [isFirstRound, setIsFirstRound] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [audioDownloadURL, setAudioDownloadURL] = useState(null);
   const [gameStats, setGameStats] = useState({
@@ -33,7 +33,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
     if (gameStats.totalRounds === 0) {
       setGameStats((prev) => ({
         ...prev,
-        totalRounds: words.filter((w) => !w.isExample).length,
+        totalRounds: words.length,
       }));
     }
   }, [gameStats.totalRounds, words]);
@@ -41,7 +41,6 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
   // Submit game results function
   const submitGameResults = useCallback(async () => {
     if (!studentId || !classId) {
-      console.error("Missing studentId or classId, cannot submit results");
       return;
     }
 
@@ -60,7 +59,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
     const results = {
       studentId: studentId,
       datetime: datetime,
-      gameName: "SyllableReadingGame",
+      gameName: "GreekReadingExercise",
       questions: gameStats.rounds,
       audioDownloadURL: audioDownloadURL,
     };
@@ -88,7 +87,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
       }
       mediaRecorder.stream.getTracks().forEach((track) => track.stop());
       setIsRecording(false);
-      mediaRecorderRef.current = null; // Clear the mediaRecorder reference
+      mediaRecorderRef.current = null;
     }
   }, [isRecording]);
 
@@ -143,7 +142,6 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
       recorder.onstop = async () => {
         const audioBlob = new Blob(chunks, { type: "audio/webm" });
 
-        // Store the audio blob for upload when game completes
         if (audioBlob.size > 0) {
           try {
             const uploadResult = await uploadAudioRecording(audioBlob, {
@@ -153,14 +151,11 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
           } catch (error) {
             console.error("Error uploading audio:", error);
           }
-        } else {
-          console.warn("Audio blob is empty, skipping upload");
         }
       };
 
       mediaRecorderRef.current = recorder;
-      // Start recording with time slice to ensure ondataavailable is called
-      recorder.start(1000); // Request data every 1000ms
+      recorder.start(1000);
       setIsRecording(true);
     } catch (err) {
       console.error("Microphone permission denied or not available");
@@ -171,36 +166,43 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
   const startGame = async () => {
     await startRecording();
     setGameStarted(true);
-    startWordHighlighting(0, true); // Start with first word in slow phase
+    startWordHighlighting(0, true); // Start with first word in first round
   };
 
-  // Start highlighting sequence for current word
-  const startWordHighlighting = (wordIndex, slowPhase) => {
-    // Immediately set to "prefix" highlight to avoid black text delay
-    setHighlightStage("prefix");
-    const duration = slowPhase ? 1000 : 500;
+  // Start highlighting sequence for current word (only in first round)
+  const startWordHighlighting = (wordIndex, firstRound) => {
+    const fullHighlightDuration = 10000;
 
-    setTimeout(() => {
-      setHighlightStage("stem");
+    if (firstRound) {
+      // Ensure root highlight is set (may already be set from nextWord)
+      setHighlightStage("root");
+
+      const duration = 1000;
+
       setTimeout(() => {
         setHighlightStage("suffix");
         setTimeout(() => {
           setHighlightStage("full");
-          const fullDuration = 10000;
           setTimeout(() => {
-            nextWord(wordIndex, slowPhase);
-          }, fullDuration);
+            nextWord(wordIndex, firstRound);
+          }, fullHighlightDuration); // Full highlight duration
         }, duration);
       }, duration);
-    }, duration);
+    } else {
+      // Second round - no highlighting, just show word for 2 seconds
+      setHighlightStage("none");
+      setTimeout(() => {
+        nextWord(wordIndex, firstRound);
+      }, fullHighlightDuration);
+    }
   };
 
   // Move to next word
-  const nextWord = (currentIndex, currentSlowPhase) => {
-    // Record result for non-example words (use current word before updating index)
+  const nextWord = (currentIndex, currentFirstRound) => {
+    // Record result for all words
     const wordToRecord = words[currentIndex];
-    if (wordToRecord && !wordToRecord.isExample) {
-      const round = currentSlowPhase ? "slow" : "fast";
+    if (wordToRecord) {
+      const round = currentFirstRound ? "πρώτος" : "δεύτερος";
       setGameStats((prev) => ({
         ...prev,
         rounds: [
@@ -215,72 +217,64 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
     if (currentIndex < words.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentWordIndex(nextIndex);
-      // Immediately set to prefix highlight to avoid black text during transitions
-      setHighlightStage("prefix");
-      setTimeout(() => startWordHighlighting(nextIndex, currentSlowPhase), 100);
-    } else if (currentSlowPhase) {
-      // Switch to fast phase - skip example word in second round
-      setIsSlowPhase(false);
-      setCurrentWordIndex(1); // Start from index 1 (skip example at index 0)
-      setHighlightStage("prefix");
-      setTimeout(() => startWordHighlighting(1, false), 100);
+      // For first round, immediately set to root highlight to avoid black text
+      if (currentFirstRound) {
+        setHighlightStage("root");
+        setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 100);
+      } else {
+        setHighlightStage("none");
+        setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 500);
+      }
+    } else if (currentFirstRound) {
+      // Switch to second round
+      setIsFirstRound(false);
+      setCurrentWordIndex(0);
+      setHighlightStage("none");
+      setTimeout(() => startWordHighlighting(0, false), 500);
     } else {
       // Game completed
       setGameCompleted(true);
-      // Stop recording after a slight delay to ensure proper cleanup
       setTimeout(() => {
         stopRecording();
       }, 100);
     }
   };
 
-  // Function to highlight text parts
+  // Function to highlight text parts (only for first round)
   const highlightWord = () => {
     if (!currentWord) return "";
 
-    const { word, prefix, stem } = currentWord;
+    const { word, root } = currentWord;
 
-    if (highlightStage === "none") {
+    if (!isFirstRound || highlightStage === "none") {
       return word;
     }
 
     // Find positions
-    const prefixEnd = prefix.length;
-    const stemEnd = prefixEnd + stem.length;
+    const rootEnd = root.length;
 
     let result = [];
 
-    // Prefix highlighting
-    if (highlightStage === "prefix" || highlightStage === "full") {
+    // Root highlighting
+    if (highlightStage === "root" || highlightStage === "full") {
       result.push(
-        <span key="prefix" style={{ color: "blue" }}>
-          {word.substring(0, prefixEnd)}
+        <span key="root" style={{ color: "blue" }}>
+          {word.substring(0, rootEnd)}
         </span>
       );
     } else {
-      result.push(word.substring(0, prefixEnd));
-    }
-
-    // Stem highlighting
-    if (highlightStage === "stem" || highlightStage === "full") {
-      result.push(
-        <span key="stem" style={{ color: "red" }}>
-          {word.substring(prefixEnd, stemEnd)}
-        </span>
-      );
-    } else {
-      result.push(word.substring(prefixEnd, stemEnd));
+      result.push(word.substring(0, rootEnd));
     }
 
     // Suffix highlighting
     if (highlightStage === "suffix" || highlightStage === "full") {
       result.push(
         <span key="suffix" style={{ color: "green" }}>
-          {word.substring(stemEnd)}
+          {word.substring(rootEnd)}
         </span>
       );
     } else {
-      result.push(word.substring(stemEnd));
+      result.push(word.substring(rootEnd));
     }
 
     return result;
@@ -294,15 +288,32 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
           <Col md={12} lg={10}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-                <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ.</h4>
+                <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
               </Card.Header>
               <Card.Body className="text-center">
-                <div className="mb-4">
-                  <p className="lead">Πάτησε Έναρξη και διάβασε τις συλλαβές και τις λέξεις.</p>
+                <div className="d-flex justify-content-center">
+                  <Button
+                    variant="dark"
+                    size="lg"
+                    onClick={startGame}
+                    className="mb-4 rounded-circle"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "2rem",
+                      backgroundColor: "#000000",
+                      border: "none",
+                    }}
+                  >
+                    <svg width="40" height="40" fill="white" viewBox="0 0 16 16">
+                      <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V14h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-1.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z" />
+                      <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0v5zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3z" />
+                    </svg>
+                  </Button>
                 </div>
-                <Button variant="success" size="lg" onClick={startGame} className="mb-4">
-                  Έναρξη
-                </Button>
               </Card.Body>
             </Card>
           </Col>
@@ -344,10 +355,7 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
         <Col md={12} lg={10}>
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0">
-                {currentWord.isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
-                Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
-              </h4>
+              <h4 className="mb-0">Άσκηση Ανάγνωσης{isFirstRound ? null : " - ΠΑΜΕ ΞΑΝΑ"}</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
@@ -369,4 +377,4 @@ const SyllableReadingGame = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default SyllableReadingGame;
+export default Game3;

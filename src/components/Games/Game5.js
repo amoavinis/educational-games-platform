@@ -4,9 +4,9 @@ import { Container, Card, Button, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
-import { game5Compounds } from "../Data/Game5";
+import { game5Compounds } from "../Data/Game5Data";
 
-const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
+const Game5 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [gameStarted, setGameStarted] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -266,4 +266,4 @@ const WordSeparationGame = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default WordSeparationGame;
+export default Game5;

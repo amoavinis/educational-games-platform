@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import "../../styles/Game6.css";
 import { addReport } from "../../services/reports";
-import { game7Words } from "../Data/Game7";
+import { game7Words } from "../Data/Game7Data";
 
 const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
