@@ -326,7 +326,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
           {!currentWord.isExample && (
             <QuestionProgressLights
               totalQuestions={words.filter((w) => !w.isExample).length}
-              currentQuestion={gameStats.rounds.length}
+              currentQuestion={words.slice(0, currentWordIndex).filter((w) => !w.isExample).length}
               answeredQuestions={gameStats.rounds.map((r) => r.isCorrect)}
             />
           )}
