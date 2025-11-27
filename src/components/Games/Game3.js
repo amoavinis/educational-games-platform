@@ -6,10 +6,33 @@ import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
 import { game3Words } from "../Data/Game3Data";
+import useAudio from "../../hooks/useAudio";
+import titleInstructionsAudio from "../../assets/sounds/03/title-instructions.mp3";
+
+// Import word audio files
+import grafioAudio from "../../assets/sounds/03/γραφείο.mp3";
+import grafistasAudio from "../../assets/sounds/03/γραφίστας.mp3";
+import grafikosAudio from "../../assets/sounds/03/γραφικός.mp3";
+import kleidonoAudio from "../../assets/sounds/03/κλειδώνω.mp3";
+import kleidomenos from "../../assets/sounds/03/κλειδωμένος.mp3";
+import organonoAudio from "../../assets/sounds/03/οργανώνω.mp3";
 
 const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = useMemo(() => game3Words, []);
+
+  // Map words to their audio files
+  const wordAudioMap = useMemo(
+    () => ({
+      "γραφείο": grafioAudio,
+      "γραφίστας": grafistasAudio,
+      "γραφικός": grafikosAudio,
+      "κλειδώνω": kleidonoAudio,
+      "κλειδωμένος": kleidomenos,
+      "οργανώνω": organonoAudio,
+    }),
+    []
+  );
 
   // Game state
   const [gameStarted, setGameStarted] = useState(false);
@@ -25,8 +48,37 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     totalRounds: 0,
   });
   const [resultsSubmitted, setResultsSubmitted] = useState(false);
+  const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(false);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [currentWordAudio, setCurrentWordAudio] = useState(null);
 
   const currentWord = words[currentWordIndex];
+
+  // Initial title-instructions audio
+  const { audioRef: titleAudioRef } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  // Word-specific audio
+  const { audioRef: wordAudioRef } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
+
+  // Listen for title audio ended
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      setIsInitialAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef]);
+
 
   // Initialize game stats
   useEffect(() => {
@@ -172,6 +224,22 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   // Start highlighting sequence for current word (only in first round)
   const startWordHighlighting = (wordIndex, firstRound) => {
     const fullHighlightDuration = 10000;
+    const word = words[wordIndex];
+
+    // Play word audio if available
+    if (word && wordAudioMap[word.word]) {
+      const audioFile = wordAudioMap[word.word];
+      setCurrentWordAudio(audioFile);
+
+      // Wait for React to update the audio element, then play
+      setTimeout(() => {
+        if (wordAudioRef.current) {
+          wordAudioRef.current.play().catch((error) => {
+            console.error("Error playing word audio:", error);
+          });
+        }
+      }, 150);
+    }
 
     if (firstRound) {
       // Ensure root highlight is set (may already be set from nextWord)
@@ -280,6 +348,27 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     return result;
   };
 
+  // Play title-instructions audio on mount
+  useEffect(() => {
+    if (!gameStarted && !hasPlayedInitialAudio && titleAudioRef.current) {
+      setIsInitialAudioPlaying(true);
+      const timer = setTimeout(() => {
+        titleAudioRef.current
+          .play()
+          .then(() => {
+            setHasPlayedInitialAudio(true);
+          })
+          .catch((error) => {
+            console.error("Error playing title audio:", error);
+            setIsInitialAudioPlaying(false);
+            setHasPlayedInitialAudio(true);
+          });
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [gameStarted, hasPlayedInitialAudio, titleAudioRef]);
+
   // Start screen
   if (!gameStarted) {
     return (
@@ -296,6 +385,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                     variant="dark"
                     size="lg"
                     onClick={startGame}
+                    disabled={isInitialAudioPlaying}
                     className="mb-4 rounded-circle"
                     style={{
                       width: "100px",
@@ -304,8 +394,10 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: "2rem",
-                      backgroundColor: "#000000",
+                      backgroundColor: isInitialAudioPlaying ? "#666666" : "#000000",
                       border: "none",
+                      opacity: isInitialAudioPlaying ? 0.6 : 1,
+                      cursor: isInitialAudioPlaying ? "not-allowed" : "pointer",
                     }}
                   >
                     <svg width="40" height="40" fill="white" viewBox="0 0 16 16">
@@ -314,6 +406,8 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                     </svg>
                   </Button>
                 </div>
+                <audio ref={titleAudioRef} src={titleInstructionsAudio} />
+                <audio ref={wordAudioRef} src={currentWordAudio} />
               </Card.Body>
             </Card>
           </Col>
@@ -355,7 +449,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
         <Col md={12} lg={10}>
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0">Άσκηση Ανάγνωσης{isFirstRound ? null : " - ΠΑΜΕ ΞΑΝΑ"}</h4>
+              <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ{isFirstRound ? null : " - ΠΑΜΕ ΞΑΝΑ"}</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
@@ -369,6 +463,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
               >
                 {highlightWord()}
               </div>
+              <audio ref={wordAudioRef} src={currentWordAudio} />
             </Card.Body>
           </Card>
         </Col>
