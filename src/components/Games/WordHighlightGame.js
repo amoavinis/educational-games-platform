@@ -5,6 +5,11 @@ import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game1Words } from "../Data/Game1";
+import useAudio from "../../hooks/useAudio";
+import titleInstructionsAudio from "../../assets/sounds/01/title-instructions.mp3";
+import exampleGrafAudio from "../../assets/sounds/01/example-γραφ.mp3";
+import exampleVafAudio from "../../assets/sounds/01/example-βαφ.mp3";
+import exampleRafAudio from "../../assets/sounds/01/example-ραφ.mp3";
 
 const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -23,8 +28,86 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
     totalRounds: 0,
   });
   const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(true);
+  const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
+  const [currentWordAudio, setCurrentWordAudio] = useState(null);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
 
   const words = useMemo(() => game1Words, []);
+
+  // Map words to their audio files (only for examples)
+  const wordAudioMap = useMemo(
+    () => ({
+      γραφω: exampleGrafAudio,
+      βαφη: exampleVafAudio,
+      ραφειο: exampleRafAudio,
+    }),
+    []
+  );
+
+  // Initial title-instructions audio (plays on load)
+  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  // Word-specific audio (plays after submission for example words)
+  const {
+    audioRef: wordAudioRef,
+    audioSrc: wordAudioSrc,
+    play: playWordAudio,
+  } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
+
+  // Play initial audio once on mount
+  useEffect(() => {
+    if (!hasPlayedInitialAudio && titleAudioRef.current) {
+      const timer = setTimeout(() => {
+        titleAudioRef.current
+          .play()
+          .then(() => {
+            setHasPlayedInitialAudio(true);
+          })
+          .catch((error) => {
+            console.error("Error playing title audio:", error);
+            setIsInitialAudioPlaying(false);
+            setHasPlayedInitialAudio(true);
+          });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedInitialAudio, titleAudioRef]);
+
+  // Listen for title audio ended
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      setIsInitialAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef]);
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      setIsWordAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef]);
 
   // Initialize game stats
   useEffect(() => {
@@ -73,9 +156,7 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
     // Update game stats only for non-example questions
     if (!currentWord.isExample) {
       const questionEndTime = Date.now();
-      const secondsForQuestion = questionStartTime
-        ? (questionEndTime - questionStartTime) / 1000
-        : 0;
+      const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
       setGameStats((prev) => ({
         ...prev,
@@ -89,10 +170,24 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
             seconds: secondsForQuestion,
           },
         ],
-        correctAnswers: isCorrect
-          ? prev.correctAnswers + 1
-          : prev.correctAnswers,
+        correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers,
       }));
+    }
+
+    // Play word-specific audio if available (for example words)
+    // Remove accents from word for audio lookup
+    const wordWithoutAccents = currentWord.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const audioFile = wordAudioMap[wordWithoutAccents];
+    if (audioFile) {
+      setCurrentWordAudio(audioFile);
+      setIsWordAudioPlaying(true);
+      // Small delay to ensure audio ref is updated
+      setTimeout(() => {
+        playWordAudio().catch((error) => {
+          console.error("Error playing word audio:", error);
+          setIsWordAudioPlaying(false);
+        });
+      }, 100);
     }
   };
 
@@ -146,8 +241,8 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   const handleTextSelection = () => {
-    // Prevent selection if feedback has already been given
-    if (feedback) return;
+    // Prevent selection if feedback has already been given or audio is playing
+    if (feedback || isInitialAudioPlaying) return;
 
     const selection = window.getSelection();
     if (selection.toString() && selection.rangeCount > 0) {
@@ -207,19 +302,11 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameStats.rounds.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -232,6 +319,8 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
+      <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
           {!currentWord.isExample && (
@@ -242,32 +331,23 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
             />
           )}
           <Card className="main-card">
-            <Card.Header
-              className={`text-center`}
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
+            <Card.Header className={`text-center`} style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">
-                {currentWord.isExample && (
-                  <span className="badge badge-dark me-2">Παράδειγμα</span>
-                )}
-                <span style={{ fontSize: 20 }}>
-                  Βρίσκω και χρωματίζω τη βάση της λέξης
-                </span>
+                {currentWord.isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+                <span style={{ fontSize: 20 }}>Βρίσκω και χρωματίζω τη βάση της λέξης</span>
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
                 className="display-4 font-weight-bold mb-4 p-4"
-                style={{ cursor: "pointer", userSelect: "text" }}
+                style={{
+                  cursor: isInitialAudioPlaying ? "default" : "pointer",
+                  userSelect: isInitialAudioPlaying ? "none" : "text",
+                  opacity: isInitialAudioPlaying ? 0.6 : 1,
+                }}
                 onMouseUp={handleTextSelection}
               >
-                {highlightedText
-                  ? highlightText(
-                      currentWord.word,
-                      highlightedText,
-                      highlightPosition
-                    )
-                  : currentWord.word}
+                {highlightedText ? highlightText(currentWord.word, highlightedText, highlightPosition) : currentWord.word}
               </div>
 
               {feedback && (
@@ -286,12 +366,12 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
           {!feedback && (
             <div className="d-flex gap-3 mt-4 mb-4 justify-content-center">
               <Button
-                variant={selectedText ? "primary" : "secondary"}
+                variant={selectedText && !isInitialAudioPlaying ? "primary" : "secondary"}
                 size="lg"
                 onClick={submitAnswer}
-                disabled={!selectedText || feedback}
+                disabled={!selectedText || feedback || isInitialAudioPlaying}
               >
-                Υποβολή
+                {isInitialAudioPlaying ? "Άκουσε τις οδηγίες..." : "Υποβολή"}
               </Button>
             </div>
           )}
@@ -299,10 +379,8 @@ const WordHighlightGame = ({ gameId, schoolId, studentId, classId }) => {
           {/* Next Word Button (only show after feedback) */}
           {feedback && (
             <div className="text-center mt-4">
-              <Button variant="primary" size="lg" onClick={nextWord}>
-                {currentWordIndex < words.length - 1
-                  ? "Επόμενη Λέξη"
-                  : "Ολοκλήρωση"}
+              <Button variant="primary" size="lg" onClick={nextWord} disabled={isWordAudioPlaying}>
+                {isWordAudioPlaying ? "Άκουσε το παράδειγμα..." : currentWordIndex < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
               </Button>
             </div>
           )}

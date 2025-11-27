@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Container,
-  Form,
-  Row,
-  Col,
-  Card,
-  Modal,
-  Button,
-} from "react-bootstrap";
+import { Container, Form, Row, Col, Card, Modal, Button } from "react-bootstrap";
 import { getUsers } from "../services/users";
 import { getStudents } from "../services/students";
 import { canStudentPlayGame } from "../services/gameAttempts";
 import "../styles/Home.css";
 import { games as allGames } from "./games";
+import welcomeAudio from "../assets/sounds/general/welcome.mp3";
+import useAudio from "../hooks/useAudio";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -27,6 +21,19 @@ const Home = () => {
   const [selectedStudentId, setSelectedStudentId] = useState("");
 
   const games = allGames;
+
+  // Check if welcome audio should play
+  const hasPlayedWelcome = sessionStorage.getItem("welcomeAudioPlayed");
+  const shouldPlayAudio = !hasPlayedWelcome;
+
+  // Use the audio hook with automatic URL change detection
+  const { audioRef, audioSrc } = useAudio(welcomeAudio, {
+    playOnMount: shouldPlayAudio,
+    playDelay: 100,
+    onPlaySuccess: () => {
+      sessionStorage.setItem("welcomeAudioPlayed", "true");
+    },
+  });
 
   useEffect(() => {
     if (role === 1 && schools.length === 0) {
@@ -74,71 +81,55 @@ const Home = () => {
     const selectedStudent = students.find((s) => s.id === selectedStudentId);
     const name = selectedStudent?.name || "";
     const classId = selectedStudent?.classId || "";
-    
+
     // Check if student can play this game (has less than 2 attempts)
     const canPlay = await canStudentPlayGame(selectedStudentId, selectedGame.id);
-    
+
     if (!canPlay) {
       alert("Ο μαθητής έχει ήδη παίξει αυτό το παιχνίδι 2 φορές. Δεν επιτρέπονται περισσότερες προσπάθειες.");
       // setShowModal(false);
       return;
     }
-    
-    navigate(
-      `/games/game${selectedGame.id}`,
-      {
-        state: {
-          studentId: selectedStudentId,
-          studentName: name,
-          classId: classId
-        }
-      }
-    );
+
+    navigate(`/games/game${selectedGame.id}`, {
+      state: {
+        studentId: selectedStudentId,
+        studentName: name,
+        classId: classId,
+      },
+    });
   };
 
   return (
     <Container>
+      <audio ref={audioRef} src={audioSrc} />
       <h1>Παιχνίδια</h1>
 
       {role === 1 && (
         <Form.Group className="mb-3">
           <Row>
             <Col md={2}>
-              <Form.Label className="d-flex flex-row align-items-center h-100 m-0">
-                Επιλογή σχολείου
-              </Form.Label>
+              <Form.Label className="d-flex flex-row align-items-center h-100 m-0">Επιλογή σχολείου</Form.Label>
             </Col>
             <Col md={4}>
-              <Form.Select
-                value={selectedSchool}
-                onChange={handleSchoolChange}
-                disabled={schools.length === 0}
-              >
+              <Form.Select value={selectedSchool} onChange={handleSchoolChange} disabled={schools.length === 0}>
                 {schools.map((school) => (
                   <option key={school.id} value={school.id}>
                     {school.name}
                   </option>
                 ))}
-                {schools.length === 0 && !loading && (
-                  <option value="">No schools available</option>
-                )}
-                {schools.length === 0 && loading && (
-                  <option value="">Loading schools...</option>
-                )}
+                {schools.length === 0 && !loading && <option value="">No schools available</option>}
+                {schools.length === 0 && loading && <option value="">Loading schools...</option>}
               </Form.Select>
             </Col>
           </Row>
         </Form.Group>
       )}
 
-      <Row xs={5} sm={5} md={5} lg={5} xl={5} className="g-4">
+      <Row xs={2} sm={2} md={4} lg={4} xl={4} className="g-4">
         {games.map((game) => (
           <Col key={game.id}>
-            <Card
-              onClick={() => handleCardClick(game)}
-              className="game-card h-100"
-              style={{ backgroundColor: game.color }}
-            >
+            <Card onClick={() => handleCardClick(game)} className="game-card h-100" style={{ backgroundColor: game.color }}>
               <Card.Body className="d-flex align-items-center justify-content-center">
                 <Card.Title className="text-center">{game.name}</Card.Title>
               </Card.Body>
@@ -148,12 +139,7 @@ const Home = () => {
       </Row>
 
       {/* Game Modal */}
-      <Modal
-        show={showModal}
-        onHide={() => setShowModal(false)}
-        size="lg"
-        centered
-      >
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>{selectedGame?.name}</Modal.Title>
         </Modal.Header>
@@ -162,10 +148,7 @@ const Home = () => {
 
           <Form.Group className="mb-3">
             <Form.Label>Επιλογή μαθητή</Form.Label>
-            <Form.Select
-              value={selectedStudentId}
-              onChange={(e) => setSelectedStudentId(e.target.value)}
-            >
+            <Form.Select value={selectedStudentId} onChange={(e) => setSelectedStudentId(e.target.value)}>
               <option value="">Επιλογή μαθητή</option>
               {students.map((student) => (
                 <option key={student.id} value={student.id}>
@@ -179,11 +162,7 @@ const Home = () => {
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Κλείσιμο
           </Button>
-          <Button
-            variant="primary"
-            onClick={handlePlay}
-            disabled={!selectedStudentId}
-          >
+          <Button variant="primary" onClick={handlePlay} disabled={!selectedStudentId}>
             Παίξε
           </Button>
         </Modal.Footer>

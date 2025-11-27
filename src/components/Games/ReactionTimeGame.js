@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import "../../styles/Game.css";
+import titleInstructionsAudio from "../../assets/sounds/response-time/title-instructions.mp3";
+import useAudio from "../../hooks/useAudio";
 
 const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -25,8 +27,35 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   const [resultsSubmitted, setResultsSubmitted] = useState(false);
   // const [liveCounter, setLiveCounter] = useState(0);
   const [counterInterval, setCounterInterval] = useState(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
 
   const totalRounds = 5;
+
+  // Use the audio hook with automatic URL change detection
+  const { audioRef, audioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: true,
+    onPlaySuccess: () => {
+      // Audio is playing
+    },
+    onPlayError: () => {
+      setIsAudioPlaying(false);
+    },
+  });
+
+  // Listen for audio ended event
+  useEffect(() => {
+    const audio = audioRef.current;
+    const handleAudioEnded = () => {
+      setIsAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleAudioEnded);
+      return () => {
+        audio.removeEventListener("ended", handleAudioEnded);
+      };
+    }
+  }, [audioRef]);
 
   // Initialize game stats
   useEffect(() => {
@@ -129,29 +158,25 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
 
   // Handle clicking anywhere to start the game
   const handleInitialClick = useCallback(() => {
-    if (gameState === "initial") {
+    if (gameState === "initial" && !isAudioPlaying) {
       setGameState("waiting");
       setGameStarted(true);
       startNewRound();
     }
-  }, [gameState, startNewRound]);
+  }, [gameState, isAudioPlaying, startNewRound]);
 
   // Complete the game and generate report
-  const completeGame = useCallback(
-    (finalTimes) => {
-      const averageTime =
-        finalTimes.reduce((sum, time) => sum + time, 0) / finalTimes.length;
+  const completeGame = useCallback((finalTimes) => {
+    const averageTime = finalTimes.reduce((sum, time) => sum + time, 0) / finalTimes.length;
 
-      console.log("Reaction Time Game Results:", {
-        reactionTimes: finalTimes,
-        averageReactionTime: Math.round(averageTime),
-        totalRounds: totalRounds,
-      });
+    console.log("Reaction Time Game Results:", {
+      reactionTimes: finalTimes,
+      averageReactionTime: Math.round(averageTime),
+      totalRounds: totalRounds,
+    });
 
-      setGameState("completed");
-    },
-    []
-  );
+    setGameState("completed");
+  }, []);
 
   // Handle shape click (only when it's a circle)
   const handleShapeClick = useCallback(() => {
@@ -197,17 +222,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
         }, 1500);
       }
     }
-  }, [
-    gameState,
-    isShape,
-    shapeChangeTime,
-    timeoutId,
-    currentRound,
-    completeGame,
-    reactionTimes,
-    stopLiveCounter,
-  ]);
-
+  }, [gameState, isShape, shapeChangeTime, timeoutId, currentRound, completeGame, reactionTimes, stopLiveCounter]);
 
   // Continue to next round
   const continueToNextRound = useCallback(() => {
@@ -272,7 +287,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
   const getInstructionText = () => {
     switch (gameState) {
       case "initial":
-        return "Κάνε κλικ οπουδήποτε για ξεκινήσεις.";
+        return isAudioPlaying ? "Άκουσε τις οδηγίες..." : "Κάνε κλικ οπουδήποτε για ξεκινήσεις.";
       case "waiting":
         return "Περίμενε να γίνει κύκλος…";
       case "ready":
@@ -294,19 +309,11 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
         <Row className="justify-content-center">
           <Col md={8} lg={6}>
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Φοβεροί χρόνοι!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-3"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-3">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -319,23 +326,17 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
+      <audio ref={audioRef} src={audioSrc} />
       <Row className="justify-content-center">
         <Col md={10} lg={8}>
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">Χρόνος Αντίδρασης</h4>
             </Card.Header>
             <Card.Body className="text-center">
               {gameStarted && (
                 <div className="mb-3">
-                  <QuestionProgressLights
-                    totalQuestions={totalRounds}
-                    currentQuestion={currentRound}
-                    answeredQuestions={gameStats.rounds.map(() => true)}
-                  />
+                  <QuestionProgressLights totalQuestions={totalRounds} currentQuestion={currentRound} answeredQuestions={gameStats.rounds.map(() => true)} />
                 </div>
               )}
 
@@ -366,8 +367,7 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
                         marginRight: "5px",
                       }}
                     ></span>
-                    ), πάτα όσο πιο γρηγορα μπορείς το αριστερό κλικ στο
-                    ποντίκι.
+                    ), πάτα όσο πιο γρηγορα μπορείς το αριστερό κλικ στο ποντίκι.
                   </p>
                   <p className="mb-4">
                     <strong>Ξεκινάμε;</strong>
@@ -379,20 +379,10 @@ const ReactionTimeGame = ({ gameId, schoolId, studentId, classId }) => {
                 <h5>{getInstructionText()}</h5>
               </div>
 
-              {gameStarted && (
-                <div
-                  style={getShapeStyle()}
-                  onClick={isShape === "circle" ? handleShapeClick : undefined}
-                ></div>
-              )}
+              {gameStarted && <div style={getShapeStyle()} onClick={isShape === "circle" ? handleShapeClick : undefined}></div>}
 
               {gameState === "next" && (
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={continueToNextRound}
-                  className="mt-3"
-                >
+                <Button variant="primary" size="lg" onClick={continueToNextRound} className="mt-3">
                   Συνέχεια
                 </Button>
               )}

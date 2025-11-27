@@ -24,6 +24,8 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      // Clear the welcome audio flag so it plays again on next login
+      sessionStorage.removeItem("welcomeAudioPlayed");
     } catch (err) {
       console.error(err);
     }

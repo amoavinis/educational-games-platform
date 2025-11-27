@@ -46,6 +46,9 @@ const Login = () => {
       }
       setDisplayName(displayName);
 
+      // Clear the welcome audio flag so it plays after login
+      sessionStorage.removeItem("welcomeAudioPlayed");
+
       navigate("/");
     } catch (err) {
       setError("Failed to log in. Please check your credentials.");
