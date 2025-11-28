@@ -5,12 +5,29 @@ import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game9Words } from "../Data/Game9Data";
+import useAudio from "../../hooks/useAudio";
+import instructionsPrefixAudio from "../../assets/sounds/09/instructions-prefix.mp3";
+import instructionsSuffixAudio from "../../assets/sounds/09/instructions-suffix.mp3";
+import exampleKataprasinosAudio from "../../assets/sounds/09/example-καταπρασινος-κατα.mp3";
+import exampleEpidenoAudio from "../../assets/sounds/09/example-επιδενω-επι.mp3";
+import exampleNomikosAudio from "../../assets/sounds/09/example-νομικος-ικος.mp3";
+import ainoAudio from "../../assets/sounds/09/αινω.mp3";
+import antiAudio from "../../assets/sounds/09/αντι.mp3";
+import apoAudio from "../../assets/sounds/09/απο.mp3";
+import dysAudio from "../../assets/sounds/09/δυσ.mp3";
+import eiaAudio from "../../assets/sounds/09/εια.mp3";
+import isiAudio from "../../assets/sounds/09/ηση.mp3";
+import izoAudio from "../../assets/sounds/09/ιζω.mp3";
+import ikosAudio from "../../assets/sounds/09/ικος.mp3";
+import ismosAudio from "../../assets/sounds/09/ισμος.mp3";
+import yperAudio from "../../assets/sounds/09/υπερ.mp3";
+import ypoAudio from "../../assets/sounds/09/υπο.mp3";
 
 const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = useMemo(() => {
-    const examples = game9Words.filter(w => w.isExample);
-    const nonExamples = game9Words.filter(w => !w.isExample);
+    const examples = game9Words.filter((w) => w.isExample);
+    const nonExamples = game9Words.filter((w) => !w.isExample);
 
     // Shuffle non-examples using Fisher-Yates algorithm
     const shuffled = [...nonExamples];
@@ -32,10 +49,107 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   const [highlightedText, setHighlightedText] = useState("");
   const [highlightPosition, setHighlightPosition] = useState({ start: -1, end: -1 });
   const [feedback, setFeedback] = useState(null);
+  const [isInstructionsAudioPlaying, setIsInstructionsAudioPlaying] = useState(true);
+  const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
+  const [currentWordAudio, setCurrentWordAudio] = useState(null);
+  const [currentInstructionsAudio, setCurrentInstructionsAudio] = useState(null);
+
+  // Map prefixes and suffixes to their audio files
+  const partAudioMap = useMemo(
+    () => ({
+      // Example words (whole word audio)
+      καταπρασινος: exampleKataprasinosAudio,
+      επιδενω: exampleEpidenoAudio,
+      νομικος: exampleNomikosAudio,
+      // Prefixes
+      αντι: antiAudio,
+      απο: apoAudio,
+      δυσ: dysAudio,
+      υπερ: yperAudio,
+      υπο: ypoAudio,
+      // Suffixes
+      αινω: ainoAudio,
+      εια: eiaAudio,
+      ηση: isiAudio,
+      ιζω: izoAudio,
+      ικος: ikosAudio,
+      ισμος: ismosAudio,
+      ος: ikosAudio, // Map ός to ικος audio
+    }),
+    []
+  );
+
+  // Instructions audio based on task type
+  const instructionsAudioRef = useAudio(currentInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  // Word-specific audio (plays after submission for example words)
+  const {
+    audioRef: wordAudioRef,
+    audioSrc: wordAudioSrc,
+    play: playWordAudio,
+  } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
 
   // Current word data
   const currentWord = words[currentQuestion];
   const targetPart = currentWord.task === "prefix" ? currentWord.prefix : currentWord.suffix;
+
+  // Play instructions audio when question changes (only for example questions)
+  useEffect(() => {
+    if (!gameCompleted && currentWord.isExample) {
+      const taskAudio = currentWord.task === "prefix" ? instructionsPrefixAudio : instructionsSuffixAudio;
+      setCurrentInstructionsAudio(taskAudio);
+      setIsInstructionsAudioPlaying(true);
+
+      const timer = setTimeout(() => {
+        if (instructionsAudioRef.audioRef.current) {
+          instructionsAudioRef.audioRef.current.play().catch((error) => {
+            console.error("Error playing instructions audio:", error);
+            setIsInstructionsAudioPlaying(false);
+          });
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    } else {
+      // For non-example questions, set instructions audio as not playing
+      setIsInstructionsAudioPlaying(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion, gameCompleted, currentWord.task, currentWord.isExample]);
+
+  // Listen for instructions audio ended
+  useEffect(() => {
+    const audio = instructionsAudioRef.audioRef.current;
+    const handleEnded = () => {
+      setIsInstructionsAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [instructionsAudioRef]);
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      setIsWordAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef]);
 
   // Handle answer selection
   const handleAnswerSelect = () => {
@@ -75,6 +189,24 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
           seconds: secondsForQuestion,
         },
       ]);
+    }
+
+    // Play audio for the target part (prefix/suffix) or whole word for examples
+    // For example words, use the whole word; for others, use the target part
+    const audioKey = currentWord.isExample
+      ? currentWord.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      : targetPart.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const audioFile = partAudioMap[audioKey];
+    if (audioFile) {
+      setCurrentWordAudio(audioFile);
+      setIsWordAudioPlaying(true);
+      setTimeout(() => {
+        playWordAudio().catch((error) => {
+          console.error("Error playing word audio:", error);
+          setIsWordAudioPlaying(false);
+        });
+      }, 100);
     }
   };
 
@@ -141,6 +273,9 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Text selection handler
   const handleTextSelection = () => {
+    // Prevent selection if feedback has already been given or instructions audio is playing
+    if (feedback || isInstructionsAudioPlaying) return;
+
     const selection = window.getSelection();
     if (selection.toString() && selection.rangeCount > 0 && selectedAnswer === null) {
       const selectedText = selection.toString().toLowerCase();
@@ -213,12 +348,14 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
+      <audio ref={instructionsAudioRef.audioRef} src={instructionsAudioRef.audioSrc} />
+      <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
           {!words[currentQuestion].isExample && (
             <QuestionProgressLights
               totalQuestions={words.filter((q) => !q.isExample).length}
-              currentQuestion={currentQuestion - 1}
+              currentQuestion={words.slice(0, currentQuestion).filter((q) => !q.isExample).length}
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
@@ -233,13 +370,25 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
               <div className="mb-4"></div>
 
               <div className="p-4 bg-light rounded mb-4">
-                <div className="display-4 font-weight-bold mb-3" style={{ userSelect: "text", cursor: "pointer" }} onMouseUp={handleTextSelection}>
+                <div
+                  className="display-4 font-weight-bold mb-3"
+                  style={{
+                    cursor: isInstructionsAudioPlaying ? "default" : "pointer",
+                    userSelect: isInstructionsAudioPlaying ? "none" : "text",
+                    opacity: isInstructionsAudioPlaying ? 0.6 : 1,
+                  }}
+                  onMouseUp={handleTextSelection}
+                >
                   {highlightedText ? highlightText(currentWord.word, highlightedText, highlightPosition) : currentWord.word}
                 </div>
 
                 {feedback && (
                   <div className="mb-4 text-center">
-                    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>{feedback.isCorrect ? "✅" : "❌"}</div>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <span className="fs-1" style={{ color: feedback.isCorrect ? "#28a745" : "#dc3545" }}>
+                        {feedback.isCorrect ? "✓" : "✗"}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -248,12 +397,12 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
               {!feedback && (
                 <div className="d-flex gap-3 mt-4 mb-4 justify-content-center">
                   <Button
-                    variant={selectedText ? "primary" : "secondary"}
+                    variant={selectedText && !isInstructionsAudioPlaying ? "primary" : "secondary"}
                     size="lg"
                     onClick={handleAnswerSelect}
-                    disabled={!selectedText || selectedAnswer !== null}
+                    disabled={!selectedText || selectedAnswer !== null || isInstructionsAudioPlaying}
                   >
-                    Υποβολή
+                    {isInstructionsAudioPlaying ? "Άκουσε τις οδηγίες..." : "Υποβολή"}
                   </Button>
                 </div>
               )}
@@ -261,8 +410,8 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
               {/* Next Question Button (only show after feedback) */}
               {feedback && (
                 <div className="text-center mt-4">
-                  <Button variant="primary" size="lg" onClick={nextQuestion}>
-                    {currentQuestion < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
+                  <Button variant="primary" size="lg" onClick={nextQuestion} disabled={isWordAudioPlaying}>
+                    {isWordAudioPlaying ? "Άκουσε το παράδειγμα..." : currentQuestion < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
                   </Button>
                 </div>
               )}
