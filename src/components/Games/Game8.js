@@ -6,6 +6,11 @@ import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { game8Questions } from "../Data/Game8Data";
+import useAudio from "../../hooks/useAudio";
+import titleInstructionsAudio from "../../assets/sounds/08/title-instructions.mp3";
+import exampleKataponoAudio from "../../assets/sounds/08/example-καταπονω.mp3";
+import exampleDiametroAudio from "../../assets/sounds/08/example-διαμετρω.mp3";
+import exampleAntrepontasAudio from "../../assets/sounds/08/example-αντρεποντας.mp3";
 
 const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -17,6 +22,83 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   const [selectedChoice, setSelectedChoice] = useState(null);
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(true);
+  const [currentWordAudio, setCurrentWordAudio] = useState(null);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+
+  // Map words to their audio files (only for examples)
+  const wordAudioMap = useMemo(
+    () => ({
+      καταπονω: exampleKataponoAudio,
+      διαμετρω: exampleDiametroAudio,
+      ανατρεποντας: exampleAntrepontasAudio,
+    }),
+    []
+  );
+
+  // Initial title-instructions audio (plays on load)
+  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  // Word-specific audio (plays after submission for example words)
+  const {
+    audioRef: wordAudioRef,
+    audioSrc: wordAudioSrc,
+    play: playWordAudio,
+  } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
+
+  // Play initial audio once on mount
+  useEffect(() => {
+    if (!hasPlayedInitialAudio && titleAudioRef.current) {
+      const timer = setTimeout(() => {
+        titleAudioRef.current
+          .play()
+          .then(() => {
+            setHasPlayedInitialAudio(true);
+          })
+          .catch((error) => {
+            console.error("Error playing title audio:", error);
+            setIsInitialAudioPlaying(false);
+            setHasPlayedInitialAudio(true);
+          });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedInitialAudio, titleAudioRef]);
+
+  // Listen for title audio ended
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      setIsInitialAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef]);
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      // Audio ended, cleanup handled by useAudio hook
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef]);
 
   const formatMorphemes = (text) => {
     const parts = text.split("|");
@@ -55,10 +137,23 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
       }
     }
 
+    // Play word-specific audio if available (for example words)
+    // Remove accents from word for audio lookup
+    const wordWithoutAccents = currentQ.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const audioFile = wordAudioMap[wordWithoutAccents];
+    if (audioFile) {
+      setCurrentWordAudio(audioFile);
+      setTimeout(() => {
+        playWordAudio().catch((error) => {
+          console.error("Error playing word audio:", error);
+        });
+      }, 100);
+    }
+
     // Auto advance after 1 second
     setTimeout(() => {
       handleNext();
-    }, 1000);
+    }, 4000);
   };
 
   const handleNext = () => {
@@ -124,13 +219,17 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
 
     return (
       <Container fluid className="game-container">
+        <audio ref={titleAudioRef} src={titleAudioSrc} />
+        <audio ref={wordAudioRef} src={wordAudioSrc} />
         <Row className="justify-content-center">
           <Col md={12} lg={10}>
-            <QuestionProgressLights
-              totalQuestions={questions.filter((q) => !q.isExample).length}
-              currentQuestion={questions[currentQuestion].isExample ? -1 : questions.slice(0, currentQuestion).filter((q) => !q.isExample).length}
-              answeredQuestions={gameResults.map((r) => r.isCorrect)}
-            />
+            {!questions[currentQuestion].isExample && (
+              <QuestionProgressLights
+                totalQuestions={questions.filter((q) => !q.isExample).length}
+                currentQuestion={questions[currentQuestion].isExample ? -1 : questions.slice(0, currentQuestion).filter((q) => !q.isExample).length}
+                answeredQuestions={gameResults.map((r) => r.isCorrect)}
+              />
+            )}
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h4 className="mb-0">
@@ -164,7 +263,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
                           variant={variant}
                           style={customStyle}
                           onClick={() => handleChoiceSelect(index)}
-                          disabled={selectedChoice !== null}
+                          disabled={selectedChoice !== null || isInitialAudioPlaying}
                         >
                           <div className="d-flex align-items-center justify-content-center">{formatMorphemes(choice)}</div>
                         </Button>

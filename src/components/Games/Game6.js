@@ -1,16 +1,41 @@
 // Game 6
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game6Questions } from "../Data/Game6Data";
-import { play } from "../../services/audioPlayer";
+import useAudio from "../../hooks/useAudio";
+import titleInstructionsAudio from "../../assets/sounds/06/title-instructions.mp3";
+import exampleAntigrafoAudio from "../../assets/sounds/06/example-αντιγραφω.mp3";
+import exampleDiatrechoAudio from "../../assets/sounds/06/example-διατρεχω.mp3";
+import exampleYpografoAudio from "../../assets/sounds/06/example-υπογραφω.mp3";
+import antibaroAudio from "../../assets/sounds/06/αντιβαρο.mp3";
+import antidrasiAudio from "../../assets/sounds/06/αντιδραση.mp3";
+import antidoroAudio from "../../assets/sounds/06/αντιδωρο.mp3";
+import antilaloAudio from "../../assets/sounds/06/αντιλαλος.mp3";
+import antipathoAudio from "../../assets/sounds/06/αντιπαθω.mp3";
+import antiparoxiAudio from "../../assets/sounds/06/αντιπαροχη.mp3";
+import antistoixizoAudio from "../../assets/sounds/06/αντιστοιχιζω.mp3";
+import apogeiosiAudio from "../../assets/sounds/06/απογειωση.mp3";
+import apotrixonoAudio from "../../assets/sounds/06/αποτριχωνω.mp3";
+import apofoitoAudio from "../../assets/sounds/06/αποφοιτω.mp3";
+import apoxorisiAudio from "../../assets/sounds/06/αποχωρηση.mp3";
+import diaballoAudio from "../../assets/sounds/06/διαβαλλω.mp3";
+import diadromoAudio from "../../assets/sounds/06/διαδρομος.mp3";
+import dialyoAudio from "../../assets/sounds/06/διαλυω.mp3";
+import diaprepoAudio from "../../assets/sounds/06/διαπρεπω.mp3";
+import dyskinitosAudio from "../../assets/sounds/06/δυσκινητος.mp3";
+import dystyxiaAudio from "../../assets/sounds/06/δυστυχια.mp3";
+import dysfimisiAudio from "../../assets/sounds/06/δυσφημιση.mp3";
+import yperkoposiAudio from "../../assets/sounds/06/υπερκοπωση.mp3";
+import yperogkoAudio from "../../assets/sounds/06/υπερογκος.mp3";
+import yperpidoAudio from "../../assets/sounds/06/υπερπηδω.mp3";
+import yperfysikosAudio from "../../assets/sounds/06/υπερφυσικος.mp3";
+import ypodouloAudio from "../../assets/sounds/06/υποδουλος.mp3";
+import ypostratigoAudio from "../../assets/sounds/06/υποστρατηγος.mp3";
+import ypotropiAudio from "../../assets/sounds/06/υποτροπη.mp3";
+import ypoxreosiAudio from "../../assets/sounds/06/υποχρεωση.mp3";
 
 const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -20,10 +45,14 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const [gameCompleted, setGameCompleted] = useState(false);
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(true);
+  const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
+  const [currentWordAudio, setCurrentWordAudio] = useState(null);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
 
   const questions = useMemo(() => {
-    const examples = game6Questions.filter(q => q.isExample);
-    const nonExamples = game6Questions.filter(q => !q.isExample);
+    const examples = game6Questions.filter((q) => q.isExample);
+    const nonExamples = game6Questions.filter((q) => !q.isExample);
 
     // Shuffle non-examples using Fisher-Yates algorithm
     const shuffled = [...nonExamples];
@@ -35,26 +64,126 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     return [...examples, ...shuffled];
   }, []);
 
-  const playAudio = useCallback(async () => {
-    console.log(6, currentQuestion + 1);
+  // Map words to their audio files (remove accents for matching)
+  const wordAudioMap = useMemo(
+    () => ({
+      διατρεχω: exampleDiatrechoAudio,
+      υπογραφω: exampleYpografoAudio,
+      αντιγραφω: exampleAntigrafoAudio,
+      υποδουλος: ypodouloAudio,
+      υποτροπη: ypotropiAudio,
+      υποχρεωση: ypoxreosiAudio,
+      υποστρατηγος: ypostratigoAudio,
+      αντιδραση: antidrasiAudio,
+      αντιλαλος: antilaloAudio,
+      αντιδωρο: antidoroAudio,
+      αντιπαθω: antipathoAudio,
+      υπερκοπωση: yperkoposiAudio,
+      υπερογκος: yperogkoAudio,
+      υπερφυσικος: yperfysikosAudio,
+      υπερπηδω: yperpidoAudio,
+      διαβαλλω: diaballoAudio,
+      διαπρεπω: diaprepoAudio,
+      διαλυω: dialyoAudio,
+      διαδρομος: diadromoAudio,
+      αποτριχωνω: apotrixonoAudio,
+      αποφοιτω: apofoitoAudio,
+      αποχωρηση: apoxorisiAudio,
+      απογειωση: apogeiosiAudio,
+      δυσκινητος: dyskinitosAudio,
+      δυστυχια: dystyxiaAudio,
+      δυσφημιση: dysfimisiAudio,
+      αντιπαροχη: antiparoxiAudio,
+      αντιστοιχιζω: antistoixizoAudio,
+      αντιβαρο: antibaroAudio,
+    }),
+    []
+  );
 
-    try {
-      await play(`06/${String(currentQuestion + 1).padStart(2, '0')}.mp3`);
-    } catch (error) {
-      console.error("Audio error:", error);
-    }
+  // Initial title-instructions audio (plays on load)
+  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
 
-    if (!questionStartTime) {
-      setQuestionStartTime(Date.now());
-    }
-  }, [currentQuestion, questionStartTime]);
+  // Word-specific audio (plays after submission for example words and on audio button press)
+  const {
+    audioRef: wordAudioRef,
+    audioSrc: wordAudioSrc,
+    play: playWordAudio,
+  } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
 
-  // Auto-play audio when question changes
+  // Play initial audio once on mount
   useEffect(() => {
-    if (!gameCompleted) {
-      playAudio();
+    if (!hasPlayedInitialAudio && titleAudioRef.current) {
+      const timer = setTimeout(() => {
+        titleAudioRef.current
+          .play()
+          .then(() => {
+            setHasPlayedInitialAudio(true);
+          })
+          .catch((error) => {
+            console.error("Error playing title audio:", error);
+            setIsInitialAudioPlaying(false);
+            setHasPlayedInitialAudio(true);
+          });
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
-  }, [currentQuestion, gameCompleted, playAudio]);
+  }, [hasPlayedInitialAudio, titleAudioRef]);
+
+  // Listen for title audio ended
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      setIsInitialAudioPlaying(false);
+      if (!questionStartTime) {
+        setQuestionStartTime(Date.now());
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef, questionStartTime]);
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      setIsWordAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef]);
+
+  // Function to play word audio (for audio button)
+  const playAudio = useCallback(() => {
+    const currentQ = questions[currentQuestion];
+    // Remove accents from word for audio lookup
+    const wordWithoutAccents = currentQ.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const audioFile = wordAudioMap[wordWithoutAccents];
+    if (audioFile) {
+      setCurrentWordAudio(audioFile);
+      setIsWordAudioPlaying(true);
+      setTimeout(() => {
+        playWordAudio().catch((error) => {
+          console.error("Error playing word audio:", error);
+          setIsWordAudioPlaying(false);
+        });
+      }, 100);
+    }
+  }, [currentQuestion, questions, wordAudioMap, playWordAudio]);
 
   const handleAnswerSelect = (answer) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
@@ -79,10 +208,25 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
       ]);
     }
 
+    // Play word-specific audio if available
+    // Remove accents from word for audio lookup
+    const wordWithoutAccents = currentQ.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const audioFile = wordAudioMap[wordWithoutAccents];
+    if (audioFile) {
+      setCurrentWordAudio(audioFile);
+      setIsWordAudioPlaying(true);
+      setTimeout(() => {
+        playWordAudio().catch((error) => {
+          console.error("Error playing word audio:", error);
+          setIsWordAudioPlaying(false);
+        });
+      }, 100);
+    }
+
     // Auto advance after 1 second
     setTimeout(() => {
       nextQuestion();
-    }, 1000);
+    }, 3000);
   };
 
   // Submit game results function
@@ -162,6 +306,8 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
+      <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
           {!questions[currentQuestion].isExample && (
@@ -189,6 +335,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                   <Button
                     variant="light"
                     onClick={playAudio}
+                    disabled={isInitialAudioPlaying || isWordAudioPlaying || selectedAnswer !== null}
                     className="mb-3 rounded-circle"
                     style={{
                       width: "80px",
@@ -198,6 +345,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                       justifyContent: "center",
                       backgroundColor: "white",
                       border: "2px solid #6c757d",
+                      opacity: isInitialAudioPlaying || isWordAudioPlaying || selectedAnswer !== null ? 0.6 : 1,
                     }}
                   >
                     <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
@@ -233,15 +381,11 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                         variant={variant}
                         style={customStyle}
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null}
+                        disabled={selectedAnswer !== null || isInitialAudioPlaying}
                         className="w-100 py-3"
                       >
                         {option}
-                        {showIcon && (
-                          <span className="ms-2 fs-4">
-                            {showIcon}
-                          </span>
-                        )}
+                        {showIcon && <span className="ms-2 fs-4">{showIcon}</span>}
                       </Button>
                     </Col>
                   );

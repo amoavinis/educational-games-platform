@@ -1,11 +1,14 @@
 // Game 7
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
 import "../../styles/Game6.css";
 import { addReport } from "../../services/reports";
 import { game7Words } from "../Data/Game7Data";
+import useAudio from "../../hooks/useAudio";
+import titleInstructionsAudio from "../../assets/sounds/07/title-instructions.mp3";
+import exampleDiastasiAudio from "../../assets/sounds/07/example-διασταση.mp3";
 
 const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -56,6 +59,96 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const [gameStartTime, setGameStartTime] = useState(null);
   const [gameResults, setGameResults] = useState([]);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(true);
+  const [currentWordAudio, setCurrentWordAudio] = useState(null);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+
+  // Map words to their audio files (only διασταση available currently)
+  const wordAudioMap = React.useMemo(
+    () => ({
+      διασταση: exampleDiastasiAudio,
+    }),
+    []
+  );
+
+  // Initial title-instructions audio (plays on load)
+  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  // Word-specific audio (plays on word click or drag start)
+  const {
+    audioRef: wordAudioRef,
+    audioSrc: wordAudioSrc,
+    play: playWordAudio,
+  } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
+
+  // Play initial audio once on mount
+  useEffect(() => {
+    if (!hasPlayedInitialAudio && titleAudioRef.current) {
+      const timer = setTimeout(() => {
+        titleAudioRef.current
+          .play()
+          .then(() => {
+            setHasPlayedInitialAudio(true);
+          })
+          .catch((error) => {
+            console.error("Error playing title audio:", error);
+            setIsInitialAudioPlaying(false);
+            setHasPlayedInitialAudio(true);
+          });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedInitialAudio, titleAudioRef]);
+
+  // Listen for title audio ended
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      setIsInitialAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef]);
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      // Audio ended, cleanup handled by useAudio hook
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef]);
+
+  // Function to play word audio
+  const playAudio = useCallback((word) => {
+    // Remove accents from word for audio lookup
+    const wordWithoutAccents = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const audioFile = wordAudioMap[wordWithoutAccents];
+    if (audioFile) {
+      setCurrentWordAudio(audioFile);
+      setTimeout(() => {
+        playWordAudio().catch((error) => {
+          console.error("Error playing word audio:", error);
+        });
+      }, 100);
+    }
+  }, [wordAudioMap, playWordAudio]);
 
   const initializeGame = React.useCallback(() => {
     const exampleWords = words.filter((w) => w.isExample);
@@ -73,8 +166,14 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   }, [initializeGame]);
 
   const handleDragStart = (e, wordData) => {
+    if (isInitialAudioPlaying) {
+      e.preventDefault();
+      return;
+    }
     e.dataTransfer.setData("text/plain", JSON.stringify(wordData));
     e.target.style.opacity = "0.5";
+    // Play audio when drag starts
+    playAudio(wordData.word);
   };
 
   const handleDragEnd = (e) => {
@@ -287,14 +386,27 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
       return {};
     };
 
+    const handleWordClick = () => {
+      if (!isDraggable) {
+        returnToPool(wordData, wordData.placedPrefix);
+      } else {
+        // Play audio when clicking on draggable word
+        playAudio(wordData.word);
+      }
+    };
+
     return (
       <div
         className={`word-card ${isDraggable ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""}`}
-        style={getCardStyle()}
-        draggable={isDraggable}
+        style={{
+          ...getCardStyle(),
+          opacity: (isDraggable && isInitialAudioPlaying) ? 0.6 : 1,
+          cursor: (isDraggable && isInitialAudioPlaying) ? 'not-allowed' : isDraggable ? 'grab' : 'pointer',
+        }}
+        draggable={isDraggable && !isInitialAudioPlaying}
         onDragStart={isDraggable ? (e) => handleDragStart(e, wordData) : undefined}
         onDragEnd={isDraggable ? handleDragEnd : undefined}
-        onClick={!isDraggable ? () => returnToPool(wordData, wordData.placedPrefix) : undefined}
+        onClick={handleWordClick}
       >
         {wordData.isExample && <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>}
         {wordData.word}
@@ -354,6 +466,8 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
+      <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="justify-content-center">
         <Col md={12} lg={12}>
           <Card className="main-card">
