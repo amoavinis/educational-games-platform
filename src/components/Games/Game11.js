@@ -6,6 +6,12 @@ import "../../styles/Game.css";
 import "../../styles/Game11.css";
 import { level11Words } from "../Data/Game11Data";
 import { addReport } from "../../services/reports";
+import useAudio from "../../hooks/useAudio";
+import titleAudio from "../../assets/sounds/11/title.mp3";
+import instructionsAudio from "../../assets/sounds/11/instructions.mp3";
+import exampleKryvoAudio from "../../assets/sounds/11/example-κρύβω.mp3";
+import exampleGraftikateAudio from "../../assets/sounds/11/example-γραφτήκατε.mp3";
+import exampleSkoupizoumeAudio from "../../assets/sounds/11/example-σκουπίζουμε.mp3";
 
 const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -24,12 +30,34 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const [gameStartTime, setGameStartTime] = useState(null);
   const [gameResults, setGameResults] = useState([]);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
 
   const shuffle = (arr) =>
     arr
       .map((value) => ({ value, sort: Math.random() }))
       .sort((a, b) => a.sort - b.sort)
       .map(({ value }) => value);
+
+  // Map example words to their audio files
+  const wordAudioMap = useMemo(
+    () => ({
+      κρύβω: exampleKryvoAudio,
+      γραφτήκατε: exampleGraftikateAudio,
+      σκουπίζουμε: exampleSkoupizoumeAudio,
+    }),
+    []
+  );
+
+  // Title audio
+  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleAudio, {
+    playOnMount: false,
+  });
+
+  // Instructions audio
+  const { audioRef: instructionsAudioRef, audioSrc: instructionsAudioSrc } = useAudio(instructionsAudio, {
+    playOnMount: false,
+  });
 
   const initializeGame = React.useCallback(() => {
     const exampleWords = words.filter((w) => w.isExample);
@@ -53,10 +81,84 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
     initializeGame();
   }, [initializeGame]);
 
+  // Play title audio on mount
+  useEffect(() => {
+    if (!hasPlayedInitialAudio) {
+      const timer = setTimeout(() => {
+        if (titleAudioRef.current) {
+          titleAudioRef.current
+            .play()
+            .then(() => {
+              setHasPlayedInitialAudio(true);
+            })
+            .catch((error) => {
+              console.error("Error playing title audio:", error);
+              setIsAudioPlaying(false);
+              setHasPlayedInitialAudio(true);
+            });
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedInitialAudio, titleAudioRef]);
+
+  // Listen for title audio ended, then play instructions
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      // Play instructions audio
+      if (instructionsAudioRef.current) {
+        instructionsAudioRef.current
+          .play()
+          .catch((error) => {
+            console.error("Error playing instructions audio:", error);
+            setIsAudioPlaying(false);
+          });
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef, instructionsAudioRef]);
+
+  // Listen for instructions audio ended
+  useEffect(() => {
+    const audio = instructionsAudioRef.current;
+    const handleEnded = () => {
+      setIsAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [instructionsAudioRef]);
+
   const handleDragStart = (e, wordData) => {
+    // Block input while initial audio is playing
+    if (isAudioPlaying) {
+      e.preventDefault();
+      return;
+    }
+
     e.dataTransfer.setData("text/plain", JSON.stringify(wordData));
     e.target.style.opacity = "0.5";
     e.target.classList.add("dragging");
+
+    // Play word audio if it's an example word (play directly without state to avoid re-render during drag)
+    if (wordData.isExample && wordAudioMap[wordData.word]) {
+      const audio = new Audio(wordAudioMap[wordData.word]);
+      audio.play().catch((error) => {
+        console.error("Error playing word audio:", error);
+      });
+    }
   };
 
   const handleDragEnd = (e) => {
@@ -76,6 +178,11 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const handleDrop = (e, targetSuffix) => {
     e.preventDefault();
     e.currentTarget.classList.remove("drag-over");
+
+    // Block input while audio is playing
+    if (isAudioPlaying) {
+      return;
+    }
 
     const wordData = JSON.parse(e.dataTransfer.getData("text/plain"));
     if (!wordData) return;
@@ -273,18 +380,23 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
     return titles[suffix] || `-${suffix}`;
   };
 
-  const WordCard = ({ wordData, isDraggable = true }) => (
-    <div
-      className={`word-card ${isDraggable ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""}`}
-      draggable={isDraggable}
-      onDragStart={isDraggable ? (e) => handleDragStart(e, wordData) : undefined}
-      onDragEnd={isDraggable ? handleDragEnd : undefined}
-      onClick={!isDraggable ? () => returnToPool(wordData, wordData.placedSuffix) : undefined}
-    >
-      {wordData.isExample && <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>}
-      {wordData.word}
-    </div>
-  );
+  const WordCard = ({ wordData, isDraggable = true }) => {
+    const canInteract = !isAudioPlaying;
+
+    return (
+      <div
+        className={`word-card ${isDraggable && canInteract ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""} ${isAudioPlaying ? "audio-playing" : ""}`}
+        draggable={isDraggable && canInteract}
+        onDragStart={isDraggable && canInteract ? (e) => handleDragStart(e, wordData) : undefined}
+        onDragEnd={isDraggable && canInteract ? handleDragEnd : undefined}
+        onClick={!isDraggable && canInteract ? () => returnToPool(wordData, wordData.placedSuffix) : undefined}
+        style={{ cursor: isAudioPlaying ? "not-allowed" : isDraggable ? "grab" : "pointer" }}
+      >
+        {wordData.isExample && <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>}
+        {wordData.word}
+      </div>
+    );
+  };
 
   const SuffixColumn = ({ suffix, words }) => (
     <Card className={`suffix-column`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, suffix)}>
@@ -364,6 +476,10 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
           </Card>
         </Col>
       </Row>
+
+      {/* Hidden audio elements */}
+      <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={instructionsAudioRef} src={instructionsAudioSrc} />
     </Container>
   );
 };

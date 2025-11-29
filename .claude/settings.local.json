@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for f in src/assets/sounds/12/*.mp3)",
+      "Bash(done)",
+      "Bash(for f in *.mp3)",
+      "Bash(do echo \"$f\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

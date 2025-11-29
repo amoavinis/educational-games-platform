@@ -6,6 +6,23 @@ import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { game12Questions } from "../Data/Game12Data";
+import useAudio from "../../hooks/useAudio";
+import titleAudio from "../../assets/sounds/12/title.mp3";
+import instructionsAudio from "../../assets/sounds/12/instructions.mp3";
+// Word audio imports
+import exampleMariaAudio from "../../assets/sounds/12/example-Μαρία χτενιζόταν.mp3";
+import examplePaidiaAudio from "../../assets/sounds/12/example-παιδιά έπαιξαν.mp3";
+import grafoumeAudio from "../../assets/sounds/12/γράφουμε.mp3";
+import chatikateAudio from "../../assets/sounds/12/χαθήκατε.mp3";
+import fagameAudio from "../../assets/sounds/12/φάγαμε.mp3";
+import gennithikeAudio from "../../assets/sounds/12/γεννήθηκε.mp3";
+import kryfikaAudio from "../../assets/sounds/12/κρύφτηκα.mp3";
+import gemiseAudio from "../../assets/sounds/12/γέμισε.mp3";
+import pantrefikaAudio from "../../assets/sounds/12/παντρευτήκατε.mp3";
+import plirothikanAudio from "../../assets/sounds/12/πληρώθηκαν.mp3";
+import elegchthikanAudio from "../../assets/sounds/12/ελέγχθηκαν.mp3";
+import bariomounAudio from "../../assets/sounds/12/βαριόμουν.mp3";
+import archizeiAudio from "../../assets/sounds/12/αρχίζει.mp3";
 
 const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -14,11 +31,43 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   const [gameState, setGameState] = useState("playing"); // 'playing' or 'results'
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
 
   const questions = useMemo(() => game12Questions, []);
 
+  // Map question indices to their audio files
+  const questionAudioMap = useMemo(
+    () => ({
+      1: exampleMariaAudio,  // Η Μαρία χτενιζόταν
+      2: examplePaidiaAudio, // παιδιά έπαιξαν
+      3: grafoumeAudio,      // γράφουμε
+      4: chatikateAudio,     // χαθήκατε
+      5: fagameAudio,        // φάγαμε
+      6: gennithikeAudio,    // γεννήθηκε
+      7: kryfikaAudio,       // κρύφτηκα
+      8: gemiseAudio,        // γέμισε
+      9: pantrefikaAudio,    // παντρευτήκατε
+      10: plirothikanAudio,  // πληρώθηκαν
+      11: elegchthikanAudio, // ελέγχθηκαν
+      12: bariomounAudio,    // βαριόμουν
+      13: archizeiAudio,     // αρχίζει
+    }),
+    []
+  );
+
+  // Title audio
+  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleAudio, {
+    playOnMount: false,
+  });
+
+  // Instructions audio
+  const { audioRef: instructionsAudioRef, audioSrc: instructionsAudioSrc } = useAudio(instructionsAudio, {
+    playOnMount: false,
+  });
+
   const handleAnswerSelect = (answer) => {
-    if (selectedAnswer !== null) return; // Prevent multiple selections
+    if (selectedAnswer !== null || isAudioPlaying) return; // Prevent multiple selections and block during initial audio
 
     const question = questions[currentQuestion];
     const isCorrect = answer === question.correct;
@@ -39,6 +88,15 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
           seconds: secondsForQuestion,
         },
       ]);
+    }
+
+    // Play word audio if available for this question
+    const audioFile = questionAudioMap[currentQuestion];
+    if (audioFile) {
+      const audio = new Audio(audioFile);
+      audio.play().catch((error) => {
+        console.error("Error playing word audio:", error);
+      });
     }
 
     // Auto advance after 10 seconds
@@ -97,6 +155,66 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
       console.error("Error submitting game results:", error);
     }
   };
+
+  // Play title audio on mount
+  useEffect(() => {
+    if (!hasPlayedInitialAudio) {
+      const timer = setTimeout(() => {
+        if (titleAudioRef.current) {
+          titleAudioRef.current
+            .play()
+            .then(() => {
+              setHasPlayedInitialAudio(true);
+            })
+            .catch((error) => {
+              console.error("Error playing title audio:", error);
+              setIsAudioPlaying(false);
+              setHasPlayedInitialAudio(true);
+            });
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedInitialAudio, titleAudioRef]);
+
+  // Listen for title audio ended, then play instructions
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      // Play instructions audio
+      if (instructionsAudioRef.current) {
+        instructionsAudioRef.current
+          .play()
+          .catch((error) => {
+            console.error("Error playing instructions audio:", error);
+            setIsAudioPlaying(false);
+          });
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef, instructionsAudioRef]);
+
+  // Listen for instructions audio ended
+  useEffect(() => {
+    const audio = instructionsAudioRef.current;
+    const handleEnded = () => {
+      setIsAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [instructionsAudioRef]);
 
   // Start timing when question loads
   useEffect(() => {
@@ -187,7 +305,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
                       <Button
                         block
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null}
+                        disabled={selectedAnswer !== null || isAudioPlaying}
                         variant={variant}
                         style={customStyle}
                         size="lg"
@@ -204,6 +322,10 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
           </Card>
         </Col>
       </Row>
+
+      {/* Hidden audio elements */}
+      <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={instructionsAudioRef} src={instructionsAudioSrc} />
     </Container>
   );
 };

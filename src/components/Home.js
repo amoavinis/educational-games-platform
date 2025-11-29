@@ -101,7 +101,7 @@ const Home = () => {
   };
 
   return (
-    <Container>
+    <Container style={{paddingBottom: 20}}>
       <audio ref={audioRef} src={audioSrc} />
       <h1>Παιχνίδια</h1>
 
