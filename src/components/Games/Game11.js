@@ -110,12 +110,10 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
     const handleEnded = () => {
       // Play instructions audio
       if (instructionsAudioRef.current) {
-        instructionsAudioRef.current
-          .play()
-          .catch((error) => {
-            console.error("Error playing instructions audio:", error);
-            setIsAudioPlaying(false);
-          });
+        instructionsAudioRef.current.play().catch((error) => {
+          console.error("Error playing instructions audio:", error);
+          setIsAudioPlaying(false);
+        });
       }
     };
 
@@ -386,14 +384,16 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
 
     return (
       <div
-        className={`word-card ${isDraggable && canInteract ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""} ${isAudioPlaying ? "audio-playing" : ""}`}
+        className={`word-card ${isDraggable && canInteract ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""} ${
+          isAudioPlaying ? "audio-playing" : ""
+        }`}
         draggable={isDraggable && canInteract}
         onDragStart={isDraggable && canInteract ? (e) => handleDragStart(e, wordData) : undefined}
         onDragEnd={isDraggable && canInteract ? handleDragEnd : undefined}
         onClick={!isDraggable && canInteract ? () => returnToPool(wordData, wordData.placedSuffix) : undefined}
         style={{ cursor: isAudioPlaying ? "not-allowed" : isDraggable ? "grab" : "pointer" }}
       >
-        {wordData.isExample && <span className="example-badge">Παράδειγμα</span>}
+        {wordData.isExample && <span className="example-badge-drag">Παράδειγμα</span>}
         {wordData.word}
       </div>
     );
@@ -425,7 +425,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameCompleted) {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="justify-content-center game-row-centered-tall">
           <Col md={12} lg={10}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
@@ -445,7 +445,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
-      <Row className="justify-content-center">
+      <Row className="game-row-centered-tall">
         <Col md={12} lg={12}>
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>

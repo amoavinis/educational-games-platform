@@ -20,8 +20,8 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
   // Map words to their audio files
   const wordAudioMap = useMemo(
     () => ({
-      "ντοματοσαλάτα": exampleDomatosalataAudio,
-      "σπιτόγατος": exampleSpitogatosAudio,
+      ντοματοσαλάτα: exampleDomatosalataAudio,
+      σπιτόγατος: exampleSpitogatosAudio,
       // Note: μαυροσκούφης has no audio file
     }),
     []
@@ -254,7 +254,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
   if (!gameStarted) {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
@@ -272,8 +272,8 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
                       style={{
                         fontSize: "1.5rem",
                         fontWeight: "bold",
-                        opacity: (isTitleAudioPlaying || isPressPlayAudioPlaying) ? 0.6 : 1,
-                        cursor: (isTitleAudioPlaying || isPressPlayAudioPlaying) ? "not-allowed" : "pointer",
+                        opacity: isTitleAudioPlaying || isPressPlayAudioPlaying ? 0.6 : 1,
+                        cursor: isTitleAudioPlaying || isPressPlayAudioPlaying ? "not-allowed" : "pointer",
                       }}
                     >
                       ΠΑΜΕ!
@@ -329,7 +329,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
   if (showResults) {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <QuestionProgressLights
               totalQuestions={compounds.filter((c) => !c.isExample).length}
@@ -377,11 +377,19 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
                 <div className="d-flex justify-content-center gap-3 flex-wrap">
                   {!isAnswered ? (
                     <>
-                      <button onClick={handleSubmit} disabled={separatorPosition === null || isTitleAudioPlaying || isPressPlayAudioPlaying} className="btn btn-primary px-4 py-2 text-white rounded">
+                      <button
+                        onClick={handleSubmit}
+                        disabled={separatorPosition === null || isTitleAudioPlaying || isPressPlayAudioPlaying}
+                        className="btn btn-primary px-4 py-2 text-white rounded"
+                      >
                         Υποβολή
                       </button>
 
-                      <button onClick={() => setSeparatorPosition(null)} disabled={isTitleAudioPlaying || isPressPlayAudioPlaying} className="btn px-4 py-2 text-white rounded btn-dark">
+                      <button
+                        onClick={() => setSeparatorPosition(null)}
+                        disabled={isTitleAudioPlaying || isPressPlayAudioPlaying}
+                        className="btn px-4 py-2 text-white rounded btn-dark"
+                      >
                         Καθαρισμός
                       </button>
                     </>

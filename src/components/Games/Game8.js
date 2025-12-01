@@ -232,7 +232,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
       <Container fluid className="game-container">
         <audio ref={titleAudioRef} src={titleAudioSrc} />
         <audio ref={wordAudioRef} src={wordAudioSrc} />
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             {!questions[currentQuestion].isExample && (
               <QuestionProgressLights
@@ -257,13 +257,17 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
                   {currentQ.choices.map((choice, index) => {
                     let variant = "outline-primary";
                     let customStyle = {};
+                    let showIcon = null;
+
                     if (selectedChoice !== null) {
                       if (index === currentQ.correct) {
                         variant = "success";
                         customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
+                        showIcon = "✓";
                       } else if (index === selectedChoice) {
                         variant = "danger";
                         customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
+                        showIcon = "✗";
                       }
                     }
 
@@ -276,7 +280,14 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
                           onClick={() => handleChoiceSelect(index)}
                           disabled={selectedChoice !== null || isInitialAudioPlaying}
                         >
-                          <div className="d-flex align-items-center justify-content-center">{formatMorphemes(choice)}</div>
+                          <div className="d-flex align-items-center justify-content-center gap-2">
+                            {formatMorphemes(choice)}
+                            {showIcon && (
+                              <span className="fs-3" style={{ color: showIcon === "✓" ? "#28a745" : "#dc3545", lineHeight: 1, margin: 0 }}>
+                                {showIcon}
+                              </span>
+                            )}
+                          </div>
                         </Button>
                       </Col>
                     );
@@ -291,7 +302,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   } else {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length}

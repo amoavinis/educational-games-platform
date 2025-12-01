@@ -40,19 +40,19 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   // Map question indices to their audio files
   const questionAudioMap = useMemo(
     () => ({
-      1: exampleMariaAudio,  // Η Μαρία χτενιζόταν
+      1: exampleMariaAudio, // Η Μαρία χτενιζόταν
       2: examplePaidiaAudio, // παιδιά έπαιξαν
-      3: grafoumeAudio,      // γράφουμε
-      4: chatikateAudio,     // χαθήκατε
-      5: fagameAudio,        // φάγαμε
-      6: gennithikeAudio,    // γεννήθηκε
-      7: kryfikaAudio,       // κρύφτηκα
-      8: gemiseAudio,        // γέμισε
-      9: pantrefikaAudio,    // παντρευτήκατε
-      10: plirothikanAudio,  // πληρώθηκαν
+      3: grafoumeAudio, // γράφουμε
+      4: chatikateAudio, // χαθήκατε
+      5: fagameAudio, // φάγαμε
+      6: gennithikeAudio, // γεννήθηκε
+      7: kryfikaAudio, // κρύφτηκα
+      8: gemiseAudio, // γέμισε
+      9: pantrefikaAudio, // παντρευτήκατε
+      10: plirothikanAudio, // πληρώθηκαν
       11: elegchthikanAudio, // ελέγχθηκαν
-      12: bariomounAudio,    // βαριόμουν
-      13: archizeiAudio,     // αρχίζει
+      12: bariomounAudio, // βαριόμουν
+      13: archizeiAudio, // αρχίζει
     }),
     []
   );
@@ -185,12 +185,10 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
     const handleEnded = () => {
       // Play instructions audio
       if (instructionsAudioRef.current) {
-        instructionsAudioRef.current
-          .play()
-          .catch((error) => {
-            console.error("Error playing instructions audio:", error);
-            setIsAudioPlaying(false);
-          });
+        instructionsAudioRef.current.play().catch((error) => {
+          console.error("Error playing instructions audio:", error);
+          setIsAudioPlaying(false);
+        });
       }
     };
 
@@ -239,7 +237,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameState === "results") {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length}
@@ -264,7 +262,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={12} lg={10}>
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights

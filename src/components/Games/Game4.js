@@ -38,26 +38,26 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
   // Map words to their audio files
   const wordAudioMap = React.useMemo(
     () => ({
-      "δυνατότητα": exampleDynatotitaAudio,
-      "κουρείο": exampleKoureioAudio,
-      "γραφικός": exampleGrafikosAudio,
-      "κουραστικός": kourastikosAudio,
-      "παραγωγικός": paragogikosAudio,
-      "σκαλιστός": skalistosAudio,
-      "χωριστός": xoristosAudio,
-      "φαρμακείο": null, // No audio file
-      "σχολείο": sxoleioAudio,
-      "φορτισμένος": fortismenosAudio,
-      "χωρισμένος": xorismenosAudio,
-      "αγαπημένος": agapimenosAudio,
-      "φορτωμένος": fortomenosAudio,
-      "κλειδωμένος": kleidomenosAudio,
-      "αγνότητα": agnotitaAudio,
-      "σεμνότητα": semnotitaAudio,
-      "γνησιότητα": gnisiotitaAudio,
-      "δικαιοσύνη": dikaiosyniAudio,
-      "καλοσύνη": kalosyniAudio,
-      "εγκυμοσύνη": egkymosyniAudio,
+      δυνατότητα: exampleDynatotitaAudio,
+      κουρείο: exampleKoureioAudio,
+      γραφικός: exampleGrafikosAudio,
+      κουραστικός: kourastikosAudio,
+      παραγωγικός: paragogikosAudio,
+      σκαλιστός: skalistosAudio,
+      χωριστός: xoristosAudio,
+      φαρμακείο: null, // No audio file
+      σχολείο: sxoleioAudio,
+      φορτισμένος: fortismenosAudio,
+      χωρισμένος: xorismenosAudio,
+      αγαπημένος: agapimenosAudio,
+      φορτωμένος: fortomenosAudio,
+      κλειδωμένος: kleidomenosAudio,
+      αγνότητα: agnotitaAudio,
+      σεμνότητα: semnotitaAudio,
+      γνησιότητα: gnisiotitaAudio,
+      δικαιοσύνη: dikaiosyniAudio,
+      καλοσύνη: kalosyniAudio,
+      εγκυμοσύνη: egkymosyniAudio,
     }),
     []
   );
@@ -288,12 +288,14 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={12} lg={10}>
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length * 2}
-              currentQuestion={currentRound * questions.filter((q) => !q.isExample).length + questions.slice(0, currentQuestion).filter((q) => !q.isExample).length}
+              currentQuestion={
+                currentRound * questions.filter((q) => !q.isExample).length + questions.slice(0, currentQuestion).filter((q) => !q.isExample).length
+              }
               answeredQuestions={gameResults.filter((r) => !questions.find((q) => q.word === r.word)?.isExample).map((r) => r.isCorrect)}
             />
           )}

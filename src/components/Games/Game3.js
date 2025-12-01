@@ -25,12 +25,12 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   // Map words to their audio files
   const wordAudioMap = useMemo(
     () => ({
-      "γραφείο": grafioAudio,
-      "γραφίστας": grafistasAudio,
-      "γραφικός": grafikosAudio,
-      "κλειδώνω": kleidonoAudio,
-      "κλειδωμένος": kleidomenos,
-      "οργανώνω": organonoAudio,
+      γραφείο: grafioAudio,
+      γραφίστας: grafistasAudio,
+      γραφικός: grafikosAudio,
+      κλειδώνω: kleidonoAudio,
+      κλειδωμένος: kleidomenos,
+      οργανώνω: organonoAudio,
     }),
     []
   );
@@ -79,7 +79,6 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       };
     }
   }, [titleAudioRef]);
-
 
   // Initialize game stats
   useEffect(() => {
@@ -384,7 +383,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   if (!gameStarted) {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
@@ -431,7 +430,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameCompleted) {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
@@ -456,7 +455,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={12} lg={10}>
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>

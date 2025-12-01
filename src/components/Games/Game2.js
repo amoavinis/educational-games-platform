@@ -313,7 +313,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameCompleted) {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <QuestionProgressLights
               totalQuestions={gameStats.totalRounds}
@@ -340,7 +340,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
     <Container fluid className="game-container">
       <audio ref={titleAudioRef} src={titleAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={12} lg={10}>
           {!currentWord.isExample && (
             <QuestionProgressLights
@@ -353,7 +353,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
             <Card.Header className={`text-center`} style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0 game-title-header">
                 {currentWord.isExample && <span className="example-badge">Παράδειγμα</span>}
-                <span style={{ fontSize: 20 }}>Βρίσκω και χρωματίζω το επίθημα της λέξης</span>
+                Βρίσκω και χρωματίζω το επίθημα της λέξης
               </h4>
             </Card.Header>
             <Card.Body className="text-center">
@@ -398,17 +398,8 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
           {/* Next Word Button (only show after feedback) */}
           {feedback && (
             <div className="text-center mt-4">
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={nextWord}
-                disabled={isWordAudioPlaying}
-              >
-                {isWordAudioPlaying
-                  ? "Άκουσε το παράδειγμα..."
-                  : currentWordIndex < words.length - 1
-                    ? "Επόμενη Λέξη"
-                    : "Ολοκλήρωση"}
+              <Button variant="primary" size="lg" onClick={nextWord} disabled={isWordAudioPlaying}>
+                {isWordAudioPlaying ? "Άκουσε το παράδειγμα..." : currentWordIndex < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
               </Button>
             </div>
           )}

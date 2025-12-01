@@ -14,8 +14,8 @@ import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = React.useMemo(() => {
-    const examples = game7Words.filter(w => w.isExample);
-    const nonExamples = game7Words.filter(w => !w.isExample);
+    const examples = game7Words.filter((w) => w.isExample);
+    const nonExamples = game7Words.filter((w) => !w.isExample);
 
     // Shuffle non-examples using Fisher-Yates algorithm
     const shuffled = [...nonExamples];
@@ -137,19 +137,22 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   }, [wordAudioRef]);
 
   // Function to play word audio
-  const playAudio = useCallback((word) => {
-    // Remove accents from word for audio lookup
-    const wordWithoutAccents = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const audioFile = wordAudioMap[wordWithoutAccents];
-    if (audioFile) {
-      setCurrentWordAudio(audioFile);
-      setTimeout(() => {
-        playWordAudio().catch((error) => {
-          console.error("Error playing word audio:", error);
-        });
-      }, 100);
-    }
-  }, [wordAudioMap, playWordAudio]);
+  const playAudio = useCallback(
+    (word) => {
+      // Remove accents from word for audio lookup
+      const wordWithoutAccents = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const audioFile = wordAudioMap[wordWithoutAccents];
+      if (audioFile) {
+        setCurrentWordAudio(audioFile);
+        setTimeout(() => {
+          playWordAudio().catch((error) => {
+            console.error("Error playing word audio:", error);
+          });
+        }, 100);
+      }
+    },
+    [wordAudioMap, playWordAudio]
+  );
 
   const initializeGame = React.useCallback(() => {
     const exampleWords = words.filter((w) => w.isExample);
@@ -411,15 +414,15 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
         className={`word-card ${isDraggable ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""}`}
         style={{
           ...getCardStyle(),
-          opacity: (isDraggable && isInitialAudioPlaying) ? 0.6 : 1,
-          cursor: (isDraggable && isInitialAudioPlaying) ? 'not-allowed' : isDraggable ? 'grab' : 'pointer',
+          opacity: isDraggable && isInitialAudioPlaying ? 0.6 : 1,
+          cursor: isDraggable && isInitialAudioPlaying ? "not-allowed" : isDraggable ? "grab" : "pointer",
         }}
         draggable={isDraggable && !isInitialAudioPlaying}
         onDragStart={isDraggable ? (e) => handleDragStart(e, wordData) : undefined}
         onDragEnd={isDraggable ? handleDragEnd : undefined}
         onClick={handleWordClick}
       >
-        {wordData.isExample && <span className="example-badge">Παράδειγμα</span>}
+        {wordData.isExample && <span className="example-badge-drag">Παράδειγμα</span>}
         {wordData.word}
       </div>
     );
@@ -457,7 +460,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   if (gameCompleted) {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered-tall">
           <Col md={12} lg={10}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
@@ -479,7 +482,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
     <Container fluid className="game-container">
       <audio ref={titleAudioRef} src={titleAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
-      <Row className="justify-content-center">
+      <Row className="game-row-centered-tall">
         <Col md={12} lg={12}>
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>

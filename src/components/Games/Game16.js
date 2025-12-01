@@ -306,7 +306,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameState === "completed") {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={8} lg={6}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
@@ -327,7 +327,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   return (
     <Container fluid className="game-container">
       <audio ref={audioRef} src={audioSrc} />
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={10} lg={8}>
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>

@@ -281,7 +281,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameState === "results") {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <QuestionProgressLights
               totalQuestions={questions.filter((q) => !q.isExample).length}
@@ -312,7 +312,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
       <audio ref={instructionsNounRef} src={instructionsNounSrc} />
       <audio ref={instructionsMetoхiRef} src={instructionsMetoхiSrc} />
 
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={12} lg={10}>
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights

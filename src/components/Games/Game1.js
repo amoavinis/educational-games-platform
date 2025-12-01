@@ -305,7 +305,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameCompleted) {
     return (
       <Container fluid className="game-container">
-        <Row className="justify-content-center">
+        <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <QuestionProgressLights
               totalQuestions={gameStats.totalRounds}
@@ -332,7 +332,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
     <Container fluid className="game-container">
       <audio ref={titleAudioRef} src={titleAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={12} lg={10}>
           {!currentWord.isExample && (
             <QuestionProgressLights
@@ -345,7 +345,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
             <Card.Header className={`text-center`} style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0 game-title-header">
                 {currentWord.isExample && <span className="example-badge">Παράδειγμα</span>}
-                <span style={{ fontSize: 20 }}>Βρίσκω και χρωματίζω τη βάση της λέξης</span>
+                Βρίσκω και χρωματίζω τη βάση της λέξης
               </h4>
             </Card.Header>
             <Card.Body className="text-center">

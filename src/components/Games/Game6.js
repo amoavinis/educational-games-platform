@@ -319,7 +319,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     <Container fluid className="game-container">
       <audio ref={titleAudioRef} src={titleAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={12} lg={10}>
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights

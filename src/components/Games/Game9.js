@@ -361,7 +361,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
     <Container fluid className="game-container">
       <audio ref={instructionsAudioRef.audioRef} src={instructionsAudioRef.audioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
-      <Row className="justify-content-center">
+      <Row className="game-row-centered">
         <Col md={12} lg={10}>
           {!words[currentQuestion].isExample && (
             <QuestionProgressLights
