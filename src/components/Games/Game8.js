@@ -8,9 +8,9 @@ import { addReport } from "../../services/reports";
 import { game8Questions } from "../Data/Game8Data";
 import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/08/title-instructions.mp3";
-import exampleKataponoAudio from "../../assets/sounds/08/example-καταπονω.mp3";
-import exampleDiametroAudio from "../../assets/sounds/08/example-διαμετρω.mp3";
-import exampleAntrepontasAudio from "../../assets/sounds/08/example-αντρεποντας.mp3";
+import exampleKataponoAudio from "../../assets/sounds/08/example-καταπονώ.mp3";
+import exampleDiametroAudio from "../../assets/sounds/08/example-διαμετρώ.mp3";
+import exampleAnatrepontasAudio from "../../assets/sounds/08/example-ανατρέποντας.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game8 = ({ gameId, schoolId, studentId, classId }) => {
@@ -30,9 +30,9 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   // Map words to their audio files (only for examples)
   const wordAudioMap = useMemo(
     () => ({
-      καταπονω: exampleKataponoAudio,
-      διαμετρω: exampleDiametroAudio,
-      ανατρεποντας: exampleAntrepontasAudio,
+      καταπονώ: exampleKataponoAudio,
+      διαμετρώ: exampleDiametroAudio,
+      ανατρέποντας: exampleAnatrepontasAudio,
     }),
     []
   );
@@ -139,9 +139,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
     }
 
     // Play word-specific audio if available (for example words)
-    // Remove accents from word for audio lookup
-    const wordWithoutAccents = currentQ.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const audioFile = wordAudioMap[wordWithoutAccents];
+    const audioFile = wordAudioMap[currentQ.word];
     if (audioFile) {
       setCurrentWordAudio(audioFile);
       setTimeout(() => {

@@ -8,7 +8,7 @@ import { addReport } from "../../services/reports";
 import { game7Words } from "../Data/Game7Data";
 import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/07/title-instructions.mp3";
-import exampleDiastasiAudio from "../../assets/sounds/07/example-διασταση.mp3";
+import exampleDiastasiAudio from "../../assets/sounds/07/example-διάσταση.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
@@ -67,7 +67,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   // Map words to their audio files (only διασταση available currently)
   const wordAudioMap = React.useMemo(
     () => ({
-      διασταση: exampleDiastasiAudio,
+      διάσταση: exampleDiastasiAudio,
     }),
     []
   );
@@ -139,9 +139,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   // Function to play word audio
   const playAudio = useCallback(
     (word) => {
-      // Remove accents from word for audio lookup
-      const wordWithoutAccents = word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const audioFile = wordAudioMap[wordWithoutAccents];
+      const audioFile = wordAudioMap[word];
       if (audioFile) {
         setCurrentWordAudio(audioFile);
         setTimeout(() => {

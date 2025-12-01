@@ -7,35 +7,35 @@ import { addReport } from "../../services/reports";
 import { game6Questions } from "../Data/Game6Data";
 import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/06/title-instructions.mp3";
-import exampleAntigrafoAudio from "../../assets/sounds/06/example-αντιγραφω.mp3";
-import exampleDiatrechoAudio from "../../assets/sounds/06/example-διατρεχω.mp3";
-import exampleYpografoAudio from "../../assets/sounds/06/example-υπογραφω.mp3";
-import antibaroAudio from "../../assets/sounds/06/αντιβαρο.mp3";
-import antidrasiAudio from "../../assets/sounds/06/αντιδραση.mp3";
-import antidoroAudio from "../../assets/sounds/06/αντιδωρο.mp3";
-import antilaloAudio from "../../assets/sounds/06/αντιλαλος.mp3";
-import antipathoAudio from "../../assets/sounds/06/αντιπαθω.mp3";
-import antiparoxiAudio from "../../assets/sounds/06/αντιπαροχη.mp3";
-import antistoixizoAudio from "../../assets/sounds/06/αντιστοιχιζω.mp3";
-import apogeiosiAudio from "../../assets/sounds/06/απογειωση.mp3";
-import apotrixonoAudio from "../../assets/sounds/06/αποτριχωνω.mp3";
-import apofoitoAudio from "../../assets/sounds/06/αποφοιτω.mp3";
-import apoxorisiAudio from "../../assets/sounds/06/αποχωρηση.mp3";
-import diaballoAudio from "../../assets/sounds/06/διαβαλλω.mp3";
-import diadromoAudio from "../../assets/sounds/06/διαδρομος.mp3";
-import dialyoAudio from "../../assets/sounds/06/διαλυω.mp3";
-import diaprepoAudio from "../../assets/sounds/06/διαπρεπω.mp3";
-import dyskinitosAudio from "../../assets/sounds/06/δυσκινητος.mp3";
-import dystyxiaAudio from "../../assets/sounds/06/δυστυχια.mp3";
-import dysfimisiAudio from "../../assets/sounds/06/δυσφημιση.mp3";
-import yperkoposiAudio from "../../assets/sounds/06/υπερκοπωση.mp3";
-import yperogkoAudio from "../../assets/sounds/06/υπερογκος.mp3";
-import yperpidoAudio from "../../assets/sounds/06/υπερπηδω.mp3";
-import yperfysikosAudio from "../../assets/sounds/06/υπερφυσικος.mp3";
-import ypodouloAudio from "../../assets/sounds/06/υποδουλος.mp3";
-import ypostratigoAudio from "../../assets/sounds/06/υποστρατηγος.mp3";
-import ypotropiAudio from "../../assets/sounds/06/υποτροπη.mp3";
-import ypoxreosiAudio from "../../assets/sounds/06/υποχρεωση.mp3";
+import exampleAntigrafoAudio from "../../assets/sounds/06/example-αντιγράφω.mp3";
+import exampleDiatrechoAudio from "../../assets/sounds/06/example-διατρέχω.mp3";
+import exampleYpografoAudio from "../../assets/sounds/06/example-υπογράφω.mp3";
+import antibaroAudio from "../../assets/sounds/06/αντίβαρο.mp3";
+import antidrasiAudio from "../../assets/sounds/06/αντίδραση.mp3";
+import antidoroAudio from "../../assets/sounds/06/αντίδωρο.mp3";
+import antilaloAudio from "../../assets/sounds/06/αντίλαλος.mp3";
+import antipathoAudio from "../../assets/sounds/06/αντιπαθώ.mp3";
+import antiparoxiAudio from "../../assets/sounds/06/αντιπαροχή.mp3";
+import antistoixizoAudio from "../../assets/sounds/06/αντιστοιχίζω.mp3";
+import apogeiosiAudio from "../../assets/sounds/06/απογείωση.mp3";
+import apotrixonoAudio from "../../assets/sounds/06/αποτριχώνω.mp3";
+import apofoitoAudio from "../../assets/sounds/06/αποφοιτώ.mp3";
+import apoxorisiAudio from "../../assets/sounds/06/αποχώρηση.mp3";
+import diaballoAudio from "../../assets/sounds/06/διαβάλλω.mp3";
+import diadromoAudio from "../../assets/sounds/06/διάδρομος.mp3";
+import dialyoAudio from "../../assets/sounds/06/διαλύω.mp3";
+import diaprepoAudio from "../../assets/sounds/06/διαπρέπω.mp3";
+import dyskinitosAudio from "../../assets/sounds/06/δυσκίνητος.mp3";
+import dystyxiaAudio from "../../assets/sounds/06/δυστυχία.mp3";
+import dysfimisiAudio from "../../assets/sounds/06/δυσφήμιση.mp3";
+import yperkoposiAudio from "../../assets/sounds/06/υπερκόπωση.mp3";
+import yperogkoAudio from "../../assets/sounds/06/υπέρογκος.mp3";
+import yperpidoAudio from "../../assets/sounds/06/υπερπηδώ.mp3";
+import yperfysikosAudio from "../../assets/sounds/06/υπερφυσικός.mp3";
+import ypodouloAudio from "../../assets/sounds/06/υπόδουλος.mp3";
+import ypostratigoAudio from "../../assets/sounds/06/υποστράτηγος.mp3";
+import ypotropiAudio from "../../assets/sounds/06/υποτροπή.mp3";
+import ypoxreosiAudio from "../../assets/sounds/06/υποχρέωση.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
@@ -68,35 +68,35 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   // Map words to their audio files (remove accents for matching)
   const wordAudioMap = useMemo(
     () => ({
-      διατρεχω: exampleDiatrechoAudio,
-      υπογραφω: exampleYpografoAudio,
-      αντιγραφω: exampleAntigrafoAudio,
-      υποδουλος: ypodouloAudio,
-      υποτροπη: ypotropiAudio,
-      υποχρεωση: ypoxreosiAudio,
-      υποστρατηγος: ypostratigoAudio,
-      αντιδραση: antidrasiAudio,
-      αντιλαλος: antilaloAudio,
-      αντιδωρο: antidoroAudio,
-      αντιπαθω: antipathoAudio,
-      υπερκοπωση: yperkoposiAudio,
-      υπερογκος: yperogkoAudio,
-      υπερφυσικος: yperfysikosAudio,
-      υπερπηδω: yperpidoAudio,
-      διαβαλλω: diaballoAudio,
-      διαπρεπω: diaprepoAudio,
-      διαλυω: dialyoAudio,
-      διαδρομος: diadromoAudio,
-      αποτριχωνω: apotrixonoAudio,
-      αποφοιτω: apofoitoAudio,
-      αποχωρηση: apoxorisiAudio,
-      απογειωση: apogeiosiAudio,
-      δυσκινητος: dyskinitosAudio,
-      δυστυχια: dystyxiaAudio,
-      δυσφημιση: dysfimisiAudio,
-      αντιπαροχη: antiparoxiAudio,
-      αντιστοιχιζω: antistoixizoAudio,
-      αντιβαρο: antibaroAudio,
+      διατρέχω: exampleDiatrechoAudio,
+      υπογράφω: exampleYpografoAudio,
+      αντιγράφω: exampleAntigrafoAudio,
+      υπόδουλος: ypodouloAudio,
+      υποτροπή: ypotropiAudio,
+      υποχρέωση: ypoxreosiAudio,
+      υποστράτηγος: ypostratigoAudio,
+      αντίδραση: antidrasiAudio,
+      αντίλαλος: antilaloAudio,
+      αντίδωρο: antidoroAudio,
+      αντιπαθώ: antipathoAudio,
+      υπερκόπωση: yperkoposiAudio,
+      υπέρογκος: yperogkoAudio,
+      υπερφυσικός: yperfysikosAudio,
+      υπερπηδώ: yperpidoAudio,
+      διαβάλλω: diaballoAudio,
+      διαπρέπω: diaprepoAudio,
+      διαλύω: dialyoAudio,
+      διάδρομος: diadromoAudio,
+      αποτριχώνω: apotrixonoAudio,
+      αποφοιτώ: apofoitoAudio,
+      αποχώρηση: apoxorisiAudio,
+      απογείωση: apogeiosiAudio,
+      δυσκίνητος: dyskinitosAudio,
+      δυστυχία: dystyxiaAudio,
+      δυσφήμιση: dysfimisiAudio,
+      αντιπαροχή: antiparoxiAudio,
+      αντιστοιχίζω: antistoixizoAudio,
+      αντίβαρο: antibaroAudio,
     }),
     []
   );
@@ -171,9 +171,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   // Function to play word audio (for audio button)
   const playAudio = useCallback(() => {
     const currentQ = questions[currentQuestion];
-    // Remove accents from word for audio lookup
-    const wordWithoutAccents = currentQ.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const audioFile = wordAudioMap[wordWithoutAccents];
+    const audioFile = wordAudioMap[currentQ.word];
     if (audioFile) {
       setCurrentWordAudio(audioFile);
       setIsWordAudioPlaying(true);
@@ -220,9 +218,8 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     }
 
     // Play word-specific audio if available
-    // Remove accents from word for audio lookup
-    const wordWithoutAccents = currentQ.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const audioFile = wordAudioMap[wordWithoutAccents];
+
+    const audioFile = wordAudioMap[currentQ.word];
     if (audioFile) {
       setCurrentWordAudio(audioFile);
       setIsWordAudioPlaying(true);
