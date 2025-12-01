@@ -9,6 +9,7 @@ import useAudio from "../../hooks/useAudio";
 import titleAudio from "../../assets/sounds/05/title.mp3";
 import pressPlayAudio from "../../assets/sounds/general/press-play.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 // Import example word audio files
 import exampleDomatosalataAudio from "../../assets/sounds/05/example-ντοματοσαλάτα.mp3";
@@ -370,9 +371,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Χωρίζω τη σύνθετη λέξη με κάθετη γραμμή
-              </h4>
+              <h4 className="mb-0 game-title-header">Χωρίζω τη σύνθετη λέξη με κάθετη γραμμή</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="bg-light p-4 rounded border mb-4">

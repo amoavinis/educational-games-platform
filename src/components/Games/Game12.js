@@ -24,6 +24,7 @@ import elegchthikanAudio from "../../assets/sounds/12/ελέγχθηκαν.mp3";
 import bariomounAudio from "../../assets/sounds/12/βαριόμουν.mp3";
 import archizeiAudio from "../../assets/sounds/12/αρχίζει.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -278,9 +279,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Διαλέγω το σωστό κλιτικό επίθημα
-              </h4>
+              <h4 className="mb-0 game-title-header">Διαλέγω το σωστό κλιτικό επίθημα</h4>
             </Card.Header>
             <Card.Body>
               <Card className="mb-4 border-primary">

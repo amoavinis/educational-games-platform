@@ -11,6 +11,7 @@ import exampleGrafAudio from "../../assets/sounds/01/example-γραφ.mp3";
 import exampleVafAudio from "../../assets/sounds/01/example-βαφ.mp3";
 import exampleRafAudio from "../../assets/sounds/01/example-ραφ.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game1 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -34,20 +35,26 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
 
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
+
   const words = useMemo(() => game1Words, []);
 
   // Map words to their audio files (only for examples)
   const wordAudioMap = useMemo(
     () => ({
-      γραφω: exampleGrafAudio,
-      βαφη: exampleVafAudio,
-      ραφειο: exampleRafAudio,
+      γράφω: exampleGrafAudio,
+      βαφή: exampleVafAudio,
+      ραφείο: exampleRafAudio,
     }),
     []
   );
 
   // Initial title-instructions audio (plays on load)
   const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
     playOnMount: false,
   });
 
@@ -95,11 +102,28 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [titleAudioRef]);
 
+  const currentWord = words[currentWordIndex];
+
   // Listen for word audio ended
   useEffect(() => {
     const audio = wordAudioRef.current;
     const handleEnded = () => {
       setIsWordAudioPlaying(false);
+      const wordIdx = words.findIndex((w) => w.word === currentWord.word);
+      if (currentWord.isExample && !words[wordIdx + 1]?.isExample) {
+        setWaitingForPracticeEnd(true);
+
+        const timer = setTimeout(() => {
+          practiceEndAudioRef.current
+            .play()
+            .then(() => {})
+            .catch((error) => {
+              console.error("Error playing end of practice audio:", error);
+            });
+        }, 100);
+
+        return () => clearTimeout(timer);
+      }
     };
 
     if (audio) {
@@ -108,7 +132,21 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [wordAudioRef]);
+  }, [currentWord.isExample, currentWord.word, practiceEndAudioRef, wordAudioRef, words]);
+
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef]);
 
   // Initialize game stats
   useEffect(() => {
@@ -120,8 +158,6 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
       setQuestionStartTime(Date.now());
     }
   }, [gameStats.totalRounds, words]);
-
-  const currentWord = words[currentWordIndex];
 
   const resetWord = () => {
     setSelectedText("");
@@ -176,9 +212,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
     }
 
     // Play word-specific audio if available (for example words)
-    // Remove accents from word for audio lookup
-    const wordWithoutAccents = currentWord.word.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const audioFile = wordAudioMap[wordWithoutAccents];
+    const audioFile = wordAudioMap[currentWord.word];
     if (audioFile) {
       setCurrentWordAudio(audioFile);
       setIsWordAudioPlaying(true);
@@ -331,6 +365,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
   return (
     <Container fluid className="game-container">
       <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="game-row-centered">
         <Col md={12} lg={10}>
@@ -348,9 +383,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className={`text-center`} style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Βρίσκω και χρωματίζω τη βάση της λέξης
-              </h4>
+              <h4 className="mb-0 game-title-header">Βρίσκω και χρωματίζω τη βάση της λέξης</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
@@ -394,8 +427,8 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
           {/* Next Word Button (only show after feedback) */}
           {feedback && (
             <div className="text-center mt-4">
-              <Button variant="primary" size="lg" onClick={nextWord} disabled={isWordAudioPlaying}>
-                {isWordAudioPlaying ? "Άκουσε το παράδειγμα..." : currentWordIndex < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
+              <Button variant="primary" size="lg" onClick={nextWord} disabled={isWordAudioPlaying || waitingForPracticeEnd}>
+                {currentWordIndex < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
               </Button>
             </div>
           )}

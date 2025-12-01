@@ -12,6 +12,7 @@ import exampleKataponoAudio from "../../assets/sounds/08/example-καταπον�
 import exampleDiametroAudio from "../../assets/sounds/08/example-διαμετρώ.mp3";
 import exampleAnatrepontasAudio from "../../assets/sounds/08/example-ανατρέποντας.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -246,9 +247,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
             )}
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-                <h4 className="mb-0 game-title-header">
-                  Επίλεξε τη σωστή ανάλυση της λέξης
-                </h4>
+                <h4 className="mb-0 game-title-header">Επίλεξε τη σωστή ανάλυση της λέξης</h4>
               </Card.Header>
               <Card.Body>
                 <div className="mb-4 text-center">

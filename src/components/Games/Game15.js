@@ -12,6 +12,8 @@ import useAudio from "../../hooks/useAudio";
 import titleAudio from "../../assets/sounds/15/title.mp3";
 import instructionsAudio from "../../assets/sounds/15/instructions.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
+
 import exampleGataMikriAudio from "../../assets/sounds/15/example-η γάτα είναι μικρή.mp3";
 import exampleKairosAudio from "../../assets/sounds/15/example-ο καιρός.mp3";
 import examplePaidiAudio from "../../assets/sounds/15/example-παιδί.mp3";

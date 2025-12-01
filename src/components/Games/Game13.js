@@ -13,7 +13,9 @@ import titleAudio from "../../assets/sounds/13/title.mp3";
 import instructionsAdjectiveAudio from "../../assets/sounds/13/instructions-adjective.mp3";
 import instructionsNounAudio from "../../assets/sounds/13/instructions-noun.mp3";
 import instructionsMetoхiAudio from "../../assets/sounds/13/instructions-metoxi.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+
 import αμεσότηταAudio from "../../assets/sounds/13/αμεσότητα.mp3";
 import γλυκύτηταAudio from "../../assets/sounds/13/γλυκύτητα.mp3";
 import γνησιότηταAudio from "../../assets/sounds/13/γνησιότητα.mp3";
@@ -328,9 +330,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Διαλέγω το κατάλληλο επίθημα και φτιάχνω…
-              </h4>
+              <h4 className="mb-0 game-title-header">Διαλέγω το κατάλληλο επίθημα και φτιάχνω…</h4>
             </Card.Header>
             <Card.Body>
               {/* Visual flow diagram */}

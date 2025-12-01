@@ -12,6 +12,8 @@ import useAudio from "../../hooks/useAudio";
 import titleAudio from "../../assets/sounds/14/title.mp3";
 import instructionsAudio from "../../assets/sounds/14/instructions.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
+
 import exampleKaterinaScholioAudio from "../../assets/sounds/14/example-Κατερίνα σχολείο.mp3";
 import exampleTaxiChorosmeniAudio from "../../assets/sounds/14/example-ταξη χωρισμένη.mp3";
 import ανευθυνότηταAudio from "../../assets/sounds/14/ανευθυνότητα.mp3";
@@ -280,9 +282,7 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Διαλέγω το σωστό κλιτικό επίθημα
-              </h4>
+              <h4 className="mb-0 game-title-header">Διαλέγω το σωστό κλιτικό επίθημα</h4>
             </Card.Header>
             <Card.Body>
               <Card className="mb-4 border-primary">

@@ -10,6 +10,8 @@ import titleInstructionsAudio from "../../assets/sounds/06/title-instructions.mp
 import exampleAntigrafoAudio from "../../assets/sounds/06/example-αντιγράφω.mp3";
 import exampleDiatrechoAudio from "../../assets/sounds/06/example-διατρέχω.mp3";
 import exampleYpografoAudio from "../../assets/sounds/06/example-υπογράφω.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
+
 import antibaroAudio from "../../assets/sounds/06/αντίβαρο.mp3";
 import antidrasiAudio from "../../assets/sounds/06/αντίδραση.mp3";
 import antidoroAudio from "../../assets/sounds/06/αντίδωρο.mp3";
@@ -332,9 +334,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Ακούω και διαλέγω το σωστό πρόθημα
-              </h4>
+              <h4 className="mb-0 game-title-header">Ακούω και διαλέγω το σωστό πρόθημα</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="p-4 bg-light rounded mb-4">

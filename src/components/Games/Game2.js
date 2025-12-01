@@ -10,6 +10,7 @@ import titleInstructionsAudio from "../../assets/sounds/02/title-instructions.mp
 import exampleIzoAudio from "../../assets/sounds/02/example-ιζω.mp3";
 import exampleOnoAudio from "../../assets/sounds/02/example-ωνω.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game2 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -33,6 +34,8 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
 
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
+
   const words = useMemo(() => game2Words, []);
 
   // Map words to their audio files (only for examples)
@@ -46,6 +49,10 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Initial title-instructions audio (plays on load)
   const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
     playOnMount: false,
   });
 
@@ -78,11 +85,29 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [hasPlayedInitialAudio, titleAudioRef]);
 
+  const currentWord = words[currentWordIndex];
+
   // Listen for title audio ended
   useEffect(() => {
     const audio = titleAudioRef.current;
     const handleEnded = () => {
       setIsInitialAudioPlaying(false);
+
+      const wordIdx = words.findIndex((w) => w.word === currentWord.word);
+      if (currentWord.isExample && !words[wordIdx + 1]?.isExample) {
+        setWaitingForPracticeEnd(true);
+
+        const timer = setTimeout(() => {
+          practiceEndAudioRef.current
+            .play()
+            .then(() => {})
+            .catch((error) => {
+              console.error("Error playing end of practice audio:", error);
+            });
+        }, 100);
+
+        return () => clearTimeout(timer);
+      }
     };
 
     if (audio) {
@@ -91,7 +116,21 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [titleAudioRef]);
+  }, [currentWord.isExample, currentWord.word, practiceEndAudioRef, titleAudioRef, words]);
+
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef]);
 
   // Listen for word audio ended
   useEffect(() => {
@@ -118,8 +157,6 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
       setQuestionStartTime(Date.now());
     }
   }, [gameStats.totalRounds, words]);
-
-  const currentWord = words[currentWordIndex];
 
   const resetWord = () => {
     setSelectedText("");
@@ -339,6 +376,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
   return (
     <Container fluid className="game-container">
       <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="game-row-centered">
         <Col md={12} lg={10}>
@@ -356,9 +394,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className={`text-center`} style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Βρίσκω και χρωματίζω το επίθημα της λέξης
-              </h4>
+              <h4 className="mb-0 game-title-header">Βρίσκω και χρωματίζω το επίθημα της λέξης</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
@@ -402,8 +438,8 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
           {/* Next Word Button (only show after feedback) */}
           {feedback && (
             <div className="text-center mt-4">
-              <Button variant="primary" size="lg" onClick={nextWord} disabled={isWordAudioPlaying}>
-                {isWordAudioPlaying ? "Άκουσε το παράδειγμα..." : currentWordIndex < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
+              <Button variant="primary" size="lg" onClick={nextWord} disabled={isWordAudioPlaying || waitingForPracticeEnd}>
+                {currentWordIndex < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
               </Button>
             </div>
           )}

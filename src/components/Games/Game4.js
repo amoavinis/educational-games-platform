@@ -26,6 +26,7 @@ import fortomenosAudio from "../../assets/sounds/04/φορτωμένος.mp3";
 import xorismenosAudio from "../../assets/sounds/04/χωρισμένος.mp3";
 import xoristosAudio from "../../assets/sounds/04/χωριστός.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 // Import example audio files
 import exampleGrafikosAudio from "../../assets/sounds/04/example-γραφικός.mp3";
@@ -306,9 +307,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Ακούω και διαλέγω το σωστό επίθημα
-              </h4>
+              <h4 className="mb-0 game-title-header">Ακούω και διαλέγω το σωστό επίθημα</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="mb-4"></div>

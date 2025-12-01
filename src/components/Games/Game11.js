@@ -13,6 +13,7 @@ import exampleKryvoAudio from "../../assets/sounds/11/example-κρύβω.mp3";
 import exampleGraftikateAudio from "../../assets/sounds/11/example-γραφτήκατε.mp3";
 import exampleSkoupizoumeAudio from "../../assets/sounds/11/example-σκουπίζουμε.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();

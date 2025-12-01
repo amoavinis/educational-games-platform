@@ -8,6 +8,8 @@ import { game9Words } from "../Data/Game9Data";
 import useAudio from "../../hooks/useAudio";
 import instructionsPrefixAudio from "../../assets/sounds/09/instructions-prefix.mp3";
 import instructionsSuffixAudio from "../../assets/sounds/09/instructions-suffix.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
+
 import exampleKataprasinosAudio from "../../assets/sounds/09/example-καταπράσινος-κατα.mp3";
 import exampleEpidenoAudio from "../../assets/sounds/09/example-επιδένω-επι.mp3";
 import exampleNomikosAudio from "../../assets/sounds/09/example-νομικός-ικος.mp3";
@@ -377,9 +379,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                {getTaskTitle()}
-              </h4>
+              <h4 className="mb-0 game-title-header">{getTaskTitle()}</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="mb-4"></div>

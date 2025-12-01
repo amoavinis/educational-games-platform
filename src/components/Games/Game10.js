@@ -7,6 +7,7 @@ import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
 import { game10Words } from "../Data/Game10Data";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -360,9 +361,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
-              </h4>
+              <h4 className="mb-0 game-title-header">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
