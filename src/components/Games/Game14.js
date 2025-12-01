@@ -6,6 +6,23 @@ import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { game14Questions } from "../Data/Game14Data";
+import useAudio from "../../hooks/useAudio";
+
+// Import audio files
+import titleAudio from "../../assets/sounds/14/title.mp3";
+import instructionsAudio from "../../assets/sounds/14/instructions.mp3";
+import exampleKaterinaScholioAudio from "../../assets/sounds/14/example-Κατερίνα σχολείο.mp3";
+import exampleTaxiChorosmeniAudio from "../../assets/sounds/14/example-ταξη χωρισμένη.mp3";
+import ανευθυνότηταAudio from "../../assets/sounds/14/ανευθυνότητα.mp3";
+import αρχηγείοAudio from "../../assets/sounds/14/αρχηγείο.mp3";
+import ασφαλιστήςAudio from "../../assets/sounds/14/ασφαλιστής.mp3";
+import ηλεκτρισμόAudio from "../../assets/sounds/14/ηλεκτρισμό.mp3";
+import καταδικασμένοςAudio from "../../assets/sounds/14/καταδικασμένος.mp3";
+import κουρασμένηAudio from "../../assets/sounds/14/κουρασμένη.mp3";
+import λιμεναρχείοAudio from "../../assets/sounds/14/λιμεναρχείο.mp3";
+import μαρμάρινοςAudio from "../../assets/sounds/14/μαρμάρινος.mp3";
+import πικράAudio from "../../assets/sounds/14/πικρά.mp3";
+import χρήσιμοAudio from "../../assets/sounds/14/χρήσιμο.mp3";
 
 const Game14 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -14,8 +31,39 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
   const [gameState, setGameState] = useState("playing"); // 'playing' or 'results'
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
 
   const questions = useMemo(() => game14Questions, []);
+
+  // Map sentences to their audio files (extract key words from sentences)
+  const sentenceAudioMap = useMemo(
+    () => ({
+      "Το άγαλμα είναι μαρμάρ____.": μαρμάρινοςAudio,
+      "Η λάμπα ανάβει με ηλεκτρ______.": ηλεκτρισμόAudio,
+      "Ο Κώστας δουλεύει στο λιμεναρχ________.": λιμεναρχείοAudio,
+      "Τα αμύγδαλα ήταν πικρ________.": πικράAudio,
+      "Ο μπαμπάς μου δουλεύει ως ασφαλ__________.": ασφαλιστήςAudio,
+      "Οι αστυνομικοί πήγαν στο αρχηγ______.": αρχηγείοAudio,
+      "Η Μαντώ δεν ήταν καλά γιατί ήταν κουρασ__________.": κουρασμένηAudio,
+      "Χάλασε το παιχνίδι του από ανευθυν___________.": ανευθυνότηταAudio,
+      "Το σχόλιο του κριτή ήταν χρήσ_______ για το κοινό.": χρήσιμοAudio,
+      "Ο ληστής ήταν καταδικασ_______ από το δικαστήριο για 10 χρόνια.": καταδικασμένοςAudio,
+      "Η τάξη είναι χωρισ_____ στα δύο.": exampleTaxiChorosmeniAudio,
+      "Η Κατερίνα κάνει μαθήματα στο σχολ______.": exampleKaterinaScholioAudio,
+    }),
+    []
+  );
+
+  // Title audio
+  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleAudio, {
+    playOnMount: false,
+  });
+
+  // Instructions audio
+  const { audioRef: instructionsAudioRef, audioSrc: instructionsAudioSrc } = useAudio(instructionsAudio, {
+    playOnMount: false,
+  });
 
   const handleAnswerSelect = (answer) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
@@ -26,6 +74,15 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
     const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
     setSelectedAnswer(answer);
+
+    // Play the word audio for the sentence
+    const wordAudio = sentenceAudioMap[question.sentence];
+    if (wordAudio) {
+      const audio = new Audio(wordAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing word audio:", error);
+      });
+    }
 
     // Track the result only for non-example questions
     if (!question.isExample) {
@@ -98,12 +155,69 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-  // Start timing when question loads
+  // Play title audio on mount
   useEffect(() => {
-    if (gameState === "playing") {
+    if (!hasPlayedInitialAudio) {
+      const timer = setTimeout(() => {
+        if (titleAudioRef.current) {
+          titleAudioRef.current
+            .play()
+            .then(() => {
+              setHasPlayedInitialAudio(true);
+            })
+            .catch((error) => {
+              console.error("Error playing title audio:", error);
+              setIsAudioPlaying(false);
+              setHasPlayedInitialAudio(true);
+            });
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedInitialAudio, titleAudioRef]);
+
+  // Listen for title audio ended, then play instructions audio
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      if (instructionsAudioRef.current) {
+        instructionsAudioRef.current.play().catch((error) => {
+          console.error("Error playing instructions audio:", error);
+          setIsAudioPlaying(false);
+        });
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef, instructionsAudioRef]);
+
+  // Listen for instructions audio ended
+  useEffect(() => {
+    const audio = instructionsAudioRef.current;
+    const handleEnded = () => {
+      setIsAudioPlaying(false);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [instructionsAudioRef]);
+
+  // Start timing when question loads and audio is done
+  useEffect(() => {
+    if (gameState === "playing" && !isAudioPlaying) {
       setQuestionStartTime(Date.now());
     }
-  }, [currentQuestion, gameState]);
+  }, [currentQuestion, gameState, isAudioPlaying]);
 
   const question = questions[currentQuestion];
 
@@ -135,6 +249,10 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
+      {/* Audio elements */}
+      <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={instructionsAudioRef} src={instructionsAudioSrc} />
+
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
           {!questions[currentQuestion].isExample && (
@@ -146,8 +264,8 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0">
-                {questions[currentQuestion].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+              <h4 className="mb-0 game-title-header">
+                {questions[currentQuestion].isExample && <span className="example-badge">Παράδειγμα</span>}
                 Διαλέγω το σωστό κλιτικό επίθημα
               </h4>
             </Card.Header>
@@ -193,7 +311,7 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
                       <Button
                         block
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null}
+                        disabled={selectedAnswer !== null || isAudioPlaying}
                         variant={variant}
                         style={customStyle}
                         size="lg"

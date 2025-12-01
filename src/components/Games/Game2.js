@@ -340,8 +340,8 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className={`text-center`} style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0">
-                {currentWord.isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+              <h4 className="mb-0 game-title-header">
+                {currentWord.isExample && <span className="example-badge">Παράδειγμα</span>}
                 <span style={{ fontSize: 20 }}>Βρίσκω και χρωματίζω το επίθημα της λέξης</span>
               </h4>
             </Card.Header>

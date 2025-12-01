@@ -392,7 +392,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
         onClick={!isDraggable && canInteract ? () => returnToPool(wordData, wordData.placedSuffix) : undefined}
         style={{ cursor: isAudioPlaying ? "not-allowed" : isDraggable ? "grab" : "pointer" }}
       >
-        {wordData.isExample && <span className="badge bg-warning text-dark me-1">Παράδειγμα</span>}
+        {wordData.isExample && <span className="example-badge">Παράδειγμα</span>}
         {wordData.word}
       </div>
     );

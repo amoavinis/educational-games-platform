@@ -344,8 +344,8 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
         <Col md={12} lg={10}>
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0">
-                {currentWord.isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+              <h4 className="mb-0 game-title-header">
+                {currentWord.isExample && <span className="example-badge">Παράδειγμα</span>}
                 Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
               </h4>
             </Card.Header>

@@ -1,11 +1,31 @@
 // Game 13
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { game13Questions } from "../Data/Game13Data";
+import useAudio from "../../hooks/useAudio";
+
+// Import audio files
+import titleAudio from "../../assets/sounds/13/title.mp3";
+import instructionsAdjectiveAudio from "../../assets/sounds/13/instructions-adjective.mp3";
+import instructionsNounAudio from "../../assets/sounds/13/instructions-noun.mp3";
+import instructionsMetoхiAudio from "../../assets/sounds/13/instructions-metoxi.mp3";
+import αμεσότηταAudio from "../../assets/sounds/13/αμεσότητα.mp3";
+import γλυκύτηταAudio from "../../assets/sounds/13/γλυκύτητα.mp3";
+import γνησιότηταAudio from "../../assets/sounds/13/γνησιότητα.mp3";
+import εξήγησηAudio from "../../assets/sounds/13/εξήγηση.mp3";
+import ηρωικόςAudio from "../../assets/sounds/13/ηρωικός.mp3";
+import κιθαριστήςAudio from "../../assets/sounds/13/κιθαριστής.mp3";
+import κλεισμένοςAudio from "../../assets/sounds/13/κλεισμένος.mp3";
+import μέτρησηAudio from "../../assets/sounds/13/μέτρηση.mp3";
+import τελικόςAudio from "../../assets/sounds/13/τελικός.mp3";
+import φαρμακείοAudio from "../../assets/sounds/13/φαρμακείο.mp3";
+import φασισμόςAudio from "../../assets/sounds/13/φασισμός.mp3";
+import χάρτινοςAudio from "../../assets/sounds/13/χάρτινος.mp3";
+import χρωματισμόςAudio from "../../assets/sounds/13/χρωματισμός.mp3";
 
 const Game13 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -14,8 +34,41 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
   const [gameState, setGameState] = useState("playing"); // 'playing' or 'results'
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
+  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [instructionAudioPlayed, setInstructionAudioPlayed] = useState(false);
 
   const questions = useMemo(() => game13Questions, []);
+
+  // Map word results to their audio files
+  const wordAudioMap = useMemo(
+    () => ({
+      αμεσότητα: αμεσότηταAudio,
+      γλυκύτητα: γλυκύτηταAudio,
+      γνησιότητα: γνησιότηταAudio,
+      εξήγηση: εξήγησηAudio,
+      ηρωικός: ηρωικόςAudio,
+      κιθαριστής: κιθαριστήςAudio,
+      κλεισμένος: κλεισμένοςAudio,
+      μέτρηση: μέτρησηAudio,
+      τελικός: τελικόςAudio,
+      φαρμακείο: φαρμακείοAudio,
+      φασισμός: φασισμόςAudio,
+      χάρτινος: χάρτινοςAudio,
+      χρωματισμός: χρωματισμόςAudio,
+    }),
+    []
+  );
+
+  // Title audio
+  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleAudio, {
+    playOnMount: false,
+  });
+
+  // Instruction audios
+  const { audioRef: instructionsAdjectiveRef, audioSrc: instructionsAdjectiveSrc } = useAudio(instructionsAdjectiveAudio, { playOnMount: false });
+  const { audioRef: instructionsNounRef, audioSrc: instructionsNounSrc } = useAudio(instructionsNounAudio, { playOnMount: false });
+  const { audioRef: instructionsMetoхiRef, audioSrc: instructionsMetoхiSrc } = useAudio(instructionsMetoхiAudio, { playOnMount: false });
 
   const handleAnswerSelect = (answer) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
@@ -23,11 +76,18 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
     const question = questions[currentQuestion];
     const isCorrect = answer === question.correct;
     const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime
-      ? (questionEndTime - questionStartTime) / 1000
-      : 0;
+    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
 
     setSelectedAnswer(answer);
+
+    // Play the word audio for the result
+    const wordAudio = wordAudioMap[question.result];
+    if (wordAudio) {
+      const audio = new Audio(wordAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing word audio:", error);
+      });
+    }
 
     // Track the result only for non-example questions
     if (!question.isExample) {
@@ -54,6 +114,8 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
       setCurrentQuestion((prev) => prev + 1);
       setSelectedAnswer(null);
       setQuestionStartTime(null); // Reset timing for next question
+      setInstructionAudioPlayed(false); // Reset instruction audio state
+      setIsAudioPlaying(true); // New question means new instruction audio
     } else {
       setGameState("results");
       submitGameResults();
@@ -66,7 +128,6 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
       console.log("Missing studentId or classId, cannot submit results");
       return;
     }
-
 
     const now = new Date();
     const datetime =
@@ -93,7 +154,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
         studentId,
         classId,
         gameId,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
       });
       // console.log("Game results submitted successfully");
     } catch (error) {
@@ -101,12 +162,108 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-  // Start timing when question loads
+  // Play title audio on mount
   useEffect(() => {
-    if (gameState === "playing") {
+    if (!hasPlayedInitialAudio && currentQuestion === 0) {
+      const timer = setTimeout(() => {
+        if (titleAudioRef.current) {
+          titleAudioRef.current
+            .play()
+            .then(() => {
+              setHasPlayedInitialAudio(true);
+            })
+            .catch((error) => {
+              console.error("Error playing title audio:", error);
+              setIsAudioPlaying(false);
+              setHasPlayedInitialAudio(true);
+            });
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedInitialAudio, currentQuestion, titleAudioRef]);
+
+  // Helper function to play the appropriate instruction audio
+  const playInstructionAudio = useCallback(() => {
+    const question = questions[currentQuestion];
+    let audioRef = null;
+
+    if (question.instruction === "ΕΠΙΘΕΤΟ") {
+      audioRef = instructionsAdjectiveRef;
+    } else if (question.instruction === "ΟΥΣΙΑΣΤΙΚΟ") {
+      audioRef = instructionsNounRef;
+    } else if (question.instruction === "ΜΕΤΟΧΗ") {
+      audioRef = instructionsMetoхiRef;
+    }
+
+    if (audioRef && audioRef.current) {
+      audioRef.current
+        .play()
+        .then(() => {
+          setInstructionAudioPlayed(true);
+        })
+        .catch((error) => {
+          console.error("Error playing instruction audio:", error);
+          setIsAudioPlaying(false);
+          setInstructionAudioPlayed(true);
+        });
+    }
+  }, [currentQuestion, questions, instructionsAdjectiveRef, instructionsNounRef, instructionsMetoхiRef]);
+
+  // Listen for title audio ended, then play instruction audio for first question
+  useEffect(() => {
+    const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      // Play instruction audio for the first question
+      if (currentQuestion === 0 && !instructionAudioPlayed) {
+        playInstructionAudio();
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef, currentQuestion, instructionAudioPlayed, playInstructionAudio]);
+
+  // Play instruction audio when question changes (except first question which is handled by title end)
+  useEffect(() => {
+    if (currentQuestion > 0 && !instructionAudioPlayed) {
+      playInstructionAudio();
+    }
+  }, [currentQuestion, instructionAudioPlayed, playInstructionAudio]);
+
+  // Listen for instruction audio ended
+  useEffect(() => {
+    const handleInstructionEnded = () => {
+      setIsAudioPlaying(false);
+    };
+
+    const refs = [instructionsAdjectiveRef, instructionsNounRef, instructionsMetoхiRef];
+    refs.forEach((ref) => {
+      if (ref.current) {
+        ref.current.addEventListener("ended", handleInstructionEnded);
+      }
+    });
+
+    return () => {
+      refs.forEach((ref) => {
+        if (ref.current) {
+          ref.current.removeEventListener("ended", handleInstructionEnded);
+        }
+      });
+    };
+  }, [instructionsAdjectiveRef, instructionsNounRef, instructionsMetoхiRef]);
+
+  // Start timing when question loads and audio is done
+  useEffect(() => {
+    if (gameState === "playing" && !isAudioPlaying) {
       setQuestionStartTime(Date.now());
     }
-  }, [currentQuestion, gameState]);
+  }, [currentQuestion, gameState, isAudioPlaying]);
 
   const question = questions[currentQuestion];
 
@@ -121,19 +278,11 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
             <Card className="main-card">
-              <Card.Header
-                className="text-center"
-                style={{ backgroundColor: "#2F4F4F", color: "white" }}
-              >
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => navigate("/")}
-                  className="mt-4"
-                >
+                <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
                   Τέλος Άσκησης
                 </Button>
               </Card.Body>
@@ -146,6 +295,12 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
 
   return (
     <Container fluid className="game-container">
+      {/* Audio elements */}
+      <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={instructionsAdjectiveRef} src={instructionsAdjectiveSrc} />
+      <audio ref={instructionsNounRef} src={instructionsNounSrc} />
+      <audio ref={instructionsMetoхiRef} src={instructionsMetoхiSrc} />
+
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
           {!questions[currentQuestion].isExample && (
@@ -156,16 +311,9 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
             />
           )}
           <Card className="main-card">
-            <Card.Header
-              className="text-center"
-              style={{ backgroundColor: "#2F4F4F", color: "white" }}
-            >
-              <h4 className="mb-0">
-                {questions[currentQuestion].isExample && (
-                  <span className="badge badge-dark me-2">
-                    Παράδειγμα
-                  </span>
-                )}
+            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+              <h4 className="mb-0 game-title-header">
+                {questions[currentQuestion].isExample && <span className="example-badge">Παράδειγμα</span>}
                 Διαλέγω το κατάλληλο επίθημα και φτιάχνω…
               </h4>
             </Card.Header>
@@ -193,11 +341,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
                   {/* Result oval - shows result after answer */}
                   <div
                     className={`px-4 py-3 rounded-pill ${
-                      selectedAnswer
-                        ? selectedAnswer === question.correct
-                          ? "bg-success"
-                          : "bg-danger"
-                        : "bg-light border border-secondary"
+                      selectedAnswer ? (selectedAnswer === question.correct ? "bg-success" : "bg-danger") : "bg-light border border-secondary"
                     } text-white`}
                     style={{ fontSize: "1.5rem", fontWeight: "bold", minWidth: "150px", textAlign: "center" }}
                   >
@@ -229,26 +373,18 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
                   }
 
                   return (
-                    <Col
-                      key={index}
-                      xs={4}
-                      className="mb-3 d-flex justify-content-center"
-                    >
+                    <Col key={index} xs={4} className="mb-3 d-flex justify-content-center">
                       <Button
                         block
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null}
+                        disabled={selectedAnswer !== null || isAudioPlaying}
                         variant={variant}
                         style={customStyle}
                         size="lg"
                         className="py-3"
                       >
                         {option}
-                        {showIcon && (
-                          <span className="ms-2 fs-4">
-                            {showIcon}
-                          </span>
-                        )}
+                        {showIcon && <span className="ms-2 fs-4">{showIcon}</span>}
                       </Button>
                     </Col>
                   );

@@ -361,8 +361,8 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0">
-                {words[currentQuestion].isExample && <span className="badge badge-dark me-2">Παράδειγμα</span>}
+              <h4 className="mb-0 game-title-header">
+                {words[currentQuestion].isExample && <span className="example-badge">Παράδειγμα</span>}
                 {getTaskTitle()}
               </h4>
             </Card.Header>
