@@ -353,10 +353,14 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     <Container fluid className="game-container">
       <Row className="justify-content-center">
         <Col md={12} lg={10}>
+          {currentWord.isExample && (
+            <div className="d-flex justify-content-center">
+              <span className="example-badge">📚 Παράδειγμα</span>
+            </div>
+          )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0 game-title-header">
-                {currentWord.isExample && <span className="example-badge">Παράδειγμα</span>}
                 Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}
               </h4>
             </Card.Header>

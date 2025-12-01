@@ -6,8 +6,20 @@
 }
 
 .example-badge {
-  margin-right: 20px;
+  background: linear-gradient(135deg, #ffd93d 0%, #f9ca24 100%);
+  color: #000;
+  padding: 12px 20px;
+  border-radius: 12px;
   font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px solid #f39c12;
+  margin-bottom: 15px;
+  width: fit-content;
 }
 
 .example-badge-drag {
@@ -143,7 +155,7 @@
 
 /* Game Row Vertical Centering */
 .game-row-centered {
-  min-height: calc(100vh - 150px);
+  min-height: calc(100vh - 190px);
   display: flex;
   align-items: center;
   justify-content: center;

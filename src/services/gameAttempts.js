@@ -1,34 +1,23 @@
 import { db } from "./firebase";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 // Check how many attempts a student has made for a specific game
 export const getStudentGameAttempts = async (studentId, gameId, schoolId = null) => {
   try {
     const school = schoolId || localStorage.getItem("school");
-    
+
     if (!studentId || !gameId || !school) {
       console.error("Missing required parameters for game attempts check");
       return 0;
     }
 
-    const q = query(
-      collection(db, "reports"),
-      where("schoolId", "==", school),
-      where("studentId", "==", studentId),
-      where("gameId", "==", parseInt(gameId))
-    );
-    
+    const q = query(collection(db, "reports"), where("schoolId", "==", school), where("studentId", "==", studentId), where("gameId", "==", parseInt(gameId)));
+
     const querySnapshot = await getDocs(q);
     const attemptCount = querySnapshot.docs.length;
-    
+
     // console.log(`Student ${studentId} has ${attemptCount} attempts for game ${gameId}`);
     return attemptCount;
-    
   } catch (error) {
     console.error("Error checking game attempts:", error);
     return 0; // Return 0 on error to allow playing (fail-safe)
@@ -50,7 +39,7 @@ export const canStudentPlayGame = async (studentId, gameId, schoolId = null) => 
 export const canSaveGameReport = async (studentId, gameId, schoolId = null) => {
   try {
     const attempts = await getStudentGameAttempts(studentId, gameId, schoolId);
-    if (attempts >= 2) {
+    if (attempts >= 200) {
       console.warn(`Cannot save report: Student ${studentId} has already completed ${attempts} attempts for game ${gameId}`);
       return false;
     }

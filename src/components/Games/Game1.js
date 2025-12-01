@@ -341,10 +341,14 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameStats.rounds.map((r) => r.isCorrect)}
             />
           )}
+          {currentWord.isExample && (
+            <div className="d-flex justify-content-center">
+              <span className="example-badge">📚 Παράδειγμα</span>
+            </div>
+          )}
           <Card className="main-card">
             <Card.Header className={`text-center`} style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0 game-title-header">
-                {currentWord.isExample && <span className="example-badge">Παράδειγμα</span>}
                 Βρίσκω και χρωματίζω τη βάση της λέξης
               </h4>
             </Card.Header>

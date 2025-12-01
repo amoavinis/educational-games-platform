@@ -104,10 +104,10 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
       ]);
     }
 
-    // Auto advance after 10 seconds
+    // Auto advance after 4 seconds
     setTimeout(() => {
       nextQuestion();
-    }, 10000);
+    }, 4000);
   };
 
   const nextQuestion = () => {
@@ -321,10 +321,14 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
+          {questions[currentQuestion].isExample && (
+            <div className="d-flex justify-content-center">
+              <span className="example-badge">📚 Παράδειγμα</span>
+            </div>
+          )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0 game-title-header">
-                {questions[currentQuestion].isExample && <span className="example-badge">Παράδειγμα</span>}
                 Διαλέγω το κατάλληλο επίθημα και φτιάχνω…
               </h4>
             </Card.Header>

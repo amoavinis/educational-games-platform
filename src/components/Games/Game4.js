@@ -299,10 +299,14 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameResults.filter((r) => !questions.find((q) => q.word === r.word)?.isExample).map((r) => r.isCorrect)}
             />
           )}
+          {questions[currentQuestion].isExample && (
+            <div className="d-flex justify-content-center">
+              <span className="example-badge">📚 Παράδειγμα</span>
+            </div>
+          )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0 game-title-header">
-                {questions[currentQuestion].isExample && <span className="example-badge">Παράδειγμα</span>}
                 Ακούω και διαλέγω το σωστό επίθημα
               </h4>
             </Card.Header>

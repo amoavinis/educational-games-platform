@@ -207,7 +207,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
         setShowResults(true);
         submitGameResults();
       }
-    }, 10000);
+    }, 4000);
   };
 
   // Submit game results function
@@ -363,10 +363,14 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
+          {compounds[currentWordIndex].isExample && (
+            <div className="d-flex justify-content-center">
+              <span className="example-badge">📚 Παράδειγμα</span>
+            </div>
+          )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0 game-title-header">
-                {compounds[currentWordIndex].isExample && <span className="example-badge">Παράδειγμα</span>}
                 Χωρίζω τη σύνθετη λέξη με κάθετη γραμμή
               </h4>
             </Card.Header>

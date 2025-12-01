@@ -369,12 +369,14 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
               answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
+          {questions[currentQuestion].isExample && (
+            <div className="d-flex justify-content-center">
+              <span className="example-badge">📚 Παράδειγμα</span>
+            </div>
+          )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">
-                {questions[currentQuestion].isExample && <span className="example-badge">Παράδειγμα</span>}
-                Διαλέγω το κατάλληλο επίθημα όσο πιο γρήγορα μπορώ
-              </h4>
+              <h4 className="mb-0 game-title-header">Διαλέγω το κατάλληλο επίθημα όσο πιο γρήγορα μπορώ</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="rounded mb-4">
