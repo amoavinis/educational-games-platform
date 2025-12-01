@@ -12,6 +12,7 @@ import instructionsAudio from "../../assets/sounds/11/instructions.mp3";
 import exampleKryvoAudio from "../../assets/sounds/11/example-κρύβω.mp3";
 import exampleGraftikateAudio from "../../assets/sounds/11/example-γραφτήκατε.mp3";
 import exampleSkoupizoumeAudio from "../../assets/sounds/11/example-σκουπίζουμε.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -410,6 +411,16 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
       </Card.Body>
     </Card>
   );
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   if (gameCompleted) {
     return (

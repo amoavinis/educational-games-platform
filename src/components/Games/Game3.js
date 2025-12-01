@@ -16,6 +16,7 @@ import grafikosAudio from "../../assets/sounds/03/γραφικός.mp3";
 import kleidonoAudio from "../../assets/sounds/03/κλειδώνω.mp3";
 import kleidomenos from "../../assets/sounds/03/κλειδωμένος.mp3";
 import organonoAudio from "../../assets/sounds/03/οργανώνω.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -368,6 +369,16 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       return () => clearTimeout(timer);
     }
   }, [gameStarted, hasPlayedInitialAudio, titleAudioRef]);
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   // Start screen
   if (!gameStarted) {

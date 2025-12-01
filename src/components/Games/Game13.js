@@ -13,6 +13,7 @@ import titleAudio from "../../assets/sounds/13/title.mp3";
 import instructionsAdjectiveAudio from "../../assets/sounds/13/instructions-adjective.mp3";
 import instructionsNounAudio from "../../assets/sounds/13/instructions-noun.mp3";
 import instructionsMetoхiAudio from "../../assets/sounds/13/instructions-metoxi.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import αμεσότηταAudio from "../../assets/sounds/13/αμεσότητα.mp3";
 import γλυκύτηταAudio from "../../assets/sounds/13/γλυκύτητα.mp3";
 import γνησιότηταAudio from "../../assets/sounds/13/γνησιότητα.mp3";
@@ -264,6 +265,16 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
       setQuestionStartTime(Date.now());
     }
   }, [currentQuestion, gameState, isAudioPlaying]);
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameState === "results") {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameState]);
 
   const question = questions[currentQuestion];
 

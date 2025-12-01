@@ -11,6 +11,7 @@ import useAudio from "../../hooks/useAudio";
 // Import audio files
 import titleAudio from "../../assets/sounds/14/title.mp3";
 import instructionsAudio from "../../assets/sounds/14/instructions.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import exampleKaterinaScholioAudio from "../../assets/sounds/14/example-Κατερίνα σχολείο.mp3";
 import exampleTaxiChorosmeniAudio from "../../assets/sounds/14/example-ταξη χωρισμένη.mp3";
 import ανευθυνότηταAudio from "../../assets/sounds/14/ανευθυνότητα.mp3";
@@ -218,6 +219,16 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
       setQuestionStartTime(Date.now());
     }
   }, [currentQuestion, gameState, isAudioPlaying]);
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameState === "results") {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameState]);
 
   const question = questions[currentQuestion];
 

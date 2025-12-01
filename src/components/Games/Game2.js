@@ -9,6 +9,7 @@ import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/02/title-instructions.mp3";
 import exampleIzoAudio from "../../assets/sounds/02/example-ιζω.mp3";
 import exampleOnoAudio from "../../assets/sounds/02/example-ωνω.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game2 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -298,6 +299,16 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
       </>
     );
   };
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   if (gameCompleted) {
     return (

@@ -11,6 +11,7 @@ import useAudio from "../../hooks/useAudio";
 // Import audio files
 import titleAudio from "../../assets/sounds/15/title.mp3";
 import instructionsAudio from "../../assets/sounds/15/instructions.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import exampleGataMikriAudio from "../../assets/sounds/15/example-η γάτα είναι μικρή.mp3";
 import exampleKairosAudio from "../../assets/sounds/15/example-ο καιρός.mp3";
 import examplePaidiAudio from "../../assets/sounds/15/example-παιδί.mp3";
@@ -316,6 +317,16 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
       }
     }
   }, [selectedAnswer]);
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   if (gameCompleted) {
     return (

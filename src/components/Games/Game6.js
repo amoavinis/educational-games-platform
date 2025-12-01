@@ -36,6 +36,7 @@ import ypodouloAudio from "../../assets/sounds/06/υποδουλος.mp3";
 import ypostratigoAudio from "../../assets/sounds/06/υποστρατηγος.mp3";
 import ypotropiAudio from "../../assets/sounds/06/υποτροπη.mp3";
 import ypoxreosiAudio from "../../assets/sounds/06/υποχρεωση.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -184,6 +185,16 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
       }, 100);
     }
   }, [currentQuestion, questions, wordAudioMap, playWordAudio]);
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   const handleAnswerSelect = (answer) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections

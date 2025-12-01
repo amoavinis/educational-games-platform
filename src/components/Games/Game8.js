@@ -11,6 +11,7 @@ import titleInstructionsAudio from "../../assets/sounds/08/title-instructions.mp
 import exampleKataponoAudio from "../../assets/sounds/08/example-καταπονω.mp3";
 import exampleDiametroAudio from "../../assets/sounds/08/example-διαμετρω.mp3";
 import exampleAntrepontasAudio from "../../assets/sounds/08/example-αντρεποντας.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -213,6 +214,16 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
       setQuestionStartTime(Date.now());
     }
   }, [currentQuestion, gameState]);
+
+  // Play bravo audio when game is completed
+  useEffect(() => {
+    if (gameState === "completed") {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameState]);
 
   if (gameState !== "completed") {
     const currentQ = questions[currentQuestion];

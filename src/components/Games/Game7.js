@@ -9,6 +9,7 @@ import { game7Words } from "../Data/Game7Data";
 import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/07/title-instructions.mp3";
 import exampleDiastasiAudio from "../../assets/sounds/07/example-διασταση.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -370,6 +371,16 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
       console.error("Error submitting game results:", error);
     }
   };
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   const WordCard = ({ wordData, isDraggable = true }) => {
     // Get styling based on placement

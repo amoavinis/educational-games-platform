@@ -6,6 +6,7 @@ import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
 import { game10Words } from "../Data/Game10Data";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -285,6 +286,16 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
     return result;
   };
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   // Start screen
   if (!gameStarted) {

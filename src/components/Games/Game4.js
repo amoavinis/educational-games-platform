@@ -25,6 +25,7 @@ import fortismenosAudio from "../../assets/sounds/04/φορτισμένος.mp3"
 import fortomenosAudio from "../../assets/sounds/04/φορτωμένος.mp3";
 import xorismenosAudio from "../../assets/sounds/04/χωρισμένος.mp3";
 import xoristosAudio from "../../assets/sounds/04/χωριστός.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 // Import example audio files
 import exampleGrafikosAudio from "../../assets/sounds/04/example-γραφικός.mp3";
@@ -161,6 +162,16 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
       setQuestionStartTime(Date.now());
     }
   }, [currentQuestion, gameCompleted, isInitialAudioPlaying, questionStartTime]);
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   const handleAnswerSelect = (answer) => {
     if (selectedAnswer !== null || isInitialAudioPlaying) return; // Prevent multiple selections and block during initial audio

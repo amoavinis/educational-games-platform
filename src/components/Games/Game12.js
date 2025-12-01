@@ -23,6 +23,7 @@ import plirothikanAudio from "../../assets/sounds/12/πληρώθηκαν.mp3";
 import elegchthikanAudio from "../../assets/sounds/12/ελέγχθηκαν.mp3";
 import bariomounAudio from "../../assets/sounds/12/βαριόμουν.mp3";
 import archizeiAudio from "../../assets/sounds/12/αρχίζει.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -222,6 +223,16 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
       setQuestionStartTime(Date.now());
     }
   }, [currentQuestion, gameState]);
+
+  // Play bravo audio when game results are shown
+  useEffect(() => {
+    if (gameState === "results") {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameState]);
 
   const question = questions[currentQuestion];
 

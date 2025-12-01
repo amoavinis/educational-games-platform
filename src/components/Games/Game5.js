@@ -8,6 +8,7 @@ import { game5Compounds } from "../Data/Game5Data";
 import useAudio from "../../hooks/useAudio";
 import titleAudio from "../../assets/sounds/05/title.mp3";
 import pressPlayAudio from "../../assets/sounds/general/press-play.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 // Import example word audio files
 import exampleDomatosalataAudio from "../../assets/sounds/05/example-ντοματοσαλάτα.mp3";
@@ -132,6 +133,16 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
       setQuestionStartTime(Date.now());
     }
   }, [currentWordIndex, isTitleAudioPlaying, isPressPlayAudioPlaying]);
+
+  // Play bravo audio when game results are shown
+  useEffect(() => {
+    if (showResults) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [showResults]);
 
   const handleSeparatorClick = (position) => {
     if (!isAnswered && !isTitleAudioPlaying && !isPressPlayAudioPlaying) {

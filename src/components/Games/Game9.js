@@ -22,6 +22,7 @@ import ikosAudio from "../../assets/sounds/09/ικος.mp3";
 import ismosAudio from "../../assets/sounds/09/ισμος.mp3";
 import yperAudio from "../../assets/sounds/09/υπερ.mp3";
 import ypoAudio from "../../assets/sounds/09/υπο.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -323,6 +324,16 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   const getTaskTitle = () => {
     return currentWord.task === "prefix" ? "Βρίσκω και χρωματίζω το πρόθημα της λέξης" : "Βρίσκω και χρωματίζω το επίθημα της λέξης";
   };
+
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameCompleted) {
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
+    }
+  }, [gameCompleted]);
 
   if (gameCompleted) {
     return (
