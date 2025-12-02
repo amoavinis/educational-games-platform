@@ -73,6 +73,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
   const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(false);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
+  const [isPracticeEndPlaying, setIsPracticeEndPlaying] = useState(false);
 
   // Initial title-instructions audio
   const { audioRef: titleAudioRef } = useAudio(titleInstructionsAudio, {
@@ -81,6 +82,11 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Word-specific audio
   const { audioRef: wordAudioRef } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
+
+  // End-of-practice audio
+  const { audioRef: practiceEndAudioRef } = useAudio(practiceEnd, {
     playOnMount: false,
   });
 
@@ -175,7 +181,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
   }, [gameCompleted]);
 
   const handleAnswerSelect = (answer) => {
-    if (selectedAnswer !== null || isInitialAudioPlaying) return; // Prevent multiple selections and block during initial audio
+    if (selectedAnswer !== null || isInitialAudioPlaying || isPracticeEndPlaying) return; // Prevent multiple selections and block during initial audio or practice end audio
 
     setSelectedAnswer(answer);
     const isCorrect = answer === questions[currentQuestion].correctSuffix;
@@ -208,6 +214,51 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
 
   const nextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
+      // Check if we just finished the last example in the first round
+      const isLastExample = questions[currentQuestion].isExample &&
+                           currentRound === 0 &&
+                           !questions[currentQuestion + 1]?.isExample;
+
+      if (isLastExample) {
+        // Play end-of-practice audio and wait for it to finish
+        setIsPracticeEndPlaying(true);
+        if (practiceEndAudioRef.current) {
+          const audio = practiceEndAudioRef.current;
+
+          // Attach the ended event listener right before playing
+          const handleAudioEnded = () => {
+            console.log("Practice end audio finished, advancing to next question");
+            setIsPracticeEndPlaying(false);
+            setCurrentQuestion((prev) => prev + 1);
+            setSelectedAnswer(null);
+            setQuestionStartTime(null);
+            // Remove the listener after it fires
+            audio.removeEventListener("ended", handleAudioEnded);
+          };
+
+          audio.addEventListener("ended", handleAudioEnded);
+
+          audio.play().catch((error) => {
+            console.error("Error playing end-of-practice audio:", error);
+            audio.removeEventListener("ended", handleAudioEnded);
+            setIsPracticeEndPlaying(false);
+            // If audio fails, advance immediately
+            setCurrentQuestion((prev) => prev + 1);
+            setSelectedAnswer(null);
+            setQuestionStartTime(null);
+          });
+        } else {
+          // If audio ref not ready, advance immediately
+          console.warn("Practice end audio ref not ready");
+          setIsPracticeEndPlaying(false);
+          setCurrentQuestion((prev) => prev + 1);
+          setSelectedAnswer(null);
+          setQuestionStartTime(null);
+        }
+        // Don't advance yet - the audio ended handler will do it
+        return;
+      }
+
       setCurrentQuestion((prev) => prev + 1);
       setSelectedAnswer(null);
       setQuestionStartTime(null); // Reset timing for next question
@@ -322,7 +373,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
                   <Button
                     variant="light"
                     onClick={playWordAudio}
-                    disabled={isInitialAudioPlaying}
+                    disabled={isInitialAudioPlaying || isPracticeEndPlaying}
                     className="mb-3 rounded-circle"
                     style={{
                       width: "80px",
@@ -363,7 +414,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
                         variant={variant}
                         style={customStyle}
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null || isInitialAudioPlaying}
+                        disabled={selectedAnswer !== null || isInitialAudioPlaying || isPracticeEndPlaying}
                         className="w-100 py-3"
                       >
                         <div className="d-flex align-items-center justify-content-center">
@@ -381,6 +432,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
               </Row>
               <audio ref={titleAudioRef} src={titleInstructionsAudio} />
               <audio ref={wordAudioRef} src={currentWordAudio} />
+              <audio ref={practiceEndAudioRef} src={practiceEnd} />
             </Card.Body>
           </Card>
         </Col>

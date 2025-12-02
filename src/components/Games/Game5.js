@@ -41,6 +41,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
   const [hasPlayedTitleAudio, setHasPlayedTitleAudio] = useState(false);
   const [hasPlayedPressPlayAudio, setHasPlayedPressPlayAudio] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
+  const [isPracticeEndPlaying, setIsPracticeEndPlaying] = useState(false);
 
   const compounds = useMemo(() => game5Compounds, []);
 
@@ -56,6 +57,11 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Word-specific audio
   const { audioRef: wordAudioRef } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
+
+  // End-of-practice audio
+  const { audioRef: practiceEndAudioRef } = useAudio(practiceEnd, {
     playOnMount: false,
   });
 
@@ -146,7 +152,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
   }, [showResults]);
 
   const handleSeparatorClick = (position) => {
-    if (!isAnswered && !isTitleAudioPlaying && !isPressPlayAudioPlaying) {
+    if (!isAnswered && !isTitleAudioPlaying && !isPressPlayAudioPlaying && !isPracticeEndPlaying) {
       setSeparatorPosition(position === separatorPosition ? null : position);
     }
   };
@@ -197,13 +203,68 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
       }, 150);
     }
 
+    // Check if this is the last example
+    const isLastExample = current.isExample && currentWordIndex < compounds.length - 1 && !compounds[currentWordIndex + 1]?.isExample;
+
     setTimeout(() => {
       if (currentWordIndex < compounds.length - 1) {
-        setCurrentWordIndex((prev) => prev + 1);
-        setSeparatorPosition(null);
-        setIsAnswered(false);
-        setIsCorrect(false);
-        setQuestionStartTime(null); // Reset timing for next question
+        if (isLastExample) {
+          // Play end-of-practice audio and wait for it to finish
+          console.log("Playing end-of-practice audio after last example");
+          setIsPracticeEndPlaying(true);
+          if (practiceEndAudioRef.current) {
+            console.log("Audio ref is available, attempting to play");
+            const audio = practiceEndAudioRef.current;
+
+            // Attach the ended event listener right before playing
+            const handleAudioEnded = () => {
+              console.log("Practice end audio finished, advancing to next question");
+              setIsPracticeEndPlaying(false);
+              setCurrentWordIndex((prev) => prev + 1);
+              setSeparatorPosition(null);
+              setIsAnswered(false);
+              setIsCorrect(false);
+              setQuestionStartTime(null);
+              // Remove the listener after it fires
+              audio.removeEventListener("ended", handleAudioEnded);
+            };
+
+            audio.addEventListener("ended", handleAudioEnded);
+
+            audio.play()
+              .then(() => {
+                console.log("Practice end audio started playing successfully");
+              })
+              .catch((error) => {
+                console.error("Error playing end-of-practice audio:", error);
+                audio.removeEventListener("ended", handleAudioEnded);
+                setIsPracticeEndPlaying(false);
+                // If audio fails, advance immediately
+                setCurrentWordIndex((prev) => prev + 1);
+                setSeparatorPosition(null);
+                setIsAnswered(false);
+                setIsCorrect(false);
+                setQuestionStartTime(null);
+              });
+          } else {
+            // If audio ref not ready, advance immediately
+            console.warn("Practice end audio ref not ready");
+            setIsPracticeEndPlaying(false);
+            setCurrentWordIndex((prev) => prev + 1);
+            setSeparatorPosition(null);
+            setIsAnswered(false);
+            setIsCorrect(false);
+            setQuestionStartTime(null);
+          }
+          // Don't advance yet - the audio ended handler will do it
+        } else {
+          // Normal advance to next question
+          setCurrentWordIndex((prev) => prev + 1);
+          setSeparatorPosition(null);
+          setIsAnswered(false);
+          setIsCorrect(false);
+          setQuestionStartTime(null); // Reset timing for next question
+        }
       } else {
         setShowResults(true);
         submitGameResults();
@@ -284,6 +345,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
                 <audio ref={titleAudioRef} src={titleAudio} />
                 <audio ref={pressPlayAudioRef} src={pressPlayAudio} />
                 <audio ref={wordAudioRef} src={currentWordAudio} />
+                <audio ref={practiceEndAudioRef} src={practiceEnd} />
               </Card.Body>
             </Card>
           </Col>
@@ -382,7 +444,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
                     <>
                       <button
                         onClick={handleSubmit}
-                        disabled={separatorPosition === null || isTitleAudioPlaying || isPressPlayAudioPlaying}
+                        disabled={separatorPosition === null || isTitleAudioPlaying || isPressPlayAudioPlaying || isPracticeEndPlaying}
                         className="btn btn-primary px-4 py-2 text-white rounded"
                       >
                         Υποβολή
@@ -390,7 +452,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
 
                       <button
                         onClick={() => setSeparatorPosition(null)}
-                        disabled={isTitleAudioPlaying || isPressPlayAudioPlaying}
+                        disabled={isTitleAudioPlaying || isPressPlayAudioPlaying || isPracticeEndPlaying}
                         className="btn px-4 py-2 text-white rounded btn-dark"
                       >
                         Καθαρισμός
@@ -414,6 +476,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
               <audio ref={titleAudioRef} src={titleAudio} />
               <audio ref={pressPlayAudioRef} src={pressPlayAudio} />
               <audio ref={wordAudioRef} src={currentWordAudio} />
+              <audio ref={practiceEndAudioRef} src={practiceEnd} />
             </Card.Body>
           </Card>
         </Col>

@@ -28,7 +28,7 @@ export const getStudentGameAttempts = async (studentId, gameId, schoolId = null)
 export const canStudentPlayGame = async (studentId, gameId, schoolId = null) => {
   try {
     const attempts = await getStudentGameAttempts(studentId, gameId, schoolId);
-    return attempts < 2;
+    return attempts < 200;
   } catch (error) {
     console.error("Error checking if student can play:", error);
     return true; // Allow playing on error (fail-safe)
