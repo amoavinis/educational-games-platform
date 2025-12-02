@@ -1,5 +1,5 @@
 // Game 14
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
@@ -36,6 +36,7 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(true);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [wasAnswerSubmitted, setWasAnswerSubmitted] = useState(false);
 
   const questions = useMemo(() => game14Questions, []);
 
@@ -68,58 +69,16 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
     playOnMount: false,
   });
 
-  const handleAnswerSelect = (answer) => {
-    if (selectedAnswer !== null) return; // Prevent multiple selections
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
+    playOnMount: false,
+  });
 
-    const question = questions[currentQuestion];
-    const isCorrect = answer === question.correct;
-    const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
-
-    setSelectedAnswer(answer);
-
-    // Play the word audio for the sentence
-    const wordAudio = sentenceAudioMap[question.sentence];
-    if (wordAudio) {
-      const audio = new Audio(wordAudio);
-      audio.play().catch((error) => {
-        console.error("Error playing word audio:", error);
-      });
-    }
-
-    // Track the result only for non-example questions
-    if (!question.isExample) {
-      setGameResults((prev) => [
-        ...prev,
-        {
-          question: question.sentence,
-          result: answer,
-          target: question.correct,
-          isCorrect: isCorrect,
-          seconds: secondsForQuestion,
-        },
-      ]);
-    }
-
-    // Auto advance after 4 seconds
-    setTimeout(() => {
-      nextQuestion();
-    }, 4000);
-  };
-
-  const nextQuestion = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setQuestionStartTime(null); // Reset timing for next question
-    } else {
-      setGameState("results");
-      submitGameResults();
-    }
-  };
+  const { audioRef: wordAudioRef, audioSrc: wordAudioSrc } = useAudio(null, {
+    playOnMount: false,
+  });
 
   // Log game results function
-  const submitGameResults = async () => {
+  const submitGameResults = useCallback(async () => {
     if (!studentId || !classId) {
       console.log("Missing studentId or classId, cannot submit results");
       return;
@@ -152,9 +111,125 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
         gameId,
         results: JSON.stringify(results),
       });
-      // console.log("Game results submitted successfully");
     } catch (error) {
       console.error("Error submitting game results:", error);
+    }
+  }, [studentId, classId, gameResults, schoolId, gameId]);
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      const question = questions[currentQuestion];
+
+      // Only play practice end audio if this was from an answer submission and it's the last example
+      if (wasAnswerSubmitted && question.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample) {
+        setTimeout(() => {
+          if (practiceEndAudioRef.current) {
+            practiceEndAudioRef.current
+              .play()
+              .then(() => {
+                console.log("Practice end audio started playing");
+              })
+              .catch((error) => {
+                console.error("Error playing end of practice audio:", error);
+              });
+          }
+        }, 100);
+      } else {
+        setWasAnswerSubmitted(false); // Reset for next time
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef, currentQuestion, questions, practiceEndAudioRef, wasAnswerSubmitted]);
+
+  // Listen for practice end audio ended
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWasAnswerSubmitted(false);
+
+      // Advance to next question after practice end audio finishes
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+        setSelectedAnswer(null);
+        setQuestionStartTime(null);
+      } else {
+        setGameState("results");
+        submitGameResults();
+      }
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef, currentQuestion, questions, submitGameResults]);
+
+  const handleAnswerSelect = (answer) => {
+    if (selectedAnswer !== null) return; // Prevent multiple selections
+
+    const question = questions[currentQuestion];
+    const isCorrect = answer === question.correct;
+    const questionEndTime = Date.now();
+    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
+
+    setSelectedAnswer(answer);
+
+    // Check if this is the last example
+    const isLastExample = question.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample;
+
+    // Play the word audio for the sentence using the ref
+    const wordAudio = sentenceAudioMap[question.sentence];
+    if (wordAudio && wordAudioRef.current) {
+      wordAudioRef.current.src = wordAudio;
+      wordAudioRef.current.play().catch((error) => {
+        console.error("Error playing word audio:", error);
+      });
+    }
+
+    // Track the result only for non-example questions
+    if (!question.isExample) {
+      setGameResults((prev) => [
+        ...prev,
+        {
+          question: question.sentence,
+          result: answer,
+          target: question.correct,
+          isCorrect: isCorrect,
+          seconds: secondsForQuestion,
+        },
+      ]);
+    }
+
+    if (isLastExample) {
+      // Mark that answer was submitted for last example
+      setWasAnswerSubmitted(true);
+      // Don't auto-advance, wait for word audio then practice end audio to finish
+    } else {
+      // Auto advance after 5 seconds
+      setTimeout(() => {
+        nextQuestion();
+      }, 5000);
+    }
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setQuestionStartTime(null); // Reset timing for next question
+    } else {
+      setGameState("results");
+      submitGameResults();
     }
   };
 
@@ -265,6 +340,8 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
       {/* Audio elements */}
       <audio ref={titleAudioRef} src={titleAudioSrc} />
       <audio ref={instructionsAudioRef} src={instructionsAudioSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
+      <audio ref={wordAudioRef} src={wordAudioSrc} />
 
       <Row className="game-row-centered">
         <Col md={12} lg={10}>
@@ -324,13 +401,12 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
                   return (
                     <Col key={index} xs={4} className="mb-3 d-flex justify-content-center">
                       <Button
-                        block
                         onClick={() => handleAnswerSelect(option)}
                         disabled={selectedAnswer !== null || isAudioPlaying}
                         variant={variant}
                         style={customStyle}
                         size="lg"
-                        className="py-3"
+                        className="py-3 w-100"
                       >
                         {option}
                         {showIcon && <span className="ms-2 fs-4">{showIcon}</span>}

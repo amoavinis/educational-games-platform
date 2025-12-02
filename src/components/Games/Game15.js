@@ -1,5 +1,5 @@
 // Game 15
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
@@ -45,6 +45,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(true);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [wasAnswerSubmitted, setWasAnswerSubmitted] = useState(false);
   const marqueeRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -81,6 +82,120 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
   const { audioRef: instructionsAudioRef, audioSrc: instructionsAudioSrc } = useAudio(instructionsAudio, {
     playOnMount: false,
   });
+
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
+    playOnMount: false,
+  });
+
+  const { audioRef: wordAudioRef, audioSrc: wordAudioSrc } = useAudio(null, {
+    playOnMount: false,
+  });
+
+  // Submit game results function
+  const submitGameResults = useCallback(async () => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
+    const now = new Date();
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
+    const results = {
+      studentId: studentId,
+      datetime: datetime,
+      gameName: "GreekCaseEndingGame",
+      questions: gameResults,
+    };
+
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results),
+      });
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
+  }, [studentId, classId, gameResults, schoolId, gameId]);
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      const question = questions[currentQuestion];
+
+      // Only play practice end audio if this was from an answer submission and it's the last example
+      if (wasAnswerSubmitted && question.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample) {
+        setTimeout(() => {
+          if (practiceEndAudioRef.current) {
+            practiceEndAudioRef.current
+              .play()
+              .then(() => {
+                console.log("Practice end audio started playing");
+              })
+              .catch((error) => {
+                console.error("Error playing end of practice audio:", error);
+              });
+          }
+        }, 100);
+      } else {
+        setWasAnswerSubmitted(false); // Reset for next time
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef, currentQuestion, questions, practiceEndAudioRef, wasAnswerSubmitted]);
+
+  // Listen for practice end audio ended
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWasAnswerSubmitted(false);
+
+      // Advance to next question after practice end audio finishes
+      if (currentQuestion < questions.length - 1) {
+        setSelectedAnswer(null);
+        setQuestionStartTime(null);
+        setIsMarqueeActive(true);
+
+        // Hide current text first, then change question
+        const textElement = marqueeRef.current;
+        if (textElement) {
+          textElement.style.visibility = "hidden";
+        }
+        setTimeout(() => {
+          setCurrentQuestion((prev) => prev + 1);
+        }, 100);
+      } else {
+        setGameCompleted(true);
+        submitGameResults();
+      }
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef, currentQuestion, questions, submitGameResults, marqueeRef]);
 
   // Play title audio on mount
   useEffect(() => {
@@ -209,11 +324,14 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
 
     setSelectedAnswer(answer);
 
-    // Play the word audio for the result
+    // Check if this is the last example
+    const isLastExample = question.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample;
+
+    // Play the word audio for the result using the ref
     const wordAudio = resultAudioMap[question.result];
-    if (wordAudio) {
-      const audio = new Audio(wordAudio);
-      audio.play().catch((error) => {
+    if (wordAudio && wordAudioRef.current) {
+      wordAudioRef.current.src = wordAudio;
+      wordAudioRef.current.play().catch((error) => {
         console.error("Error playing word audio:", error);
       });
     }
@@ -232,10 +350,16 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
       ]);
     }
 
-    // Auto advance after 1 second
-    setTimeout(() => {
-      nextQuestion();
-    }, 4000);
+    if (isLastExample) {
+      // Mark that answer was submitted for last example
+      setWasAnswerSubmitted(true);
+      // Don't auto-advance, wait for word audio then practice end audio to finish
+    } else {
+      // Auto advance after 4 seconds
+      setTimeout(() => {
+        nextQuestion();
+      }, 4000);
+    }
   };
 
   const nextQuestion = () => {
@@ -256,52 +380,15 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
     }
   };
 
-  // Use effect to log results when game completes
+  // Use effect to play bravo audio when game completes
   useEffect(() => {
-    // Log game results function
-    const submitGameResults = async (finalResults) => {
-      if (!studentId || !classId) {
-        console.log("Missing studentId or classId, cannot submit results");
-        return;
-      }
-
-      const now = new Date();
-      const datetime =
-        now.getFullYear() +
-        "-" +
-        String(now.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(now.getDate()).padStart(2, "0") +
-        " " +
-        String(now.getHours()).padStart(2, "0") +
-        ":" +
-        String(now.getMinutes()).padStart(2, "0");
-
-      const results = {
-        studentId: studentId,
-        datetime: datetime,
-        gameName: "GreekSuffixMarqueeGame",
-        questions: finalResults,
-      };
-
-      try {
-        await addReport({
-          schoolId,
-          studentId,
-          classId,
-          gameId,
-          results: JSON.stringify(results),
-        });
-        // console.log("Game results submitted successfully");
-      } catch (error) {
-        console.error("Error submitting game results:", error);
-      }
-    };
-
     if (gameCompleted) {
-      submitGameResults(gameResults);
+      const audio = new Audio(bravoAudio);
+      audio.play().catch((error) => {
+        console.error("Error playing bravo audio:", error);
+      });
     }
-  }, [classId, gameCompleted, gameId, gameResults, schoolId, studentId]);
+  }, [gameCompleted]);
 
   const question = questions[currentQuestion];
 
@@ -361,6 +448,8 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
       {/* Audio elements */}
       <audio ref={titleAudioRef} src={titleAudioSrc} />
       <audio ref={instructionsAudioRef} src={instructionsAudioSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
+      <audio ref={wordAudioRef} src={wordAudioSrc} />
 
       <Row className="game-row-centered">
         <Col md={12} lg={10}>

@@ -1,5 +1,5 @@
 // Game 8
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
@@ -27,6 +27,8 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(true);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
+  const [wasAnswerSubmitted, setWasAnswerSubmitted] = useState(false);
 
   // Map words to their audio files (only for examples)
   const wordAudioMap = useMemo(
@@ -40,6 +42,10 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Initial title-instructions audio (plays on load)
   const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
     playOnMount: false,
   });
 
@@ -91,7 +97,23 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   useEffect(() => {
     const audio = wordAudioRef.current;
     const handleEnded = () => {
-      // Audio ended, cleanup handled by useAudio hook
+      const currentQ = questions[currentQuestion];
+      // Only play practice end audio if this was from an answer submission
+      if (wasAnswerSubmitted && currentQ.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample) {
+        setWaitingForPracticeEnd(true);
+
+        const timer = setTimeout(() => {
+          practiceEndAudioRef.current
+            .play()
+            .then(() => {})
+            .catch((error) => {
+              console.error("Error playing end of practice audio:", error);
+            });
+        }, 100);
+
+        return () => clearTimeout(timer);
+      }
+      setWasAnswerSubmitted(false); // Reset for next time
     };
 
     if (audio) {
@@ -100,7 +122,71 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [wordAudioRef]);
+  }, [wordAudioRef, currentQuestion, questions, practiceEndAudioRef, wasAnswerSubmitted]);
+
+  // Submit game results function
+  const submitGameResults = useCallback(async () => {
+    if (!studentId || !classId) {
+      console.log("Missing studentId or classId, cannot submit results");
+      return;
+    }
+
+    const now = new Date();
+    const datetime =
+      now.getFullYear() +
+      "-" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0");
+
+    const results = {
+      studentId: studentId,
+      datetime: datetime,
+      gameName: "GreekMorphologyGame",
+      questions: gameResults,
+    };
+
+    try {
+      await addReport({
+        schoolId,
+        studentId,
+        classId,
+        gameId,
+        results: JSON.stringify(results),
+      });
+      // console.log("Game results submitted successfully");
+    } catch (error) {
+      console.error("Error submitting game results:", error);
+    }
+  }, [studentId, classId, gameResults, schoolId, gameId]);
+
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+      // Advance to next question after practice end audio finishes
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+        setSelectedChoice(null);
+        setQuestionStartTime(null);
+        setWasAnswerSubmitted(false);
+      } else {
+        setGameState("completed");
+        submitGameResults();
+      }
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef, currentQuestion, questions, submitGameResults]);
 
   const formatMorphemes = (text) => {
     const parts = text.split("|");
@@ -150,10 +236,19 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
       }, 100);
     }
 
-    // Auto advance after 1 second
-    setTimeout(() => {
-      handleNext();
-    }, 4000);
+    // Check if this is the last example
+    const isLastExample = currentQ.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample;
+
+    if (isLastExample) {
+      // Mark that answer was submitted for last example
+      setWasAnswerSubmitted(true);
+      // Don't auto-advance, wait for practice end audio to finish
+    } else {
+      // Auto advance after 4 seconds
+      setTimeout(() => {
+        handleNext();
+      }, 4000);
+    }
   };
 
   const handleNext = () => {
@@ -161,49 +256,10 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedChoice(null);
       setQuestionStartTime(null); // Reset timing for next question
+      setWasAnswerSubmitted(false); // Reset for next question
     } else {
       setGameState("completed");
       submitGameResults();
-    }
-  };
-
-  // Submit game results function
-  const submitGameResults = async () => {
-    if (!studentId || !classId) {
-      console.log("Missing studentId or classId, cannot submit results");
-      return;
-    }
-
-    const now = new Date();
-    const datetime =
-      now.getFullYear() +
-      "-" +
-      String(now.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(now.getDate()).padStart(2, "0") +
-      " " +
-      String(now.getHours()).padStart(2, "0") +
-      ":" +
-      String(now.getMinutes()).padStart(2, "0");
-
-    const results = {
-      studentId: studentId,
-      datetime: datetime,
-      gameName: "GreekMorphologyGame",
-      questions: gameResults,
-    };
-
-    try {
-      await addReport({
-        schoolId,
-        studentId,
-        classId,
-        gameId,
-        results: JSON.stringify(results),
-      });
-      // console.log("Game results submitted successfully");
-    } catch (error) {
-      console.error("Error submitting game results:", error);
     }
   };
 
@@ -230,6 +286,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
     return (
       <Container fluid className="game-container">
         <audio ref={titleAudioRef} src={titleAudioSrc} />
+        <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
         <audio ref={wordAudioRef} src={wordAudioSrc} />
         <Row className="game-row-centered">
           <Col md={12} lg={10}>
@@ -279,7 +336,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
                           variant={variant}
                           style={customStyle}
                           onClick={() => handleChoiceSelect(index)}
-                          disabled={selectedChoice !== null || isInitialAudioPlaying}
+                          disabled={selectedChoice !== null || isInitialAudioPlaying || waitingForPracticeEnd}
                         >
                           <div className="d-flex align-items-center justify-content-center gap-2">
                             {formatMorphemes(choice)}

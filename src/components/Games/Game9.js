@@ -56,6 +56,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [currentInstructionsAudio, setCurrentInstructionsAudio] = useState(null);
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
   // Map prefixes and suffixes to their audio files
   const partAudioMap = useMemo(
@@ -84,6 +85,10 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Instructions audio based on task type
   const instructionsAudioRef = useAudio(currentInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
     playOnMount: false,
   });
 
@@ -144,6 +149,21 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
     const audio = wordAudioRef.current;
     const handleEnded = () => {
       setIsWordAudioPlaying(false);
+      const currentW = words[currentQuestion];
+      if (currentW.isExample && currentQuestion < words.length - 1 && !words[currentQuestion + 1].isExample) {
+        setWaitingForPracticeEnd(true);
+
+        const timer = setTimeout(() => {
+          practiceEndAudioRef.current
+            .play()
+            .then(() => {})
+            .catch((error) => {
+              console.error("Error playing end of practice audio:", error);
+            });
+        }, 100);
+
+        return () => clearTimeout(timer);
+      }
     };
 
     if (audio) {
@@ -152,7 +172,21 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [wordAudioRef]);
+  }, [wordAudioRef, currentQuestion, words, practiceEndAudioRef]);
+
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef]);
 
   // Handle answer selection
   const handleAnswerSelect = () => {
@@ -362,6 +396,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   return (
     <Container fluid className="game-container">
       <audio ref={instructionsAudioRef.audioRef} src={instructionsAudioRef.audioSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="game-row-centered">
         <Col md={12} lg={10}>
@@ -415,7 +450,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
                     variant={selectedText && !isInstructionsAudioPlaying ? "primary" : "secondary"}
                     size="lg"
                     onClick={handleAnswerSelect}
-                    disabled={!selectedText || selectedAnswer !== null || isInstructionsAudioPlaying}
+                    disabled={!selectedText || selectedAnswer !== null || isInstructionsAudioPlaying || waitingForPracticeEnd}
                   >
                     {isInstructionsAudioPlaying ? "Άκουσε τις οδηγίες..." : "Υποβολή"}
                   </Button>
@@ -425,8 +460,8 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
               {/* Next Question Button (only show after feedback) */}
               {feedback && (
                 <div className="text-center mt-4">
-                  <Button variant="primary" size="lg" onClick={nextQuestion} disabled={isWordAudioPlaying}>
-                    {isWordAudioPlaying ? "Άκουσε το παράδειγμα..." : currentQuestion < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
+                  <Button variant="primary" size="lg" onClick={nextQuestion} disabled={isWordAudioPlaying || waitingForPracticeEnd}>
+                    {currentQuestion < words.length - 1 ? "Επόμενη Λέξη" : "Ολοκλήρωση"}
                   </Button>
                 </div>
               )}

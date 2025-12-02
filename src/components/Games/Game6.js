@@ -52,6 +52,8 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
+  const [wasAnswerSubmitted, setWasAnswerSubmitted] = useState(false);
 
   const questions = useMemo(() => {
     const examples = game6Questions.filter((q) => q.isExample);
@@ -108,6 +110,10 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     playOnMount: false,
   });
 
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
+    playOnMount: false,
+  });
+
   // Word-specific audio (plays after submission for example words and on audio button press)
   const {
     audioRef: wordAudioRef,
@@ -160,6 +166,23 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     const audio = wordAudioRef.current;
     const handleEnded = () => {
       setIsWordAudioPlaying(false);
+      const currentQ = questions[currentQuestion];
+      // Only play practice end audio if this was from an answer submission (not from sound button)
+      if (wasAnswerSubmitted && currentQ.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample) {
+        setWaitingForPracticeEnd(true);
+
+        const timer = setTimeout(() => {
+          practiceEndAudioRef.current
+            .play()
+            .then(() => {})
+            .catch((error) => {
+              console.error("Error playing end of practice audio:", error);
+            });
+        }, 100);
+
+        return () => clearTimeout(timer);
+      }
+      setWasAnswerSubmitted(false); // Reset for next time
     };
 
     if (audio) {
@@ -168,7 +191,40 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [wordAudioRef]);
+  }, [wordAudioRef, currentQuestion, questions, practiceEndAudioRef, wasAnswerSubmitted]);
+
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef]);
+
+  // Auto-play word audio when question changes (after initial audio ends)
+  useEffect(() => {
+    if (!isInitialAudioPlaying && selectedAnswer === null && !isWordAudioPlaying) {
+      const currentQ = questions[currentQuestion];
+      const audioFile = wordAudioMap[currentQ.word];
+      if (audioFile) {
+        setCurrentWordAudio(audioFile);
+        setIsWordAudioPlaying(true);
+        setTimeout(() => {
+          playWordAudio().catch((error) => {
+            console.error("Error playing word audio:", error);
+            setIsWordAudioPlaying(false);
+          });
+        }, 500);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion, isInitialAudioPlaying, selectedAnswer]);
 
   // Function to play word audio (for audio button)
   const playAudio = useCallback(() => {
@@ -219,24 +275,32 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
       ]);
     }
 
-    // Play word-specific audio if available
+    // Check if this is the last example and should play end-of-practice audio
+    const isLastExample = currentQ.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample;
 
-    const audioFile = wordAudioMap[currentQ.word];
-    if (audioFile) {
-      setCurrentWordAudio(audioFile);
-      setIsWordAudioPlaying(true);
-      setTimeout(() => {
-        playWordAudio().catch((error) => {
-          console.error("Error playing word audio:", error);
-          setIsWordAudioPlaying(false);
-        });
-      }, 100);
+    if (isLastExample) {
+      // If word audio is not currently playing, play end-of-practice immediately
+      if (!isWordAudioPlaying) {
+        setWaitingForPracticeEnd(true);
+        setTimeout(() => {
+          practiceEndAudioRef.current
+            .play()
+            .then(() => {})
+            .catch((error) => {
+              console.error("Error playing end of practice audio:", error);
+              setWaitingForPracticeEnd(false);
+            });
+        }, 100);
+      } else {
+        // Word audio is still playing, mark to play end-of-practice when it ends
+        setWasAnswerSubmitted(true);
+      }
     }
 
-    // Auto advance after 1 second
+    // Auto advance after 4 seconds
     setTimeout(() => {
       nextQuestion();
-    }, 3000);
+    }, 4000);
   };
 
   // Submit game results function
@@ -317,6 +381,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   return (
     <Container fluid className="game-container">
       <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="game-row-centered">
         <Col md={12} lg={10}>
@@ -347,7 +412,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                   <Button
                     variant="light"
                     onClick={playAudio}
-                    disabled={isInitialAudioPlaying || isWordAudioPlaying || selectedAnswer !== null}
+                    disabled={isInitialAudioPlaying || isWordAudioPlaying || selectedAnswer !== null || waitingForPracticeEnd}
                     className="mb-3 rounded-circle"
                     style={{
                       width: "80px",
@@ -393,7 +458,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                         variant={variant}
                         style={customStyle}
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={selectedAnswer !== null || isInitialAudioPlaying}
+                        disabled={selectedAnswer !== null || isInitialAudioPlaying || waitingForPracticeEnd}
                         className="w-100 py-3"
                       >
                         {option}

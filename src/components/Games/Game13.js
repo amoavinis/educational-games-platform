@@ -13,8 +13,8 @@ import titleAudio from "../../assets/sounds/13/title.mp3";
 import instructionsAdjectiveAudio from "../../assets/sounds/13/instructions-adjective.mp3";
 import instructionsNounAudio from "../../assets/sounds/13/instructions-noun.mp3";
 import instructionsMetoхiAudio from "../../assets/sounds/13/instructions-metoxi.mp3";
-import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 import αμεσότηταAudio from "../../assets/sounds/13/αμεσότητα.mp3";
 import γλυκύτηταAudio from "../../assets/sounds/13/γλυκύτητα.mp3";
@@ -40,6 +40,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
   const [isAudioPlaying, setIsAudioPlaying] = useState(true);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
   const [instructionAudioPlayed, setInstructionAudioPlayed] = useState(false);
+  const [wasAnswerSubmitted, setWasAnswerSubmitted] = useState(false);
 
   const questions = useMemo(() => game13Questions, []);
 
@@ -73,60 +74,48 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
   const { audioRef: instructionsNounRef, audioSrc: instructionsNounSrc } = useAudio(instructionsNounAudio, { playOnMount: false });
   const { audioRef: instructionsMetoхiRef, audioSrc: instructionsMetoхiSrc } = useAudio(instructionsMetoхiAudio, { playOnMount: false });
 
-  const handleAnswerSelect = (answer) => {
-    if (selectedAnswer !== null) return; // Prevent multiple selections
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
+    playOnMount: false,
+  });
 
-    const question = questions[currentQuestion];
-    const isCorrect = answer === question.correct;
-    const questionEndTime = Date.now();
-    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
+  const { audioRef: wordAudioRef, audioSrc: wordAudioSrc } = useAudio(null, {
+    playOnMount: false,
+  });
 
-    setSelectedAnswer(answer);
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      const question = questions[currentQuestion];
 
-    // Play the word audio for the result
-    const wordAudio = wordAudioMap[question.result];
-    if (wordAudio) {
-      const audio = new Audio(wordAudio);
-      audio.play().catch((error) => {
-        console.error("Error playing word audio:", error);
-      });
+      // Only play practice end audio if this was from an answer submission and it's the last example
+      if (wasAnswerSubmitted && question.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample) {
+        setTimeout(() => {
+          if (practiceEndAudioRef.current) {
+            practiceEndAudioRef.current
+              .play()
+              .then(() => {
+                console.log("Practice end audio started playing");
+              })
+              .catch((error) => {
+                console.error("Error playing end of practice audio:", error);
+              });
+          }
+        }, 100);
+      } else {
+        setWasAnswerSubmitted(false); // Reset for next time
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
     }
+  }, [wordAudioRef, currentQuestion, questions, practiceEndAudioRef, wasAnswerSubmitted]);
 
-    // Track the result only for non-example questions
-    if (!question.isExample) {
-      setGameResults((prev) => [
-        ...prev,
-        {
-          question: `${question.instruction} για τη λέξη ${question.baseWord}`,
-          result: answer,
-          target: question.correct,
-          isCorrect: isCorrect,
-          seconds: secondsForQuestion,
-        },
-      ]);
-    }
-
-    // Auto advance after 4 seconds
-    setTimeout(() => {
-      nextQuestion();
-    }, 4000);
-  };
-
-  const nextQuestion = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setQuestionStartTime(null); // Reset timing for next question
-      setInstructionAudioPlayed(false); // Reset instruction audio state
-      setIsAudioPlaying(true); // New question means new instruction audio
-    } else {
-      setGameState("results");
-      submitGameResults();
-    }
-  };
-
-  // Log game results function
-  const submitGameResults = async () => {
+  const submitGameResults = useCallback(async () => {
     if (!studentId || !classId) {
       console.log("Missing studentId or classId, cannot submit results");
       return;
@@ -147,7 +136,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
     const results = {
       studentId: studentId,
       datetime: datetime,
-      gameName: "GreekWordFormationGame",
+      gameName: "DerivativeWordGame",
       questions: gameResults,
     };
 
@@ -159,9 +148,107 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
         gameId,
         results: JSON.stringify(results),
       });
-      // console.log("Game results submitted successfully");
     } catch (error) {
       console.error("Error submitting game results:", error);
+    }
+  }, [studentId, classId, gameResults, schoolId, gameId]);
+
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWasAnswerSubmitted(false);
+
+      // Advance to next question after practice end audio finishes
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+        setSelectedAnswer(null);
+        setQuestionStartTime(null);
+        setInstructionAudioPlayed(false);
+      } else {
+        setGameState("results");
+        submitGameResults();
+      }
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef, currentQuestion, questions, submitGameResults]);
+
+  const handleAnswerSelect = (answer) => {
+    if (selectedAnswer !== null) return; // Prevent multiple selections
+
+    const question = questions[currentQuestion];
+    const isCorrect = answer === question.correct;
+    const questionEndTime = Date.now();
+    const secondsForQuestion = questionStartTime ? (questionEndTime - questionStartTime) / 1000 : 0;
+
+    setSelectedAnswer(answer);
+
+    // Check if this is the last example
+    const isLastExample = question.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample;
+
+    // For non-example questions, play the word audio for the result
+    if (!question.isExample) {
+      const wordAudio = wordAudioMap[question.result];
+      if (wordAudio && wordAudioRef.current) {
+        wordAudioRef.current.src = wordAudio;
+        wordAudioRef.current.play().catch((error) => {
+          console.error("Error playing word audio:", error);
+        });
+      }
+
+      // Track the result
+      setGameResults((prev) => [
+        ...prev,
+        {
+          question: `${question.instruction} για τη λέξη ${question.baseWord}`,
+          result: answer,
+          target: question.correct,
+          isCorrect: isCorrect,
+          seconds: secondsForQuestion,
+        },
+      ]);
+
+      // Auto advance after 4 seconds
+      setTimeout(() => {
+        nextQuestion();
+      }, 4000);
+    } else if (isLastExample) {
+      // For the last example, play practice end audio after a short delay
+      setTimeout(() => {
+        if (practiceEndAudioRef.current) {
+          practiceEndAudioRef.current
+            .play()
+            .then(() => {
+              console.log("Practice end audio started playing after last example");
+            })
+            .catch((error) => {
+              console.error("Error playing end of practice audio:", error);
+            });
+        }
+      }, 1000);
+    } else {
+      // For other examples, auto advance after 4 seconds
+      setTimeout(() => {
+        nextQuestion();
+      }, 4000);
+    }
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setQuestionStartTime(null); // Reset timing for next question
+      setInstructionAudioPlayed(false); // Reset instruction audio state
+      setIsAudioPlaying(true); // New question means new instruction audio
+    } else {
+      setGameState("results");
+      submitGameResults();
     }
   };
 
@@ -313,6 +400,8 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
       <audio ref={instructionsAdjectiveRef} src={instructionsAdjectiveSrc} />
       <audio ref={instructionsNounRef} src={instructionsNounSrc} />
       <audio ref={instructionsMetoхiRef} src={instructionsMetoхiSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
+      <audio ref={wordAudioRef} src={wordAudioSrc} />
 
       <Row className="game-row-centered">
         <Col md={12} lg={10}>
@@ -390,13 +479,12 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
                   return (
                     <Col key={index} xs={4} className="mb-3 d-flex justify-content-center">
                       <Button
-                        block
                         onClick={() => handleAnswerSelect(option)}
                         disabled={selectedAnswer !== null || isAudioPlaying}
                         variant={variant}
                         style={customStyle}
                         size="lg"
-                        className="py-3"
+                        className="py-3 w-100"
                       >
                         {option}
                         {showIcon && <span className="ms-2 fs-4">{showIcon}</span>}

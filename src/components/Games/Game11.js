@@ -34,6 +34,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const [gameCompleted, setGameCompleted] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(true);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
   const shuffle = (arr) =>
     arr
@@ -58,6 +59,10 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Instructions audio
   const { audioRef: instructionsAudioRef, audioSrc: instructionsAudioSrc } = useAudio(instructionsAudio, {
+    playOnMount: false,
+  });
+
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
     playOnMount: false,
   });
 
@@ -141,9 +146,23 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [instructionsAudioRef]);
 
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef]);
+
   const handleDragStart = (e, wordData) => {
-    // Block input while initial audio is playing
-    if (isAudioPlaying) {
+    // Block input while initial audio is playing or waiting for practice end
+    if (isAudioPlaying || waitingForPracticeEnd) {
       e.preventDefault();
       return;
     }
@@ -229,7 +248,19 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
         // If all examples are placed, add all regular words to the pool
         if (placedExamples.length === exampleWords.length) {
           const regularWords = shuffle(words.filter((w) => !w.isExample));
-          setWordPool((prev) => [...prev, ...regularWords]);
+          setWaitingForPracticeEnd(true);
+          setTimeout(() => {
+            practiceEndAudioRef.current
+              .play()
+              .then(() => {
+                setWordPool((prev) => [...prev, ...regularWords]);
+              })
+              .catch((error) => {
+                console.error("Error playing end of practice audio:", error);
+                setWordPool((prev) => [...prev, ...regularWords]);
+                setWaitingForPracticeEnd(false);
+              });
+          }, 100);
         }
       } else {
         // Check if all regular words are placed
@@ -280,7 +311,19 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
           // If all examples are placed, add all regular words to the pool
           if (placedExamples.length === exampleWords.length) {
             const regularWords = shuffle(words.filter((w) => !w.isExample));
-            setWordPool((prev) => [...prev, ...regularWords]);
+            setWaitingForPracticeEnd(true);
+            setTimeout(() => {
+              practiceEndAudioRef.current
+                .play()
+                .then(() => {
+                  setWordPool((prev) => [...prev, ...regularWords]);
+                })
+                .catch((error) => {
+                  console.error("Error playing end of practice audio:", error);
+                  setWordPool((prev) => [...prev, ...regularWords]);
+                  setWaitingForPracticeEnd(false);
+                });
+            }, 100);
           }
         } else {
           // Check if all regular words are placed
@@ -492,6 +535,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
       {/* Hidden audio elements */}
       <audio ref={titleAudioRef} src={titleAudioSrc} />
       <audio ref={instructionsAudioRef} src={instructionsAudioSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
     </Container>
   );
 };

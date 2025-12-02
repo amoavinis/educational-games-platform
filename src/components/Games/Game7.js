@@ -10,6 +10,7 @@ import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/07/title-instructions.mp3";
 import exampleDiastasiAudio from "../../assets/sounds/07/example-διάσταση.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -63,6 +64,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(true);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
   // Map words to their audio files (only διασταση available currently)
   const wordAudioMap = React.useMemo(
@@ -74,6 +76,10 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
 
   // Initial title-instructions audio (plays on load)
   const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
+    playOnMount: false,
+  });
+
+  const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
     playOnMount: false,
   });
 
@@ -136,6 +142,20 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [wordAudioRef]);
 
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [practiceEndAudioRef]);
+
   // Function to play word audio
   const playAudio = useCallback(
     (word) => {
@@ -168,14 +188,16 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   }, [initializeGame]);
 
   const handleDragStart = (e, wordData) => {
-    if (isInitialAudioPlaying) {
+    if (isInitialAudioPlaying || waitingForPracticeEnd) {
       e.preventDefault();
       return;
     }
     e.dataTransfer.setData("text/plain", JSON.stringify(wordData));
     e.target.style.opacity = "0.5";
-    // Play audio when drag starts
-    playAudio(wordData.word);
+    // Play audio after a small delay to not interfere with drag
+    setTimeout(() => {
+      playAudio(wordData.word);
+    }, 20);
   };
 
   const handleDragEnd = (e) => {
@@ -234,7 +256,19 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
         // If all examples are placed, add all regular words to the pool
         if (placedExamples.length === exampleWords.length) {
           const regularWords = words.filter((w) => !w.isExample);
-          setWordPool((prev) => [...prev, ...regularWords]);
+          setWaitingForPracticeEnd(true);
+          setTimeout(() => {
+            practiceEndAudioRef.current
+              .play()
+              .then(() => {
+                setWordPool((prev) => [...prev, ...regularWords]);
+              })
+              .catch((error) => {
+                console.error("Error playing end of practice audio:", error);
+                setWordPool((prev) => [...prev, ...regularWords]);
+                setWaitingForPracticeEnd(false);
+              });
+          }, 100);
         }
       } else {
         // Check if all regular words are placed
@@ -285,7 +319,19 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
           // If all examples are placed, add all regular words to the pool
           if (placedExamples.length === exampleWords.length) {
             const regularWords = words.filter((w) => !w.isExample);
-            setWordPool((prev) => [...prev, ...regularWords]);
+            setWaitingForPracticeEnd(true);
+            setTimeout(() => {
+              practiceEndAudioRef.current
+                .play()
+                .then(() => {
+                  setWordPool((prev) => [...prev, ...regularWords]);
+                })
+                .catch((error) => {
+                  console.error("Error playing end of practice audio:", error);
+                  setWordPool((prev) => [...prev, ...regularWords]);
+                  setWaitingForPracticeEnd(false);
+                });
+            }, 100);
           }
         } else {
           // Check if all regular words are placed
@@ -479,6 +525,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   return (
     <Container fluid className="game-container">
       <audio ref={titleAudioRef} src={titleAudioSrc} />
+      <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
       <Row className="game-row-centered-tall">
         <Col md={12} lg={12}>
