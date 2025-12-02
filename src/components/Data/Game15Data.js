@@ -1,5 +1,4 @@
 export const game15Questions = [
-  // Παραδείγματα
   {
     sentence: "Η γάτα είναι μικρ",
     options: ["-ή", "-ός", "-ό"],
@@ -21,8 +20,6 @@ export const game15Questions = [
     result: "Το παιδί κοιμήθηκε ήσυχο",
     isExample: true,
   },
-
-  // Υλικό
   {
     sentence: "Τα δελφίνια αγαπούν τη θάλασσ",
     options: ["-η", "-α", "-ες"],

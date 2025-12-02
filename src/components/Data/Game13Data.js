@@ -1,5 +1,4 @@
 export const game13Questions = [
-  // Παραδείγματα
   {
     instruction: "ΕΠΙΘΕΤΟ",
     baseWord: "θάλασσα",
@@ -24,8 +23,6 @@ export const game13Questions = [
     result: "μεταλλικός",
     isExample: true,
   },
-
-  // Υλικό
   {
     instruction: "ΟΥΣΙΑΣΤΙΚΟ",
     baseWord: "γλυκός",

@@ -215,9 +215,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
   const nextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
       // Check if we just finished the last example in the first round
-      const isLastExample = questions[currentQuestion].isExample &&
-                           currentRound === 0 &&
-                           !questions[currentQuestion + 1]?.isExample;
+      const isLastExample = questions[currentQuestion].isExample && currentRound === 0 && !questions[currentQuestion + 1]?.isExample;
 
       if (isLastExample) {
         // Play end-of-practice audio and wait for it to finish

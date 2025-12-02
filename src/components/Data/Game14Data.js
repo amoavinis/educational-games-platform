@@ -1,5 +1,4 @@
 export const game14Questions = [
-  // Παραδείγματα
   {
     sentence: "Αυτό το παιδί είναι καλ__.",
     options: ["-ή", "-ό", "-ός"],
@@ -21,8 +20,6 @@ export const game14Questions = [
     explanation: 'Το ουσιαστικό "σχολείο" παίρνει την κατάληξη -είο',
     isExample: true,
   },
-
-  // Υλικό
   {
     sentence: "Το άγαλμα είναι μαρμάρ____.",
     options: ["-ικό", "-ινο", "-ιμο"],

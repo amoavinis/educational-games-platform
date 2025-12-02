@@ -1,5 +1,4 @@
 export const game12Questions = [
-  // Παραδείγματα
   {
     sentence: "Κάθε πρωί εγώ τρώ___ πρωινό.",
     options: ["-ω", "-εις", "-ει"],
@@ -21,8 +20,6 @@ export const game12Questions = [
     explanation: "Το 3ο πληθυντικό πρόσωπο στον παρελθόντα παίρνει την κατάληξη -αν",
     isExample: true,
   },
-
-  // Υλικό
   {
     sentence: "Εμείς τώρα γράφ___.",
     options: ["-ετε", "-ηκαμε", "-ουμε"],
@@ -61,7 +58,7 @@ export const game12Questions = [
   },
   {
     sentence: "Το ποτήρι γέμ___.",
-    options: ["-ισα", "-ισε", "-ιζει"],
+    options: ["-ισει", "-ισε", "-ιστει"],
     correct: "-ισε",
     explanation: "Το 3ο ενικό πρόσωπο στον παρελθόντα παίρνει την κατάληξη -ισε",
   },

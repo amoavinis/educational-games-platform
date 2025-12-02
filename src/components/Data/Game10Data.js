@@ -1,5 +1,4 @@
 export const game10Words = [
-  // Παραδείγματα
   {
     word: "αντίστροφος",
     prefix: "αντί",
@@ -21,8 +20,6 @@ export const game10Words = [
     suffix: "ω",
     isExample: true,
   },
-
-  // Existing words
   {
     word: "επιχρωματισμένος",
     prefix: "επι",
@@ -35,8 +32,6 @@ export const game10Words = [
     stem: "λεξικ",
     suffix: "ός",
   },
-
-  // Νέο υλικό
   {
     word: "υπερφόρτωση",
     prefix: "υπερ",
