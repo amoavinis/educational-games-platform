@@ -3,11 +3,13 @@ export const game3Words = [
     word: "γραφείο",
     root: "γραφ",
     suffix: "είο",
+    isExample: true,
   },
   {
     word: "γραφίστας",
     root: "γραφ",
     suffix: "ίστας",
+    isExample: true,
   },
   {
     word: "γραφικός",

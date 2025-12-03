@@ -17,6 +17,7 @@ import kleidonoAudio from "../../assets/sounds/03/κλειδώνω.mp3";
 import kleidomenos from "../../assets/sounds/03/κλειδωμένος.mp3";
 import organonoAudio from "../../assets/sounds/03/οργανώνω.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEndAudio from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -52,6 +53,11 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(false);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
+  const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
+  const [hasPlayedWordAudio, setHasPlayedWordAudio] = useState(false);
+  const [timeoutEnded, setTimeoutEnded] = useState(false);
+  const [canProceed, setCanProceed] = useState(false);
+  const timeoutRef = useRef(null);
 
   const currentWord = words[currentWordIndex];
 
@@ -80,12 +86,35 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [titleAudioRef]);
 
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      setIsWordAudioPlaying(false);
+      setHasPlayedWordAudio(true);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef, currentWordAudio]);
+
+  // Check if can proceed (both audio played and timeout ended)
+  useEffect(() => {
+    if (hasPlayedWordAudio && timeoutEnded) {
+      setCanProceed(true);
+    }
+  }, [hasPlayedWordAudio, timeoutEnded]);
+
   // Initialize game stats
   useEffect(() => {
     if (gameStats.totalRounds === 0) {
       setGameStats((prev) => ({
         ...prev,
-        totalRounds: words.length,
+        totalRounds: words.filter((w) => !w.isExample).length,
       }));
     }
   }, [gameStats.totalRounds, words]);
@@ -214,6 +243,45 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
+  // Play word audio when speaker button clicked
+  const playWordAudio = () => {
+    if (wordAudioRef.current && !isWordAudioPlaying && !hasPlayedWordAudio) {
+      setIsWordAudioPlaying(true);
+      wordAudioRef.current.play().catch((error) => {
+        console.error("Error playing word audio:", error);
+        setIsWordAudioPlaying(false);
+      });
+      // Trigger highlighting animation when audio plays
+      performHighlighting(isFirstRound);
+    }
+  };
+
+  // Handle next question button click
+  const handleNextQuestion = () => {
+    if (canProceed) {
+      // Clear the timeout if it exists
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+
+      // Play end-of-practice audio if this is the last example word in first round
+      const lastExampleIndex = words.map((w, i) => w.isExample ? i : -1).filter(i => i >= 0).pop();
+      if (isFirstRound && currentWordIndex === lastExampleIndex && currentWord && currentWord.isExample) {
+        const audio = new Audio(practiceEndAudio);
+        audio.play().catch((error) => {
+          console.error("Error playing practice end audio:", error);
+        });
+        // Wait for audio to finish before moving to next word
+        audio.onended = () => {
+          nextWord(currentWordIndex, isFirstRound);
+        };
+      } else {
+        nextWord(currentWordIndex, isFirstRound);
+      }
+    }
+  };
+
   // Start game
   const startGame = async () => {
     await startRecording();
@@ -221,55 +289,76 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     startWordHighlighting(0, true); // Start with first word in first round
   };
 
-  // Start highlighting sequence for current word (only in first round)
-  const startWordHighlighting = (wordIndex, firstRound) => {
-    const fullHighlightDuration = 10000;
-    const word = words[wordIndex];
-
-    // Play word audio if available
-    if (word && wordAudioMap[word.word]) {
-      const audioFile = wordAudioMap[word.word];
-      setCurrentWordAudio(audioFile);
-
-      // Wait for React to update the audio element, then play
-      setTimeout(() => {
-        if (wordAudioRef.current) {
-          wordAudioRef.current.play().catch((error) => {
-            console.error("Error playing word audio:", error);
-          });
-        }
-      }, 150);
-    }
-
+  // Perform highlighting animation
+  const performHighlighting = (firstRound) => {
     if (firstRound) {
-      // Ensure root highlight is set (may already be set from nextWord)
+      const duration = 850;
       setHighlightStage("root");
-
-      const duration = 1000;
 
       setTimeout(() => {
         setHighlightStage("suffix");
         setTimeout(() => {
           setHighlightStage("full");
           setTimeout(() => {
-            nextWord(wordIndex, firstRound);
-          }, fullHighlightDuration); // Full highlight duration
+            setHighlightStage("none"); // Reset to black
+          }, duration);
         }, duration);
       }, duration);
     } else {
-      // Second round - no highlighting, just show word for 2 seconds
+      // Second round - no highlighting
       setHighlightStage("none");
-      setTimeout(() => {
-        nextWord(wordIndex, firstRound);
-      }, fullHighlightDuration);
     }
+  };
+
+  // Start highlighting sequence for current word (only in first round)
+  const startWordHighlighting = (wordIndex, firstRound) => {
+    const fullHighlightDuration = 10000;
+    const word = words[wordIndex];
+
+    // Set up word audio but don't play yet
+    if (word && wordAudioMap[word.word]) {
+      const audioFile = wordAudioMap[word.word];
+      setCurrentWordAudio(audioFile);
+    }
+
+    // Reset states for new word
+    setIsWordAudioPlaying(false);
+    setHasPlayedWordAudio(false);
+    setTimeoutEnded(false);
+    setCanProceed(false);
+
+    // Show word in black initially
+    setHighlightStage("none");
+
+    // Trigger highlighting animation when word first appears
+    setTimeout(() => {
+      performHighlighting(firstRound);
+    }, 100);
+
+    // Start the timeout timer
+    timeoutRef.current = setTimeout(() => {
+      setTimeoutEnded(true);
+      // Trigger highlighting animation when timeout ends
+      performHighlighting(firstRound);
+
+      // Always play audio when timeout ends
+      if (wordAudioRef.current) {
+        setIsWordAudioPlaying(true);
+        wordAudioRef.current.play().catch((error) => {
+          console.error("Error playing word audio:", error);
+          setIsWordAudioPlaying(false);
+          // If play fails, still enable the button
+          setHasPlayedWordAudio(true);
+        });
+      }
+    }, fullHighlightDuration);
   };
 
   // Move to next word
   const nextWord = (currentIndex, currentFirstRound) => {
-    // Record result for all words
+    // Record result for non-example words only
     const wordToRecord = words[currentIndex];
-    if (wordToRecord) {
+    if (wordToRecord && !wordToRecord.isExample) {
       const round = currentFirstRound ? "πρώτος" : "δεύτερος";
       setGameStats((prev) => ({
         ...prev,
@@ -285,20 +374,16 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     if (currentIndex < words.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentWordIndex(nextIndex);
-      // For first round, immediately set to root highlight to avoid black text
-      if (currentFirstRound) {
-        setHighlightStage("root");
-        setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 100);
-      } else {
-        setHighlightStage("none");
-        setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 500);
-      }
-    } else if (currentFirstRound) {
-      // Switch to second round
-      setIsFirstRound(false);
-      setCurrentWordIndex(0);
       setHighlightStage("none");
-      setTimeout(() => startWordHighlighting(0, false), 500);
+      setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 100);
+    } else if (currentFirstRound) {
+      // Switch to second round - skip example words
+      setIsFirstRound(false);
+      // Find first non-example word
+      const firstNonExampleIndex = words.findIndex(w => !w.isExample);
+      setCurrentWordIndex(firstNonExampleIndex >= 0 ? firstNonExampleIndex : 0);
+      setHighlightStage("none");
+      setTimeout(() => startWordHighlighting(firstNonExampleIndex >= 0 ? firstNonExampleIndex : 0, false), 100);
     } else {
       // Game completed
       setGameCompleted(true);
@@ -457,13 +542,18 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     <Container fluid className="game-container">
       <Row className="game-row-centered">
         <Col md={12} lg={10}>
+          {currentWord.isExample && (
+            <div className="d-flex justify-content-center">
+              <span className="example-badge">📚 Παράδειγμα</span>
+            </div>
+          )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ{isFirstRound ? null : " - ΠΑΜΕ ΞΑΝΑ"}</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
-                className="display-4 font-weight-bold mb-4 p-4"
+                className="display-4 font-weight-bold p-4"
                 style={{
                   minHeight: "150px",
                   display: "flex",
@@ -472,6 +562,32 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                 }}
               >
                 {highlightWord()}
+              </div>
+              <div className="d-flex justify-content-center align-items-center">
+                <Button
+                  variant="light"
+                  size="lg"
+                  onClick={playWordAudio}
+                  disabled={isWordAudioPlaying || hasPlayedWordAudio}
+                  className="rounded-circle"
+                  style={{
+                    width: "80px",
+                    height: "80px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "white",
+                    border: "2px solid #6c757d",
+                    opacity: isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
+                  }}
+                >
+                  <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
+                </Button>
+              </div>
+              <div className="d-flex justify-content-center mt-3">
+                <Button variant="success" size="lg" onClick={handleNextQuestion} disabled={!canProceed} style={{ minWidth: "200px" }}>
+                  Επόμενη Ερώτηση
+                </Button>
               </div>
               <audio ref={wordAudioRef} src={currentWordAudio} />
             </Card.Body>
