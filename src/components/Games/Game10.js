@@ -85,6 +85,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const [timeoutEnded, setTimeoutEnded] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
   const timeoutRef = useRef(null);
+  const [playerClickedAudioButton, setPlayerClickedAudioButton] = useState(false);
 
   const currentWord = words[currentWordIndex];
 
@@ -277,6 +278,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   // Play word audio when speaker button clicked
   const playWordAudio = () => {
     if (wordAudioRef.current && !isWordAudioPlaying && !hasPlayedWordAudio) {
+      setPlayerClickedAudioButton(true);
       setIsWordAudioPlaying(true);
       wordAudioRef.current.play().catch((error) => {
         console.error("Error playing word audio:", error);
@@ -396,10 +398,14 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
           ...prev.rounds,
           {
             question: `${wordToRecord.word} (${round})`,
+            playerClickedAudioButton: playerClickedAudioButton,
           },
         ],
       }));
     }
+
+    // Reset the audio button flag for the next word
+    setPlayerClickedAudioButton(false);
 
     if (currentIndex < words.length - 1) {
       const nextIndex = currentIndex + 1;

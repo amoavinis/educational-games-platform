@@ -190,6 +190,9 @@ const Reports = () => {
     // Check if this is the reaction time game (ID 16)
     const isReactionTimeGame = parseInt(selectedGame) === 16;
 
+    // Check if this is game 3 or 10 (audio button tracking games)
+    const isAudioButtonGame = parseInt(selectedGame) === 3 || parseInt(selectedGame) === 10;
+
     const questionGroupHeaders = ["", "", "", "", ""];
     const detailedHeaders = [
       "Κωδικός Μαθητή",
@@ -207,6 +210,17 @@ const Reports = () => {
           "Ερώτημα",
           "Σωστό",
           "Δευτερόλεπτα"
+        );
+      } else if (isAudioButtonGame) {
+        // For games 3 and 10, add audio button column
+        questionGroupHeaders.push(`Ερώτηση ${i}`, "", "", "", "", "");
+        detailedHeaders.push(
+          "Ερώτημα",
+          "Στόχος",
+          "Απάντηση",
+          "Σωστό",
+          "Δευτερόλεπτα",
+          "Πάτησε το κουμπί ήχου"
         );
       } else {
         // For other games, include all columns
@@ -251,6 +265,20 @@ const Reports = () => {
                 : "",
               question.seconds !== undefined ? question.seconds : ""
             );
+          } else if (isAudioButtonGame) {
+            // For games 3 and 10, include audio button column
+            row.push(
+              question.question || "",
+              question.target || "",
+              question.result || "",
+              question.isCorrect !== undefined
+                ? question.isCorrect
+                  ? "Σωστό"
+                  : "Λάθος"
+                : "",
+              question.seconds !== undefined ? question.seconds : "",
+              question.playerClickedAudioButton ? "ΝΑΙ" : "ΟΧΙ"
+            );
           } else {
             // For other games, include all columns
             row.push(
@@ -268,6 +296,8 @@ const Reports = () => {
         } else {
           if (isReactionTimeGame) {
             row.push("", "", "");
+          } else if (isAudioButtonGame) {
+            row.push("", "", "", "", "", "");
           } else {
             row.push("", "", "", "", "");
           }
@@ -279,7 +309,7 @@ const Reports = () => {
     const ws = XLSX.utils.aoa_to_sheet(excelData);
 
     // Κάνουμε τις πρώτες σειρές να συγχωνευτούν σε κάθε group
-    const columnsPerQuestion = isReactionTimeGame ? 3 : 5;
+    const columnsPerQuestion = isReactionTimeGame ? 3 : (isAudioButtonGame ? 6 : 5);
     for (let i = 5; i < 5 + maxQuestions * columnsPerQuestion; i += columnsPerQuestion) {
       ws["!merges"] = ws["!merges"] || [];
       ws["!merges"].push({ s: { r: 2, c: i }, e: { r: 2, c: i + columnsPerQuestion - 1 } });
