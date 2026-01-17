@@ -43,6 +43,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   // Map question indices to their audio files
   const questionAudioMap = useMemo(
     () => ({
+      0: null,
       1: exampleMariaAudio, // Η Μαρία χτενιζόταν
       2: examplePaidiaAudio, // παιδιά έπαιξαν
       3: grafoumeAudio, // γράφουμε
@@ -50,12 +51,13 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
       5: fagameAudio, // φάγαμε
       6: gennithikeAudio, // γεννήθηκε
       7: kryfikaAudio, // κρύφτηκα
-      8: gemiseAudio, // γέμισε
-      9: pantrefikaAudio, // παντρευτήκατε
-      10: plirothikanAudio, // πληρώθηκαν
-      11: elegchthikanAudio, // ελέγχθηκαν
-      12: bariomounAudio, // βαριόμουν
-      13: archizeiAudio, // αρχίζει
+      8: null,
+      9: gemiseAudio, // γέμισε
+      10: pantrefikaAudio, // παντρευτήκατε
+      11: plirothikanAudio, // πληρώθηκαν
+      12: elegchthikanAudio, // ελέγχθηκαν
+      13: bariomounAudio, // βαριόμουν
+      14: archizeiAudio, // αρχίζει
     }),
     []
   );
@@ -393,7 +395,6 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
                   return (
                     <Col key={index} xs={4} className="mb-3 d-flex justify-content-center">
                       <Button
-                        block
                         onClick={() => handleAnswerSelect(option)}
                         disabled={selectedAnswer !== null || isAudioPlaying || waitingForPracticeEnd}
                         variant={variant}
@@ -402,7 +403,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
                         className="py-3"
                       >
                         {option}
-                        {showIcon && <span style={{'margin-left': 10}}>{showIcon}</span>}
+                        {showIcon && <span style={{marginLeft: 10}}>{showIcon}</span>}
                       </Button>
                     </Col>
                   );

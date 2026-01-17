@@ -365,14 +365,6 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
               <Card className="mb-4 border-primary">
                 <Card.Body className="text-center">
                   <h3 className="display-5 mb-4 text-primary">{question.sentence}</h3>
-
-                  {selectedAnswer && (
-                    <div className="mt-4 p-3 bg-light rounded">
-                      <p className="mb-0 text-muted" style={{ fontSize: "1.1rem" }}>
-                        {question.explanation}
-                      </p>
-                    </div>
-                  )}
                 </Card.Body>
               </Card>
 
@@ -409,7 +401,7 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
                         className="py-3 w-100"
                       >
                         {option}
-                        {showIcon && <span style={{'margin-left': 10}}>{showIcon}</span>}
+                        {showIcon && <span style={{marginLeft: 10}}>{showIcon}</span>}
                       </Button>
                     </Col>
                   );

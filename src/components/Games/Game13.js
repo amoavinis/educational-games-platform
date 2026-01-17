@@ -487,7 +487,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
                         className="py-3 w-100"
                       >
                         {option}
-                        {showIcon && <span style={{'margin-left': 10}}>{showIcon}</span>}
+                        {showIcon && <span style={{marginLeft: 10}}>{showIcon}</span>}
                       </Button>
                     </Col>
                   );

@@ -462,7 +462,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                         className="w-100 py-3"
                       >
                         {option}
-                        {showIcon && <span style={{'margin-left': 10}}>{showIcon}</span>}
+                        {showIcon && <span style={{marginLeft: 10}}>{showIcon}</span>}
                       </Button>
                     </Col>
                   );

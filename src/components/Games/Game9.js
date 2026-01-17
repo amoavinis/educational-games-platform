@@ -374,16 +374,16 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameCompleted) {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center full-height">
+        <QuestionProgressLights
+          totalQuestions={words.filter((q) => !q.isExample).length}
+          currentQuestion={words.filter((q) => !q.isExample).length}
+          answeredQuestions={gameResults.map((r) => r.isCorrect)}
+        />
         <Card className="w-100" style={{ maxWidth: "600px" }}>
           <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
             <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
           </Card.Header>
           <Card.Body className="text-center">
-            <QuestionProgressLights
-              totalQuestions={words.filter((q) => !q.isExample).length}
-              currentQuestion={words.filter((q) => !q.isExample).length}
-              answeredQuestions={gameResults.map((r) => r.isCorrect)}
-            />
             <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
               Τέλος Άσκησης
             </Button>
@@ -433,7 +433,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
                 </div>
 
                 {feedback && (
-                  <div className="mb-4 text-center">
+                  <div className="mb-1 text-center">
                     <div className="d-flex align-items-center justify-content-center">
                       <span className="fs-1" style={{ color: feedback.isCorrect ? "#28a745" : "#dc3545" }}>
                         {feedback.isCorrect ? "✓" : "✗"}
