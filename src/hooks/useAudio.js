@@ -22,6 +22,14 @@ const useAudio = (audioSrc, options = {}) => {
   const audioRef = useRef(null);
   const location = useLocation();
   const previousPathRef = useRef(location.pathname);
+  const onPlaySuccessRef = useRef(onPlaySuccess);
+  const onPlayErrorRef = useRef(onPlayError);
+
+  // Keep callback refs up to date
+  useEffect(() => {
+    onPlaySuccessRef.current = onPlaySuccess;
+    onPlayErrorRef.current = onPlayError;
+  }, [onPlaySuccess, onPlayError]);
 
   // Stop audio when URL changes
   useEffect(() => {
@@ -41,14 +49,14 @@ const useAudio = (audioSrc, options = {}) => {
         audioRef.current
           .play()
           .then(() => {
-            if (onPlaySuccess) {
-              onPlaySuccess();
+            if (onPlaySuccessRef.current) {
+              onPlaySuccessRef.current();
             }
           })
           .catch((error) => {
             console.error("Error playing audio:", error);
-            if (onPlayError) {
-              onPlayError(error);
+            if (onPlayErrorRef.current) {
+              onPlayErrorRef.current(error);
             }
           });
       }, playDelay);
@@ -57,7 +65,7 @@ const useAudio = (audioSrc, options = {}) => {
         clearTimeout(timer);
       };
     }
-  }, [playOnMount, playDelay, onPlaySuccess, onPlayError]);
+  }, [playOnMount, playDelay]);
 
   // Cleanup on unmount
   useEffect(() => {

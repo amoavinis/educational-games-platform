@@ -1,11 +1,12 @@
 // Game 16
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import "../../styles/Game.css";
 import titleInstructionsAudio from "../../assets/sounds/response-time/title-instructions.mp3";
+import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import useAudio from "../../hooks/useAudio";
 
 const Game16 = ({ gameId, schoolId, studentId, classId }) => {
@@ -23,39 +24,29 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   const [shapeChangeTime, setShapeChangeTime] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [timeoutId, setTimeoutId] = useState(null);
-  // const [currentReactionTime, setCurrentReactionTime] = useState(null);
   const [resultsSubmitted, setResultsSubmitted] = useState(false);
-  // const [liveCounter, setLiveCounter] = useState(0);
   const [counterInterval, setCounterInterval] = useState(null);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
 
   const totalRounds = 5;
 
   // Use the audio hook with automatic URL change detection
-  const { audioRef, audioSrc } = useAudio(titleInstructionsAudio, {
+  const {
+    audioRef,
+    audioSrc,
+    stop: stopTitleAudio,
+  } = useAudio(titleInstructionsAudio, {
     playOnMount: true,
-    onPlaySuccess: () => {
-      // Audio is playing
-    },
-    onPlayError: () => {
-      setIsAudioPlaying(false);
-    },
   });
 
-  // Listen for audio ended event
-  useEffect(() => {
-    const audio = audioRef.current;
-    const handleAudioEnded = () => {
-      setIsAudioPlaying(false);
-    };
+  // Bravo audio ref
+  const bravoAudioRef = useRef(null);
 
-    if (audio) {
-      audio.addEventListener("ended", handleAudioEnded);
-      return () => {
-        audio.removeEventListener("ended", handleAudioEnded);
-      };
+  // Play bravo audio when game completes
+  useEffect(() => {
+    if (gameState === "completed" && bravoAudioRef.current) {
+      bravoAudioRef.current.play().catch(() => {});
     }
-  }, [audioRef]);
+  }, [gameState]);
 
   // Initialize game stats
   useEffect(() => {
@@ -115,10 +106,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Start the live counter when circle appears
   const startLiveCounter = useCallback(() => {
-    // setLiveCounter(0);
-    const interval = setInterval(() => {
-      // setLiveCounter(prev => prev + 10);
-    }, 10);
+    const interval = setInterval(() => {}, 10);
     setCounterInterval(interval);
   }, []);
 
@@ -133,15 +121,13 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   // Reset the live counter
   const resetLiveCounter = useCallback(() => {
     stopLiveCounter();
-    // setLiveCounter(0);
   }, [stopLiveCounter]);
 
   // Start a new round with random delay
   const startNewRound = useCallback(() => {
     setIsShape("rectangle");
     setGameState("waiting");
-    // setCurrentReactionTime(null);
-    resetLiveCounter(); // Reset counter when square appears
+    resetLiveCounter();
 
     // Random delay between 2-3 seconds
     const delay = Math.random() * 1000 + 2000;
@@ -150,7 +136,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
       setIsShape("circle");
       setShapeChangeTime(Date.now());
       setGameState("ready");
-      startLiveCounter(); // Start counter when circle appears
+      startLiveCounter();
     }, delay);
 
     setTimeoutId(timeout);
@@ -158,12 +144,13 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Handle clicking anywhere to start the game
   const handleInitialClick = useCallback(() => {
-    if (gameState === "initial" && !isAudioPlaying) {
+    if (gameState === "initial") {
+      stopTitleAudio();
       setGameState("waiting");
       setGameStarted(true);
       startNewRound();
     }
-  }, [gameState, isAudioPlaying, startNewRound]);
+  }, [gameState, stopTitleAudio, startNewRound]);
 
   // Complete the game and generate report
   const completeGame = useCallback((finalTimes) => {
@@ -184,8 +171,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
       const clickTime = Date.now();
       const reactionTime = clickTime - shapeChangeTime;
 
-      stopLiveCounter(); // Stop counter when circle is clicked
-      // setCurrentReactionTime(reactionTime);
+      stopLiveCounter();
       setReactionTimes((prev) => [...prev, reactionTime]);
       setGameState("clicked");
 
@@ -287,7 +273,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   const getInstructionText = () => {
     switch (gameState) {
       case "initial":
-        return isAudioPlaying ? "Άκουσε τις οδηγίες..." : "Κάνε κλικ οπουδήποτε για ξεκινήσεις.";
+        return "Κάνε κλικ οπουδήποτε για ξεκινήσεις";
       case "waiting":
         return "Περίμενε να γίνει κύκλος…";
       case "ready":
@@ -306,6 +292,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameState === "completed") {
     return (
       <Container fluid className="game-container">
+        <audio ref={bravoAudioRef} src={bravoAudio} />
         <Row className="game-row-centered">
           <Col md={8} lg={6}>
             <Card className="main-card">
@@ -329,17 +316,16 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
       <audio ref={audioRef} src={audioSrc} />
       <Row className="game-row-centered">
         <Col md={10} lg={8}>
+          {gameStarted && (
+            <div className="mb-3">
+              <QuestionProgressLights totalQuestions={totalRounds} currentQuestion={currentRound} answeredQuestions={gameStats.rounds.map(() => true)} />
+            </div>
+          )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
               <h4 className="mb-0">Χρόνος Αντίδρασης</h4>
             </Card.Header>
             <Card.Body className="text-center">
-              {gameStarted && (
-                <div className="mb-3">
-                  <QuestionProgressLights totalQuestions={totalRounds} currentQuestion={currentRound} answeredQuestions={gameStats.rounds.map(() => true)} />
-                </div>
-              )}
-
               {!gameStarted && (
                 <div className="mb-4">
                   <p className="mb-3">
