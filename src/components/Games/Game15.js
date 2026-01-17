@@ -534,11 +534,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                             className="w-100 py-3"
                           >
                             {option}
-                            {showIcon && (
-                              <span className="ms-2 fs-4" style={{ marginTop: 0, marginBottom: 0, lineHeight: 1 }}>
-                                {showIcon}
-                              </span>
-                            )}
+                            {showIcon && <span style={{ "margin-left": 10, marginTop: 0, marginBottom: 0, lineHeight: 1 }}>{showIcon}</span>}
                           </Button>
                         </Col>
                       );
