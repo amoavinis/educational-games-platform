@@ -17,7 +17,6 @@ import kleidonoAudio from "../../assets/sounds/03/κλειδώνω.mp3";
 import kleidomenos from "../../assets/sounds/03/κλειδωμένος.mp3";
 import organonoAudio from "../../assets/sounds/03/οργανώνω.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
-import practiceEndAudio from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -42,7 +41,6 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const mediaRecorderRef = useRef(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'root', 'suffix', 'full'
-  const [isFirstRound, setIsFirstRound] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [audioDownloadURL, setAudioDownloadURL] = useState(null);
   const [gameStats, setGameStats] = useState({
@@ -254,7 +252,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
         setIsWordAudioPlaying(false);
       });
       // Trigger highlighting animation when audio plays
-      performHighlighting(isFirstRound);
+      performHighlighting();
     }
   };
 
@@ -266,21 +264,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-
-      // Play end-of-practice audio if this is the last example word in first round
-      const lastExampleIndex = words.map((w, i) => w.isExample ? i : -1).filter(i => i >= 0).pop();
-      if (isFirstRound && currentWordIndex === lastExampleIndex && currentWord && currentWord.isExample) {
-        const audio = new Audio(practiceEndAudio);
-        audio.play().catch((error) => {
-          console.error("Error playing practice end audio:", error);
-        });
-        // Wait for audio to finish before moving to next word
-        audio.onended = () => {
-          nextWord(currentWordIndex, isFirstRound);
-        };
-      } else {
-        nextWord(currentWordIndex, isFirstRound);
-      }
+      nextWord(currentWordIndex);
     }
   };
 
@@ -288,32 +272,27 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const startGame = async () => {
     await startRecording();
     setGameStarted(true);
-    startWordHighlighting(0, true); // Start with first word in first round
+    startWordHighlighting(0);
   };
 
   // Perform highlighting animation
-  const performHighlighting = (firstRound) => {
-    if (firstRound) {
-      const duration = 850;
-      setHighlightStage("root");
+  const performHighlighting = () => {
+    const duration = 1200;
+    setHighlightStage("root");
 
+    setTimeout(() => {
+      setHighlightStage("suffix");
       setTimeout(() => {
-        setHighlightStage("suffix");
+        setHighlightStage("full");
         setTimeout(() => {
-          setHighlightStage("full");
-          setTimeout(() => {
-            setHighlightStage("none"); // Reset to black
-          }, duration);
-        }, duration);
+          setHighlightStage("none"); // Reset to black
+        }, 1.5 * duration);
       }, duration);
-    } else {
-      // Second round - no highlighting
-      setHighlightStage("none");
-    }
+    }, duration);
   };
 
-  // Start highlighting sequence for current word (only in first round)
-  const startWordHighlighting = (wordIndex, firstRound) => {
+  // Start highlighting sequence for current word
+  const startWordHighlighting = (wordIndex) => {
     const fullHighlightDuration = 10000;
     const word = words[wordIndex];
 
@@ -334,14 +313,14 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
 
     // Trigger highlighting animation when word first appears
     setTimeout(() => {
-      performHighlighting(firstRound);
+      performHighlighting();
     }, 100);
 
     // Start the timeout timer
     timeoutRef.current = setTimeout(() => {
       setTimeoutEnded(true);
       // Trigger highlighting animation when timeout ends
-      performHighlighting(firstRound);
+      performHighlighting();
 
       // Always play audio when timeout ends
       if (wordAudioRef.current) {
@@ -357,17 +336,16 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   // Move to next word
-  const nextWord = (currentIndex, currentFirstRound) => {
+  const nextWord = (currentIndex) => {
     // Record result for non-example words only
     const wordToRecord = words[currentIndex];
     if (wordToRecord && !wordToRecord.isExample) {
-      const round = currentFirstRound ? "πρώτος" : "δεύτερος";
       setGameStats((prev) => ({
         ...prev,
         rounds: [
           ...prev.rounds,
           {
-            question: `${wordToRecord.word} (${round})`,
+            question: wordToRecord.word,
             playerClickedAudioButton: playerClickedAudioButton,
           },
         ],
@@ -381,15 +359,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       const nextIndex = currentIndex + 1;
       setCurrentWordIndex(nextIndex);
       setHighlightStage("none");
-      setTimeout(() => startWordHighlighting(nextIndex, currentFirstRound), 100);
-    } else if (currentFirstRound) {
-      // Switch to second round - skip example words
-      setIsFirstRound(false);
-      // Find first non-example word
-      const firstNonExampleIndex = words.findIndex(w => !w.isExample);
-      setCurrentWordIndex(firstNonExampleIndex >= 0 ? firstNonExampleIndex : 0);
-      setHighlightStage("none");
-      setTimeout(() => startWordHighlighting(firstNonExampleIndex >= 0 ? firstNonExampleIndex : 0, false), 100);
+      setTimeout(() => startWordHighlighting(nextIndex), 100);
     } else {
       // Game completed
       setGameCompleted(true);
@@ -399,13 +369,13 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-  // Function to highlight text parts (only for first round)
+  // Function to highlight text parts
   const highlightWord = () => {
     if (!currentWord) return "";
 
     const { word, root } = currentWord;
 
-    if (!isFirstRound || highlightStage === "none") {
+    if (highlightStage === "none") {
       return word;
     }
 
@@ -555,7 +525,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ{isFirstRound ? null : " - ΠΑΜΕ ΞΑΝΑ"}</h4>
+              <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
@@ -592,7 +562,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
               </div>
               <div className="d-flex justify-content-center mt-3">
                 <Button variant="success" size="lg" onClick={handleNextQuestion} disabled={!canProceed} style={{ minWidth: "200px" }}>
-                  Επόμενη Ερώτηση
+                  Επόμενη Λέξη
                 </Button>
               </div>
               <audio ref={wordAudioRef} src={currentWordAudio} />
