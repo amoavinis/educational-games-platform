@@ -121,6 +121,15 @@ const Reports = () => {
       // Fetch all reports for the school
       const allReports = await getReportsWithDetails();
 
+      // Sort reports by datetime ascending
+      allReports.sort((a, b) => {
+        const parsedA = a.results ? JSON.parse(a.results) : null;
+        const parsedB = b.results ? JSON.parse(b.results) : null;
+        const dateA = parsedA?.datetime || "";
+        const dateB = parsedB?.datetime || "";
+        return dateA.localeCompare(dateB);
+      });
+
       // Filter reports based on criteria
       let filteredReports = allReports;
 

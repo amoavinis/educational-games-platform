@@ -17,7 +17,19 @@ import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
-  const words = useMemo(() => level11Words, []);
+  const words = useMemo(() => {
+    const examples = level11Words.filter((w) => w.isExample);
+        const nonExamples = level11Words.filter((w) => !w.isExample);
+    
+        // Shuffle non-examples using Fisher-Yates algorithm
+        const shuffled = [...nonExamples];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+    
+        return [...examples, ...shuffled];
+  }, []);
 
   const [wordPool, setWordPool] = useState([]);
   const [columns, setColumns] = useState({
@@ -221,7 +233,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
       const score = newAttempts; // 1 for first try, 2 for second, 3 for third+
 
       if (!wordData.isExample) {
-        setGameResults((prev) => [...prev, { word: wordData.word, score }]);
+        setGameResults((prev) => [...prev, { question: wordData.word, result: score, target: 1, isCorrect: score === 1 }]);
       }
 
       // Remove from pool
@@ -273,7 +285,6 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
           // All regular words placed - game completed
           setTimeout(() => {
             setGameCompleted(true);
-            submitGameResults();
           }, 500);
         }
       }
@@ -284,7 +295,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
         const score = 3;
 
         if (!wordData.isExample) {
-          setGameResults((prev) => [...prev, { word: wordData.word, score }]);
+          setGameResults((prev) => [...prev, { question: wordData.word, result: score, target: 1, isCorrect: score === 1 }]);
         }
 
         // Remove from pool
@@ -336,7 +347,6 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
             // All regular words placed - game completed
             setTimeout(() => {
               setGameCompleted(true);
-              submitGameResults();
             }, 500);
           }
         }
@@ -437,7 +447,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
         onClick={!isDraggable && canInteract ? () => returnToPool(wordData, wordData.placedSuffix) : undefined}
         style={{ cursor: isAudioPlaying ? "not-allowed" : isDraggable ? "grab" : "pointer" }}
       >
-        {wordData.isExample && <span className="example-badge-drag">Παράδειγμα</span>}
+        {wordData.isExample && <div className="example-badge-drag">Παράδειγμα</div>}
         {wordData.word}
       </div>
     );
@@ -456,15 +466,16 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
     </Card>
   );
 
-  // Play bravo audio when game completes
+  // Submit results and play bravo audio when game completes
   useEffect(() => {
-    if (gameCompleted) {
+    if (gameCompleted && gameResults.length > 0) {
+      submitGameResults();
       const audio = new Audio(bravoAudio);
       audio.play().catch((error) => {
         console.error("Error playing bravo audio:", error);
       });
     }
-  }, [gameCompleted]);
+  }, [gameCompleted, gameResults]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (gameCompleted) {
     return (

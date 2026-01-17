@@ -229,7 +229,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
       const score = newAttempts; // 1 for first try, 2 for second, 3 for third+
 
       if (!wordData.isExample) {
-        setGameResults((prev) => [...prev, { word: wordData.word, score }]);
+        setGameResults((prev) => [...prev, { question: wordData.word, result: score, target: 1, isCorrect: score === 1 }]);
       }
 
       // Remove from pool
@@ -281,7 +281,6 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
           // All regular words placed - game completed
           setTimeout(() => {
             setGameCompleted(true);
-            submitGameResults();
           }, 500);
         }
       }
@@ -292,7 +291,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
         const score = 3;
 
         if (!wordData.isExample) {
-          setGameResults((prev) => [...prev, { word: wordData.word, score }]);
+          setGameResults((prev) => [...prev, { question: wordData.word, result: score, target: 1, isCorrect: score === 1 }]);
         }
 
         // Remove from pool
@@ -344,7 +343,6 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
             // All regular words placed - game completed
             setTimeout(() => {
               setGameCompleted(true);
-              submitGameResults();
             }, 500);
           }
         }
@@ -419,15 +417,16 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-  // Play bravo audio when game completes
+  // Submit results and play bravo audio when game completes
   useEffect(() => {
-    if (gameCompleted) {
+    if (gameCompleted && gameResults.length > 0) {
+      submitGameResults();
       const audio = new Audio(bravoAudio);
       audio.play().catch((error) => {
         console.error("Error playing bravo audio:", error);
       });
     }
-  }, [gameCompleted]);
+  }, [gameCompleted, gameResults]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const WordCard = ({ wordData, isDraggable = true }) => {
     // Get styling based on placement
