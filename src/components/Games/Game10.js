@@ -633,7 +633,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
               </div>
               <div className="d-flex justify-content-center mt-3">
                 <Button variant="success" size="lg" onClick={handleNextQuestion} disabled={!canProceed} style={{ minWidth: "200px" }}>
-                  Επόμενη Ερώτηση
+                  Επόμενη Λέξη
                 </Button>
               </div>
               <audio ref={wordAudioRef} src={currentWordAudio} />

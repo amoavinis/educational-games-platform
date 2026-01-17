@@ -452,7 +452,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
                     onClick={handleAnswerSelect}
                     disabled={!selectedText || selectedAnswer !== null || isInstructionsAudioPlaying || waitingForPracticeEnd}
                   >
-                    {isInstructionsAudioPlaying ? "Άκουσε τις οδηγίες..." : "Υποβολή"}
+                    Υποβολή
                   </Button>
                 </div>
               )}

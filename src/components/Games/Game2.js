@@ -430,7 +430,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
                 onClick={submitAnswer}
                 disabled={!selectedText || feedback || isInitialAudioPlaying}
               >
-                {isInitialAudioPlaying ? "Άκουσε τις οδηγίες..." : "Υποβολή"}
+                Υποβολή
               </Button>
             </div>
           )}
