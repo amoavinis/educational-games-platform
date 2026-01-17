@@ -65,6 +65,17 @@ const Login = () => {
       <div className="w-100" style={{ maxWidth: "400px" }}>
         <Card>
           <Card.Body>
+            <h1
+              className="text-center mb-4"
+              style={{
+                fontWeight: 'bold',
+                color: '#4a90d9',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
+                letterSpacing: '2px'
+              }}
+            >
+              Morpho-Game
+            </h1>
             <h2 className="text-center mb-4">Σύνδεση</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form onSubmit={handleSubmit}>
