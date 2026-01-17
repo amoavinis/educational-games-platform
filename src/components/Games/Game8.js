@@ -10,7 +10,7 @@ import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/08/title-instructions.mp3";
 import exampleKataponoAudio from "../../assets/sounds/08/example-καταπονώ.mp3";
 import exampleDiametroAudio from "../../assets/sounds/08/example-διαμετρώ.mp3";
-import exampleAnatrepontasAudio from "../../assets/sounds/08/example-ανατρέποντας.mp3";
+import anatrepontasAudio from "../../assets/sounds/08/ανατρέποντας.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
@@ -35,7 +35,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
     () => ({
       καταπονώ: exampleKataponoAudio,
       διαμετρώ: exampleDiametroAudio,
-      ανατρέποντας: exampleAnatrepontasAudio,
+      ανατρέποντας: anatrepontasAudio,
     }),
     []
   );
