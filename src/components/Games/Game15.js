@@ -30,6 +30,9 @@ import μεθόδουςAudio from "../../assets/sounds/15/μεθόδους.mp3";
 import μουσικήςAudio from "../../assets/sounds/15/μουσικής.mp3";
 import ΧριστουγέννωνAudio from "../../assets/sounds/15/Χριστουγέννων.mp3";
 
+// Marquee animation duration in seconds (lower = faster)
+const MARQUEE_DURATION_SECONDS = 5;
+
 const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,7 +61,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
       "Ο καιρός σήμερα είναι πολύ ζεστός": exampleKairosAudio,
       "Το παιδί κοιμήθηκε ήσυχο": examplePaidiAudio,
       "Τα δελφίνια αγαπούν τη θάλασσα": θάλασσαAudio,
-      "Η πορεία έκλεισε όλες τις ανοιχτές εισοδ": εισόδουςAudio,
+      "Η πορεία έκλεισε όλες τις ανοιχτές εισόδους": εισόδουςAudio,
       "Εξαφανίστηκαν όλοι την ώρα του κινδύνου": κινδύνουAudio,
       "Στο βουνό ντυνόμαστε ζεστά": ζεστάAudio,
       "Ήταν μικρή διάρκεια των διακοπών": διακοπώνAudio,
@@ -297,7 +300,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
     // Move left until last letter is visible (stop when text fits completely)
     const stopOffset = containerWidth - textWidth;
 
-    textElement.style.transition = "left 3s ease-out";
+    textElement.style.transition = `left ${MARQUEE_DURATION_SECONDS}s ease-out`;
     textElement.style.left = `${stopOffset}px`;
 
     const handleTransitionEnd = () => {
@@ -355,10 +358,10 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
       setWasAnswerSubmitted(true);
       // Don't auto-advance, wait for word audio then practice end audio to finish
     } else {
-      // Auto advance after 4 seconds
+      // Auto advance after 5 seconds
       setTimeout(() => {
         nextQuestion();
-      }, 4000);
+      }, 5000);
     }
   };
 
@@ -491,7 +494,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                     style={{
                       position: "absolute",
                       whiteSpace: "nowrap",
-                      transition: "left 3s ease-out",
+                      transition: `left ${MARQUEE_DURATION_SECONDS}s ease-out`,
                       fontSize: "1.5rem",
                       fontWeight: "bold",
                       visibility: "visible",
@@ -533,7 +536,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                             className="w-100 py-3"
                           >
                             {option}
-                            {showIcon && <span style={{ "margin-left": 10, marginTop: 0, marginBottom: 0, lineHeight: 1 }}>{showIcon}</span>}
+                            {showIcon && <span style={{ marginLeft: 10, marginTop: 0, marginBottom: 0, lineHeight: 1 }}>{showIcon}</span>}
                           </Button>
                         </Col>
                       );
