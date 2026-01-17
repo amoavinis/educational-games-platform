@@ -65,7 +65,6 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
   );
 
   // Game state
-  const [currentRound, setCurrentRound] = useState(0); // 0 = slow, 1 = normal
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [gameCompleted, setGameCompleted] = useState(false);
@@ -164,12 +163,19 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [currentQuestion, questions, wordAudioMap, wordAudioRef]);
 
-  // Start question timer when question changes (but don't play audio)
+  // Start question timer when question changes
   useEffect(() => {
     if (!gameCompleted && !isInitialAudioPlaying && !questionStartTime) {
       setQuestionStartTime(Date.now());
     }
   }, [currentQuestion, gameCompleted, isInitialAudioPlaying, questionStartTime]);
+
+  // Play word audio when a new question appears (wait for initial audio to finish for first question)
+  useEffect(() => {
+    if (!gameCompleted && !isInitialAudioPlaying && !isPracticeEndPlaying && selectedAnswer === null && hasPlayedInitialAudio) {
+      playWordAudio();
+    }
+  }, [currentQuestion, gameCompleted, isInitialAudioPlaying, isPracticeEndPlaying, hasPlayedInitialAudio]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play bravo audio when game completes
   useEffect(() => {
@@ -215,8 +221,8 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
 
   const nextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
-      // Check if we just finished the last example in the first round
-      const isLastExample = questions[currentQuestion].isExample && currentRound === 0 && !questions[currentQuestion + 1]?.isExample;
+      // Check if we just finished the last example
+      const isLastExample = questions[currentQuestion].isExample && !questions[currentQuestion + 1]?.isExample;
 
       if (isLastExample) {
         // Play end-of-practice audio and wait for it to finish
@@ -226,12 +232,10 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
 
           // Attach the ended event listener right before playing
           const handleAudioEnded = () => {
-            console.log("Practice end audio finished, advancing to next question");
             setIsPracticeEndPlaying(false);
             setCurrentQuestion((prev) => prev + 1);
             setSelectedAnswer(null);
             setQuestionStartTime(null);
-            // Remove the listener after it fires
             audio.removeEventListener("ended", handleAudioEnded);
           };
 
@@ -241,32 +245,22 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
             console.error("Error playing end-of-practice audio:", error);
             audio.removeEventListener("ended", handleAudioEnded);
             setIsPracticeEndPlaying(false);
-            // If audio fails, advance immediately
             setCurrentQuestion((prev) => prev + 1);
             setSelectedAnswer(null);
             setQuestionStartTime(null);
           });
         } else {
-          // If audio ref not ready, advance immediately
-          console.warn("Practice end audio ref not ready");
           setIsPracticeEndPlaying(false);
           setCurrentQuestion((prev) => prev + 1);
           setSelectedAnswer(null);
           setQuestionStartTime(null);
         }
-        // Don't advance yet - the audio ended handler will do it
         return;
       }
 
       setCurrentQuestion((prev) => prev + 1);
       setSelectedAnswer(null);
-      setQuestionStartTime(null); // Reset timing for next question
-    } else if (currentRound === 0) {
-      // Move to normal speed round, skip example question
-      setCurrentRound(1);
-      setCurrentQuestion(1); // Start at question 1 to skip example
-      setSelectedAnswer(null);
-      setQuestionStartTime(null); // Reset timing for next question
+      setQuestionStartTime(null);
     } else {
       setGameCompleted(true);
       submitGameResults();
@@ -307,7 +301,6 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
         gameId,
         results: JSON.stringify(results),
       });
-      // console.log("Game results submitted successfully");
     } catch (error) {
       console.error("Error submitting game results:", error);
     }
@@ -316,16 +309,16 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
   if (gameCompleted) {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center full-height">
+        <QuestionProgressLights
+          totalQuestions={questions.filter((q) => !q.isExample).length}
+          currentQuestion={questions.filter((q) => !q.isExample).length}
+          answeredQuestions={gameResults.map((r) => r.isCorrect)}
+        />
         <Card className="w-100" style={{ maxWidth: "600px" }}>
           <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
             <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
           </Card.Header>
           <Card.Body className="text-center">
-            <QuestionProgressLights
-              totalQuestions={questions.filter((q) => !q.isExample).length * 2}
-              currentQuestion={questions.filter((q) => !q.isExample).length * 2}
-              answeredQuestions={gameResults.filter((r) => !r.isExample).map((r) => r.isCorrect)}
-            />
             <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
               Τέλος Άσκησης
             </Button>
@@ -343,11 +336,9 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
         <Col md={12} lg={10}>
           {!questions[currentQuestion].isExample && (
             <QuestionProgressLights
-              totalQuestions={questions.filter((q) => !q.isExample).length * 2}
-              currentQuestion={
-                currentRound * questions.filter((q) => !q.isExample).length + questions.slice(0, currentQuestion).filter((q) => !q.isExample).length
-              }
-              answeredQuestions={gameResults.filter((r) => !questions.find((q) => q.word === r.word)?.isExample).map((r) => r.isCorrect)}
+              totalQuestions={questions.filter((q) => !q.isExample).length}
+              currentQuestion={questions.slice(0, currentQuestion).filter((q) => !q.isExample).length}
+              answeredQuestions={gameResults.map((r) => r.isCorrect)}
             />
           )}
           {questions[currentQuestion].isExample && (
