@@ -324,7 +324,6 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
                         showIcon = "✓";
                       } else if (index === selectedChoice) {
                         variant = "danger";
-                        customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
                         showIcon = "✗";
                       }
                     }

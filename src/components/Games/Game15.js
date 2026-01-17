@@ -515,7 +515,6 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                           showIcon = "✓";
                         } else {
                           variant = "danger";
-                          customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
                           showIcon = "✗";
                         }
                       } else if (selectedAnswer && option === question.correct) {

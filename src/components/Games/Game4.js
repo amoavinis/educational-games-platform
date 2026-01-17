@@ -391,7 +391,6 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
                       customStyle = { backgroundColor: "#FFFF33", borderColor: "#FFFF33", color: "black" };
                     } else {
                       variant = "danger";
-                      customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
                     }
                   } else if (selectedAnswer && option === currentQ.correctSuffix) {
                     variant = "success";

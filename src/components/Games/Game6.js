@@ -443,7 +443,6 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                       showIcon = "✓";
                     } else {
                       variant = "danger";
-                      customStyle = { backgroundColor: "#9370DB", borderColor: "#9370DB", color: "white" };
                       showIcon = "✗";
                     }
                   } else if (selectedAnswer && option === currentQ.correctPrefix) {
