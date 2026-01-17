@@ -466,7 +466,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
         onDragEnd={isDraggable ? handleDragEnd : undefined}
         onClick={handleWordClick}
       >
-        {wordData.isExample && <span className="example-badge-drag">Παράδειγμα</span>}
+        {wordData.isExample && <div className="example-badge-drag">Παράδειγμα</div>}
         {wordData.word}
       </div>
     );
