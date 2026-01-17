@@ -31,6 +31,7 @@ import dysarmonikoAudio from "../../assets/sounds/10/δυσαρμονικό.mp3"
 import yptertonizoAudio from "../../assets/sounds/10/υπερτονίζω.mp3";
 import antistoixoAudio from "../../assets/sounds/10/αντιστοιχώ.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
+import practiceEndAudio from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -42,8 +43,8 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       αντίστροφος: exampleAntistrofosAudio,
       καταστρέφω: exampleKatastrefoAudio,
       επιλέγω: exampleEpilegoAudio,
-      // επιχρωματισμένος: epixromatismenosAudio, // Missing audio file
-      // δυσλεξικός: dyslexikosAudio, // Missing audio file
+      επιχρωματισμένος: null, // Missing audio file
+      δυσλεξικός: null, // Missing audio file
       υπερφόρτωση: yperfortoshAudio,
       αντιστάθμιση: antistathmisiAudio,
       επικεντρώνω: epikentronoAudio,
@@ -84,6 +85,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const [canProceed, setCanProceed] = useState(false);
   const timeoutRef = useRef(null);
   const [playerClickedAudioButton, setPlayerClickedAudioButton] = useState(false);
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
   const currentWord = words[currentWordIndex];
 
@@ -94,6 +96,11 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Word-specific audio
   const { audioRef: wordAudioRef } = useAudio(currentWordAudio, {
+    playOnMount: false,
+  });
+
+  // Practice end audio
+  const { audioRef: practiceEndAudioRef } = useAudio(practiceEndAudio, {
     playOnMount: false,
   });
 
@@ -134,6 +141,8 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       setCanProceed(true);
     }
   }, [hasPlayedWordAudio, timeoutEnded]);
+
+  
 
   // Initialize game stats
   useEffect(() => {
@@ -272,7 +281,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Play word audio when speaker button clicked
   const playWordAudio = () => {
-    if (wordAudioRef.current && !isWordAudioPlaying && !hasPlayedWordAudio) {
+    if (currentWordAudio && wordAudioRef.current && !isWordAudioPlaying && !hasPlayedWordAudio) {
       setPlayerClickedAudioButton(true);
       setIsWordAudioPlaying(true);
       wordAudioRef.current.play().catch((error) => {
@@ -292,13 +301,32 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-      nextWord(currentWordIndex);
+
+      // Check if this is the last example (current word is example and next word is not)
+      const isLastExample =
+        currentWord.isExample &&
+        currentWordIndex < words.length - 1 &&
+        !words[currentWordIndex + 1].isExample;
+
+      if (isLastExample) {
+        // Play practice end audio and wait for it to finish
+        setWaitingForPracticeEnd(true);
+        if (practiceEndAudioRef.current) {
+          practiceEndAudioRef.current.play().catch((error) => {
+            console.error("Error playing practice end audio:", error);
+            setWaitingForPracticeEnd(false);
+            nextWord(currentWordIndex);
+          });
+        }
+      } else {
+        nextWord(currentWordIndex);
+      }
     }
   };
 
   // Perform highlighting animation
   const performHighlighting = () => {
-    const duration = 850;
+    const duration = 1200;
 
     setHighlightStage("prefix");
     setTimeout(() => {
@@ -309,7 +337,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
           setHighlightStage("full");
           setTimeout(() => {
             setHighlightStage("none"); // Reset to black
-          }, 3 * duration);
+          }, 2.5 * duration);
         }, duration);
       }, duration);
     }, duration);
@@ -323,14 +351,12 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   // Start highlighting sequence for current word
-  const startWordHighlighting = (wordIndex) => {
+  const startWordHighlighting = useCallback((wordIndex) => {
     const word = words[wordIndex];
 
-    // Set up word audio but don't play yet
-    if (word && wordAudioMap[word.word]) {
-      const audioFile = wordAudioMap[word.word];
-      setCurrentWordAudio(audioFile);
-    }
+    // Set up word audio or clear if none available
+    const audioFile = word && wordAudioMap[word.word] ? wordAudioMap[word.word] : null;
+    setCurrentWordAudio(audioFile);
 
     // Reset states for new word
     setIsWordAudioPlaying(false);
@@ -354,8 +380,8 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       // Trigger highlighting animation when timeout ends
       performHighlighting();
 
-      // Always play audio when timeout ends
-      if (wordAudioRef.current) {
+      // Only play audio when timeout ends if audio exists for this word
+      if (audioFile && wordAudioRef.current) {
         setIsWordAudioPlaying(true);
         wordAudioRef.current.play().catch((error) => {
           console.error("Error playing word audio:", error);
@@ -363,12 +389,15 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
           // If play fails, still enable the button
           setHasPlayedWordAudio(true);
         });
+      } else {
+        // No audio for this word, mark as played so button can be enabled
+        setHasPlayedWordAudio(true);
       }
     }, fullDuration);
-  };
+  }, [wordAudioMap, wordAudioRef, words]);
 
   // Move to next word
-  const nextWord = (currentIndex) => {
+  const nextWord = useCallback((currentIndex) => {
     // Record result for non-example words (use current word before updating index)
     const wordToRecord = words[currentIndex];
     if (wordToRecord && !wordToRecord.isExample) {
@@ -400,7 +429,24 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
         stopRecording();
       }, 100);
     }
-  };
+  }, [playerClickedAudioButton, startWordHighlighting, stopRecording, words]);
+
+  // Listen for practice end audio ended
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+      // Advance to next word after practice end audio finishes
+      nextWord(currentWordIndex);
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [practiceEndAudioRef, currentWordIndex, nextWord]);
 
   // Function to highlight text parts
   const highlightWord = () => {
@@ -589,7 +635,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
                   variant="light"
                   size="lg"
                   onClick={playWordAudio}
-                  disabled={isWordAudioPlaying || hasPlayedWordAudio}
+                  disabled={!currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio}
                   className="rounded-circle"
                   style={{
                     width: "80px",
@@ -599,18 +645,19 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
                     justifyContent: "center",
                     backgroundColor: "white",
                     border: "2px solid #6c757d",
-                    opacity: isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
+                    opacity: !currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
                   }}
                 >
                   <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
                 </Button>
               </div>
               <div className="d-flex justify-content-center mt-3">
-                <Button variant="success" size="lg" onClick={handleNextQuestion} disabled={!canProceed} style={{ minWidth: "200px" }}>
+                <Button variant="success" size="lg" onClick={handleNextQuestion} disabled={!canProceed || waitingForPracticeEnd} style={{ minWidth: "200px" }}>
                   Επόμενη Λέξη
                 </Button>
               </div>
               <audio ref={wordAudioRef} src={currentWordAudio} />
+              <audio ref={practiceEndAudioRef} src={practiceEndAudio} />
             </Card.Body>
           </Card>
         </Col>

@@ -99,10 +99,10 @@ export const game10Words = [
     suffix: "ισμός",
   },
   {
-    word: "δυσαρμονικό",
+    word: "δυσαρμονικός",
     prefix: "δυσ",
     stem: "αρμον",
-    suffix: "ικό",
+    suffix: "ικός",
   },
   {
     word: "υπερτονίζω",
