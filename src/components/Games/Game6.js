@@ -357,16 +357,16 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
   if (gameCompleted) {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center full-height">
+        <QuestionProgressLights
+          totalQuestions={questions.filter((q) => !q.isExample).length}
+          currentQuestion={questions.filter((q) => !q.isExample).length}
+          answeredQuestions={gameResults.filter((r) => !r.isExample).map((r) => r.isCorrect)}
+        />
         <Card className="w-100" style={{ maxWidth: "600px" }}>
           <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
             <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
           </Card.Header>
           <Card.Body className="text-center">
-            <QuestionProgressLights
-              totalQuestions={questions.filter((q) => !q.isExample).length}
-              currentQuestion={questions.filter((q) => !q.isExample).length}
-              answeredQuestions={gameResults.filter((r) => !r.isExample).map((r) => r.isCorrect)}
-            />
             <Button variant="primary" size="lg" onClick={() => navigate("/")} className="mt-4">
               Τέλος Άσκησης
             </Button>
@@ -430,7 +430,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                 </div>
               </div>
 
-              <Row className="g-3 mb-4">
+              <Row className="g-3 mb-4 align-items-center">
                 {currentQ.options.map((option, index) => {
                   let variant = "outline-primary";
                   let customStyle = {};
@@ -462,7 +462,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                         className="w-100 py-3"
                       >
                         {option}
-                        {showIcon && <span className="ms-2 fs-4">{showIcon}</span>}
+                        {showIcon && <span style={{'margin-left': 10}}>{showIcon}</span>}
                       </Button>
                     </Col>
                   );
