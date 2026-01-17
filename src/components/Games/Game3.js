@@ -28,9 +28,36 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       γραφείο: grafioAudio,
       γραφίστας: grafistasAudio,
       γραφικός: grafikosAudio,
-      κλειδώνω: kleidonoAudio,
-      κλειδωμένος: kleidomenos,
+      γραφέας: null,
+      γραφίδα: null,
+      γραφικότητα: null,
       οργανώνω: organonoAudio,
+      οργανωτικός: null,
+      οργανωτής: null,
+      οργανωμένος: null,
+      κλειδώνω: kleidonoAudio,
+      κλειδί: null,
+      κλειδωμένος: kleidomenos,
+      κλείδωση: null,
+      σκουπίζω: null,
+      σκουπίδι: null,
+      σκουπιστός: null,
+      σκουπισμένος: null,
+      ποτίζω: null,
+      πότισμα: null,
+      ποτίστρα: null,
+      ποτιστήρι: null,
+      ξυπνώ: null,
+      ξύπνησα: null,
+      ξυπνώντας: null,
+      ξυπνητήρι: null,
+      ξυπνητός: null,
+      ξύπνημα: null,
+      μαγειρεύω: null,
+      μαγειρεμένος: null,
+      μαγείρισσα: null,
+      μαγειρικός: null,
+      μαγειρείο: null,
     }),
     []
   );
@@ -244,7 +271,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Play word audio when speaker button clicked
   const playWordAudio = () => {
-    if (wordAudioRef.current && !isWordAudioPlaying && !hasPlayedWordAudio) {
+    if (currentWordAudio && wordAudioRef.current && !isWordAudioPlaying && !hasPlayedWordAudio) {
       setPlayerClickedAudioButton(true);
       setIsWordAudioPlaying(true);
       wordAudioRef.current.play().catch((error) => {
@@ -296,11 +323,9 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     const fullHighlightDuration = 10000;
     const word = words[wordIndex];
 
-    // Set up word audio but don't play yet
-    if (word && wordAudioMap[word.word]) {
-      const audioFile = wordAudioMap[word.word];
-      setCurrentWordAudio(audioFile);
-    }
+    // Set up word audio or clear if none available
+    const audioFile = word && wordAudioMap[word.word] ? wordAudioMap[word.word] : null;
+    setCurrentWordAudio(audioFile);
 
     // Reset states for new word
     setIsWordAudioPlaying(false);
@@ -322,8 +347,8 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       // Trigger highlighting animation when timeout ends
       performHighlighting();
 
-      // Always play audio when timeout ends
-      if (wordAudioRef.current) {
+      // Only play audio when timeout ends if audio exists for this word
+      if (audioFile && wordAudioRef.current) {
         setIsWordAudioPlaying(true);
         wordAudioRef.current.play().catch((error) => {
           console.error("Error playing word audio:", error);
@@ -331,6 +356,9 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
           // If play fails, still enable the button
           setHasPlayedWordAudio(true);
         });
+      } else {
+        // No audio for this word, mark as played so button can be enabled
+        setHasPlayedWordAudio(true);
       }
     }, fullHighlightDuration);
   };
@@ -544,7 +572,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                   variant="light"
                   size="lg"
                   onClick={playWordAudio}
-                  disabled={isWordAudioPlaying || hasPlayedWordAudio}
+                  disabled={!currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio}
                   className="rounded-circle"
                   style={{
                     width: "80px",
@@ -554,7 +582,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                     justifyContent: "center",
                     backgroundColor: "white",
                     border: "2px solid #6c757d",
-                    opacity: isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
+                    opacity: !currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
                   }}
                 >
                   <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
