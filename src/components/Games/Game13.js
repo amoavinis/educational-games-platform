@@ -445,7 +445,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
                   {/* Result oval - shows result after answer */}
                   <div
                     className={`px-4 py-3 rounded-pill ${
-                      selectedAnswer ? (selectedAnswer === question.correct ? "bg-success" : "bg-danger") : "bg-light border border-secondary"
+                      selectedAnswer ? (selectedAnswer === question.correct ? "bg-primary" : "bg-danger") : "bg-light border border-secondary"
                     } text-white`}
                     style={{ fontSize: "1.5rem", fontWeight: "bold", minWidth: "150px", textAlign: "center" }}
                   >
