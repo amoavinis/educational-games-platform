@@ -31,7 +31,6 @@ import dysarmonikoAudio from "../../assets/sounds/10/δυσαρμονικό.mp3"
 import yptertonizoAudio from "../../assets/sounds/10/υπερτονίζω.mp3";
 import antistoixoAudio from "../../assets/sounds/10/αντιστοιχώ.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
-import practiceEndAudio from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -69,7 +68,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const mediaRecorderRef = useRef(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'prefix', 'stem', 'suffix', 'full'
-  const [isSlowPhase, setIsSlowPhase] = useState(true);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [audioDownloadURL, setAudioDownloadURL] = useState(null);
   const [gameStats, setGameStats] = useState({
@@ -118,7 +116,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   useEffect(() => {
     const audio = wordAudioRef.current;
     const handleEnded = () => {
-      console.log("Word audio ended");
       setIsWordAudioPlaying(false);
       setHasPlayedWordAudio(true);
     };
@@ -133,9 +130,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Check if can proceed (both audio played and timeout ended)
   useEffect(() => {
-    console.log("Checking canProceed:", { timeoutEnded, hasPlayedWordAudio });
     if (timeoutEnded && hasPlayedWordAudio) {
-      console.log("Setting canProceed to TRUE");
       setCanProceed(true);
     }
   }, [hasPlayedWordAudio, timeoutEnded]);
@@ -297,20 +292,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-
-      // Play end-of-practice audio if this is the last example word in first round
-      if (isSlowPhase && currentWordIndex === 2 && currentWord && currentWord.isExample) {
-        const audio = new Audio(practiceEndAudio);
-        audio.play().catch((error) => {
-          console.error("Error playing practice end audio:", error);
-        });
-        // Wait for audio to finish before moving to next word
-        audio.onended = () => {
-          nextWord(currentWordIndex, isSlowPhase);
-        };
-      } else {
-        nextWord(currentWordIndex, isSlowPhase);
-      }
+      nextWord(currentWordIndex);
     }
   };
 
@@ -337,11 +319,11 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const startGame = async () => {
     await startRecording();
     setGameStarted(true);
-    startWordHighlighting(0, true); // Start with first word in slow phase
+    startWordHighlighting(0);
   };
 
   // Start highlighting sequence for current word
-  const startWordHighlighting = (wordIndex, slowPhase) => {
+  const startWordHighlighting = (wordIndex) => {
     const word = words[wordIndex];
 
     // Set up word audio but don't play yet
@@ -364,16 +346,15 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       performHighlighting();
     }, 100);
 
-    const fullDuration = slowPhase ? 10000 : 6000;
+    const fullDuration = 10000;
 
     // Start the timeout timer
     timeoutRef.current = setTimeout(() => {
       setTimeoutEnded(true);
       // Trigger highlighting animation when timeout ends
-      performHighlighting(slowPhase);
+      performHighlighting();
 
       // Always play audio when timeout ends
-      console.log("Timeout ended, playing word audio");
       if (wordAudioRef.current) {
         setIsWordAudioPlaying(true);
         wordAudioRef.current.play().catch((error) => {
@@ -387,17 +368,16 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   // Move to next word
-  const nextWord = (currentIndex, currentSlowPhase) => {
+  const nextWord = (currentIndex) => {
     // Record result for non-example words (use current word before updating index)
     const wordToRecord = words[currentIndex];
     if (wordToRecord && !wordToRecord.isExample) {
-      const round = currentSlowPhase ? "slow" : "fast";
       setGameStats((prev) => ({
         ...prev,
         rounds: [
           ...prev.rounds,
           {
-            question: `${wordToRecord.word} (${round})`,
+            question: wordToRecord.word,
             playerClickedAudioButton: playerClickedAudioButton,
           },
         ],
@@ -411,13 +391,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       const nextIndex = currentIndex + 1;
       setCurrentWordIndex(nextIndex);
       setHighlightStage("prefix");
-      setTimeout(() => startWordHighlighting(nextIndex, currentSlowPhase), 100);
-    } else if (currentSlowPhase) {
-      // Switch to fast phase - skip example word in second round
-      setIsSlowPhase(false);
-      setCurrentWordIndex(1); // Start from index 1 (skip example at index 0)
-      setHighlightStage("prefix");
-      setTimeout(() => startWordHighlighting(1, false), 100);
+      setTimeout(() => startWordHighlighting(nextIndex), 100);
     } else {
       // Game completed
       setGameCompleted(true);
@@ -596,7 +570,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ {isSlowPhase ? "(Αργά)" : "(Γρήγορα)"}</h4>
+              <h4 className="mb-0 game-title-header">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div
