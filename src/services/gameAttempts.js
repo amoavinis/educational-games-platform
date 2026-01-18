@@ -1,6 +1,9 @@
 import { db } from "./firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
+// Constants
+export const MAX_ATTEMPTS_PER_GAME = 200;
+
 // Check how many attempts a student has made for a specific game
 export const getStudentGameAttempts = async (studentId, gameId, schoolId = null) => {
   try {
@@ -24,11 +27,11 @@ export const getStudentGameAttempts = async (studentId, gameId, schoolId = null)
   }
 };
 
-// Check if a student can play a game (less than 2 attempts)
+// Check if a student can play a game (less than MAX_ATTEMPTS_PER_GAME attempts)
 export const canStudentPlayGame = async (studentId, gameId, schoolId = null) => {
   try {
     const attempts = await getStudentGameAttempts(studentId, gameId, schoolId);
-    return attempts < 200;
+    return attempts < MAX_ATTEMPTS_PER_GAME;
   } catch (error) {
     console.error("Error checking if student can play:", error);
     return true; // Allow playing on error (fail-safe)
@@ -39,7 +42,7 @@ export const canStudentPlayGame = async (studentId, gameId, schoolId = null) => 
 export const canSaveGameReport = async (studentId, gameId, schoolId = null) => {
   try {
     const attempts = await getStudentGameAttempts(studentId, gameId, schoolId);
-    if (attempts >= 200) {
+    if (attempts >= MAX_ATTEMPTS_PER_GAME) {
       console.warn(`Cannot save report: Student ${studentId} has already completed ${attempts} attempts for game ${gameId}`);
       return false;
     }
@@ -49,6 +52,3 @@ export const canSaveGameReport = async (studentId, gameId, schoolId = null) => {
     return true; // Allow saving on error (fail-safe)
   }
 };
-
-// Constants
-export const MAX_ATTEMPTS_PER_GAME = 2;

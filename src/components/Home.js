@@ -36,35 +36,43 @@ const Home = () => {
   });
 
   useEffect(() => {
-    if (role === 1 && schools.length === 0) {
-      // Only load schools for admins
-      const loadSchools = async () => {
+    let isMounted = true;
+
+    const loadData = async () => {
+      // Load schools for admins
+      if (role === 1) {
         try {
           setLoading(true);
           let schoolsData = await getUsers();
           schoolsData = schoolsData.map((s) => ({ id: s.uid, name: s.name }));
-          setSchools(schoolsData);
-          setSelectedSchool(localStorage.getItem("school"));
-          setLoading(false);
+          if (isMounted) {
+            setSchools(schoolsData);
+            setSelectedSchool(localStorage.getItem("school"));
+            setLoading(false);
+          }
         } catch (err) {
           console.error("Failed to load schools:", err);
+          if (isMounted) setLoading(false);
         }
-      };
-      loadSchools();
-    }
+      }
 
-    if ((schools.length > 0 || role === 2) && students.length === 0) {
-      const loadStudents = async () => {
-        try {
-          let studentsData = await getStudents();
+      // Load students
+      try {
+        let studentsData = await getStudents();
+        if (isMounted) {
           setStudents(studentsData);
-        } catch (error) {
-          console.error("Failed to load students:", error);
         }
-      };
-      loadStudents();
-    }
-  }, [role, schools, students]);
+      } catch (error) {
+        console.error("Failed to load students:", error);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [role, selectedSchool]);
 
   const handleSchoolChange = (e) => {
     const schoolId = e.target.value;
@@ -96,6 +104,7 @@ const Home = () => {
         studentId: selectedStudentId,
         studentName: name,
         classId: classId,
+        canPlay: canPlay
       },
     });
   };

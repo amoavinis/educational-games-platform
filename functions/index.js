@@ -366,11 +366,11 @@ exports.getReportsWithDetails = functions.https.onRequest(
         const db = admin.firestore();
         const schoolId = req.query.schoolId;
 
-        // Get all classes, students, and schools for join with reports
-        const [classesSnapshot, schoolsSnapshot, studentsSnapshot] =
+        // Get classes, students, and current school for join with reports
+        const [classesSnapshot, schoolDoc, studentsSnapshot] =
           await Promise.all([
             db.collection("classes").where("schoolId", "==", schoolId).get(),
-            db.collection("schools").get(),
+            db.collection("schools").doc(schoolId).get(),
             db.collection("students").where("schoolId", "==", schoolId).get(),
           ]);
 
@@ -380,9 +380,9 @@ exports.getReportsWithDetails = functions.https.onRequest(
         });
 
         const schoolsMap = {};
-        schoolsSnapshot.forEach((doc) => {
-          schoolsMap[doc.id] = doc.data().name;
-        });
+        if (schoolDoc.exists) {
+          schoolsMap[schoolDoc.id] = schoolDoc.data().name;
+        }
 
         const studentsMap = {};
         studentsSnapshot.forEach((doc) => {
