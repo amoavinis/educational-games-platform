@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Navbar, Nav, Container } from "react-bootstrap";
+import { Navbar, Nav } from "react-bootstrap";
 import { Link, useLocation } from "react-router-dom";
 import { auth, getUserRoleFromClaims } from "../services/firebase";
 import { signOut } from "firebase/auth";
@@ -41,13 +41,13 @@ const Header = () => {
 
   return (
     <Navbar expand="lg" className="header-navbar mb-4">
-      <Container>
-        <Navbar.Brand as={Link} to="/">
+      <div className="header">
+        <Navbar.Brand as={Link} to="/" style={{marginRight: 30}}>
           Morpho-Game
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
+          <Nav className="me-auto" style={{gap: 18}}>
             <Nav.Link
               as={Link}
               to="/"
@@ -108,7 +108,7 @@ const Header = () => {
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>
-      </Container>
+      </div>
     </Navbar>
   );
 };

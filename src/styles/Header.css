@@ -1,3 +1,11 @@
+.header {
+  width: 100%;
+  padding: 0 3%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
 .nav-link {
   position: relative;
   color: #333;
