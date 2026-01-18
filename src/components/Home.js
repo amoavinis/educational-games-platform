@@ -104,7 +104,7 @@ const Home = () => {
         studentId: selectedStudentId,
         studentName: name,
         classId: classId,
-        canPlay: canPlay
+        fromNavigation: true
       },
     });
   };
