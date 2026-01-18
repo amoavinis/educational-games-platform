@@ -419,12 +419,12 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
             <Card.Body className="text-center">
               <div className="mb-4"></div>
 
-              <div className="p-4 bg-light rounded mb-4">
+              <div className="p-4 bg-light rounded mb-2">
                 <div
                   className="display-4 font-weight-bold mb-3"
                   style={{
-                    cursor: isInstructionsAudioPlaying ? "default" : "pointer",
-                    userSelect: isInstructionsAudioPlaying ? "none" : "text",
+                    cursor: feedback || isInstructionsAudioPlaying ? "default" : "pointer",
+                    userSelect: feedback || isInstructionsAudioPlaying ? "none" : "text",
                     opacity: isInstructionsAudioPlaying ? 0.6 : 1,
                   }}
                   onMouseUp={handleTextSelection}
@@ -433,7 +433,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
                 </div>
 
                 {feedback && (
-                  <div className="mb-1 text-center">
+                  <div className="text-center">
                     <div className="d-flex align-items-center justify-content-center">
                       <span className="fs-1" style={{ color: feedback.isCorrect ? "#28a745" : "#dc3545" }}>
                         {feedback.isCorrect ? "✓" : "✗"}

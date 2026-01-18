@@ -46,7 +46,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
       βαφή: exampleVafAudio,
       ραφείο: exampleRafAudio,
     }),
-    []
+    [],
   );
 
   // Initial title-instructions audio (plays on load)
@@ -387,10 +387,10 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
             </Card.Header>
             <Card.Body className="text-center">
               <div
-                className="display-4 font-weight-bold mb-4 p-4"
+                className="display-4 font-weight-bold mb-2 p-4"
                 style={{
-                  cursor: isInitialAudioPlaying ? "default" : "pointer",
-                  userSelect: isInitialAudioPlaying ? "none" : "text",
+                  cursor: feedback || isInitialAudioPlaying ? "default" : "pointer",
+                  userSelect: feedback || isInitialAudioPlaying ? "none" : "text",
                   opacity: isInitialAudioPlaying ? 0.6 : 1,
                 }}
                 onMouseUp={handleTextSelection}
@@ -399,7 +399,7 @@ const Game1 = ({ gameId, schoolId, studentId, classId }) => {
               </div>
 
               {feedback && (
-                <div className="mb-4 text-center">
+                <div className="text-center">
                   <div className="d-flex align-items-center justify-content-center">
                     <span className="fs-1" style={{ color: feedback.isCorrect ? "#28a745" : "#dc3545" }}>
                       {feedback.isCorrect ? "✓" : "✗"}

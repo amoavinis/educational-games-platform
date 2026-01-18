@@ -277,8 +277,8 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   const handleTextSelection = () => {
-    // Prevent selection if initial audio is playing
-    if (isInitialAudioPlaying) return;
+    // Prevent selection if feedback has already been given or audio is playing
+    if (feedback || isInitialAudioPlaying) return;
 
     const selection = window.getSelection();
     if (selection.toString() && selection.rangeCount > 0) {
@@ -398,10 +398,10 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
             </Card.Header>
             <Card.Body className="text-center">
               <div
-                className="display-4 font-weight-bold mb-4 p-4"
+                className="display-4 font-weight-bold mb-2 p-4"
                 style={{
-                  cursor: isInitialAudioPlaying ? "default" : "pointer",
-                  userSelect: isInitialAudioPlaying ? "none" : "text",
+                  cursor: feedback || isInitialAudioPlaying ? "default" : "pointer",
+                  userSelect: feedback || isInitialAudioPlaying ? "none" : "text",
                   opacity: isInitialAudioPlaying ? 0.6 : 1,
                 }}
                 onMouseUp={handleTextSelection}
@@ -410,7 +410,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
               </div>
 
               {feedback && (
-                <div className="mb-4 text-center">
+                <div className="text-center">
                   <div className="d-flex align-items-center justify-content-center">
                     <span className="fs-1" style={{ color: feedback.isCorrect ? "#28a745" : "#dc3545" }}>
                       {feedback.isCorrect ? "✓" : "✗"}
