@@ -1,0 +1,6 @@
+.game-container {
+  height: calc(100% - 100px) !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

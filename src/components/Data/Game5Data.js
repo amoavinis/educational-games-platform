@@ -1,5 +1,5 @@
 export const game5Compounds = [
-  { word: "μαυροσκούφης", correctPosition: 5, isExample: true },
+  // { word: "μαυροσκούφης", correctPosition: 5, isExample: true },
   { word: "σπιτόγατος", correctPosition: 5, isExample: true },
   { word: "ντοματοσαλάτα", correctPosition: 7, isExample: true },
   { word: "σιδηρόδρομος", correctPosition: 6 },

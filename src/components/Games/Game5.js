@@ -6,10 +6,10 @@ import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
 import { game5Compounds } from "../Data/Game5Data";
 import useAudio from "../../hooks/useAudio";
-import titleAudio from "../../assets/sounds/05/title.mp3";
-import pressPlayAudio from "../../assets/sounds/general/press-play.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
+import demoVideo from "../../assets/video/DEMO 5.mp4";
+import "../../styles/Game5.css";
 
 // Import example word audio files
 import exampleDomatosalataAudio from "../../assets/sounds/05/example-ντοματοσαλάτα.mp3";
@@ -23,9 +23,8 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
     () => ({
       ντοματοσαλάτα: exampleDomatosalataAudio,
       σπιτόγατος: exampleSpitogatosAudio,
-      // Note: μαυροσκούφης has no audio file
     }),
-    []
+    [],
   );
 
   const [gameStarted, setGameStarted] = useState(false);
@@ -36,24 +35,11 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
   const [isAnswered, setIsAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(null);
-  const [isTitleAudioPlaying, setIsTitleAudioPlaying] = useState(false);
-  const [isPressPlayAudioPlaying, setIsPressPlayAudioPlaying] = useState(false);
-  const [hasPlayedTitleAudio, setHasPlayedTitleAudio] = useState(false);
-  const [hasPlayedPressPlayAudio, setHasPlayedPressPlayAudio] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [isPracticeEndPlaying, setIsPracticeEndPlaying] = useState(false);
+  const [isVideoEnded, setIsVideoEnded] = useState(false);
 
   const compounds = useMemo(() => game5Compounds, []);
-
-  // Title audio
-  const { audioRef: titleAudioRef } = useAudio(titleAudio, {
-    playOnMount: false,
-  });
-
-  // Press-play audio
-  const { audioRef: pressPlayAudioRef } = useAudio(pressPlayAudio, {
-    playOnMount: false,
-  });
 
   // Word-specific audio
   const { audioRef: wordAudioRef } = useAudio(currentWordAudio, {
@@ -65,81 +51,10 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
     playOnMount: false,
   });
 
-  // Listen for title audio ended
+  // Start timing when question loads
   useEffect(() => {
-    const audio = titleAudioRef.current;
-    const handleEnded = () => {
-      setIsTitleAudioPlaying(false);
-      // Play press-play audio after title finishes
-      if (!hasPlayedPressPlayAudio) {
-        setIsPressPlayAudioPlaying(true);
-        setTimeout(() => {
-          if (pressPlayAudioRef.current) {
-            pressPlayAudioRef.current
-              .play()
-              .then(() => {
-                setHasPlayedPressPlayAudio(true);
-              })
-              .catch((error) => {
-                console.error("Error playing press-play audio:", error);
-                setIsPressPlayAudioPlaying(false);
-                setHasPlayedPressPlayAudio(true);
-              });
-          }
-        }, 100);
-      }
-    };
-
-    if (audio) {
-      audio.addEventListener("ended", handleEnded);
-      return () => {
-        audio.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [titleAudioRef, hasPlayedPressPlayAudio, pressPlayAudioRef]);
-
-  // Listen for press-play audio ended
-  useEffect(() => {
-    const audio = pressPlayAudioRef.current;
-    const handleEnded = () => {
-      setIsPressPlayAudioPlaying(false);
-    };
-
-    if (audio) {
-      audio.addEventListener("ended", handleEnded);
-      return () => {
-        audio.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [pressPlayAudioRef]);
-
-  // Play title audio on mount
-  useEffect(() => {
-    if (!hasPlayedTitleAudio && titleAudioRef.current) {
-      setIsTitleAudioPlaying(true);
-      const timer = setTimeout(() => {
-        titleAudioRef.current
-          .play()
-          .then(() => {
-            setHasPlayedTitleAudio(true);
-          })
-          .catch((error) => {
-            console.error("Error playing title audio:", error);
-            setIsTitleAudioPlaying(false);
-            setHasPlayedTitleAudio(true);
-          });
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [hasPlayedTitleAudio, titleAudioRef]);
-
-  // Start timing when question loads (but not during audio playback)
-  useEffect(() => {
-    if (!isTitleAudioPlaying && !isPressPlayAudioPlaying) {
-      setQuestionStartTime(Date.now());
-    }
-  }, [currentWordIndex, isTitleAudioPlaying, isPressPlayAudioPlaying]);
+    setQuestionStartTime(Date.now());
+  }, [currentWordIndex]);
 
   // Play bravo audio when game results are shown
   useEffect(() => {
@@ -152,7 +67,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
   }, [showResults]);
 
   const handleSeparatorClick = (position) => {
-    if (!isAnswered && !isTitleAudioPlaying && !isPressPlayAudioPlaying && !isPracticeEndPlaying) {
+    if (!isAnswered && !isPracticeEndPlaying) {
       setSeparatorPosition(position === separatorPosition ? null : position);
     }
   };
@@ -231,7 +146,8 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
 
             audio.addEventListener("ended", handleAudioEnded);
 
-            audio.play()
+            audio
+              .play()
               .then(() => {
                 console.log("Practice end audio started playing successfully");
               })
@@ -320,32 +236,31 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
           <Col md={12} lg={10}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-                <h4 className="mb-0">Χωρίζω τη σύνθετη λέξη με κάθετη γραμμή</h4>
+                <h3 className="mb-0">Βίντεο επεξήγησης</h3>
               </Card.Header>
               <Card.Body className="text-center">
-                <div className="bg-light p-4 rounded border mb-4">
-                  <div className="d-flex justify-content-center gap-3 flex-wrap">
-                    <Button
-                      variant="success"
-                      size="lg"
-                      onClick={() => setGameStarted(true)}
-                      disabled={isTitleAudioPlaying || isPressPlayAudioPlaying}
-                      className="px-5 py-3"
-                      style={{
-                        fontSize: "1.5rem",
-                        fontWeight: "bold",
-                        opacity: isTitleAudioPlaying || isPressPlayAudioPlaying ? 0.6 : 1,
-                        cursor: isTitleAudioPlaying || isPressPlayAudioPlaying ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      ΠΑΜΕ!
-                    </Button>
-                  </div>
+                <div className="mb-4">
+                  <video width="100%" style={{ maxWidth: "1000px", borderRadius: "8px" }} onEnded={() => setIsVideoEnded(true)} autoPlay controls>
+                    <source src={demoVideo} type="video/mp4" />
+                  </video>
                 </div>
-                <audio ref={titleAudioRef} src={titleAudio} />
-                <audio ref={pressPlayAudioRef} src={pressPlayAudio} />
-                <audio ref={wordAudioRef} src={currentWordAudio} />
-                <audio ref={practiceEndAudioRef} src={practiceEnd} />
+                <div className="d-flex justify-content-center">
+                  <Button
+                    variant="success"
+                    size="lg"
+                    onClick={() => setGameStarted(true)}
+                    disabled={!isVideoEnded}
+                    className="px-5 py-3"
+                    style={{
+                      fontSize: "1.5rem",
+                      fontWeight: "bold",
+                      opacity: !isVideoEnded ? 0.6 : 1,
+                      cursor: !isVideoEnded ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    ΠΑΜΕ!
+                  </Button>
+                </div>
               </Card.Body>
             </Card>
           </Col>
@@ -364,7 +279,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
       spans.push(
         <span key={`letter-${i}`} className="fs-3 fw-bold text-primary">
           {letters[i]}
-        </span>
+        </span>,
       );
 
       if (i < letters.length - 1) {
@@ -381,7 +296,7 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
             }}
           >
             |
-          </span>
+          </span>,
         );
       }
     }
@@ -444,17 +359,13 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
                     <>
                       <button
                         onClick={handleSubmit}
-                        disabled={separatorPosition === null || isTitleAudioPlaying || isPressPlayAudioPlaying || isPracticeEndPlaying}
+                        disabled={separatorPosition === null || isPracticeEndPlaying}
                         className="btn btn-primary px-4 py-2 text-white rounded"
                       >
                         Υποβολή
                       </button>
 
-                      <button
-                        onClick={() => setSeparatorPosition(null)}
-                        disabled={isTitleAudioPlaying || isPressPlayAudioPlaying || isPracticeEndPlaying}
-                        className="btn px-4 py-2 text-white rounded btn-dark"
-                      >
+                      <button onClick={() => setSeparatorPosition(null)} disabled={isPracticeEndPlaying} className="btn px-4 py-2 text-white rounded btn-dark">
                         Καθαρισμός
                       </button>
                     </>
@@ -468,13 +379,6 @@ const Game5 = ({ gameId, schoolId, studentId, classId }) => {
                 </div>
               </div>
 
-              {/* <div className="text-center">
-          <button onClick={resetGame} className="btn btn-secondary px-4 py-2">
-            Επανάληψη
-          </button>
-        </div> */}
-              <audio ref={titleAudioRef} src={titleAudio} />
-              <audio ref={pressPlayAudioRef} src={pressPlayAudio} />
               <audio ref={wordAudioRef} src={currentWordAudio} />
               <audio ref={practiceEndAudioRef} src={practiceEnd} />
             </Card.Body>
