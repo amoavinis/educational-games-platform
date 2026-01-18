@@ -3,7 +3,7 @@ export const game2Words = [
   { word: "κλειδώνω", stem: "κλειδ", suffix: "ώνω", isExample: true }, // Example question
   { word: "σκαλίζω", stem: "σκαλ", suffix: "ίζω" },
   { word: "σκάλισα", stem: "σκάλ", suffix: "ισα" },
-  { word: "σκάλισμα", stem: "σκαλ", suffix: "ίσμα" },
+  { word: "σκάλισμα", stem: "σκάλ", suffix: "ισμα" },
   { word: "σκαλιστός", stem: "σκαλ", suffix: "ιστός" },
   { word: "ζωγραφίζω", stem: "ζωγραφ", suffix: "ίζω" },
   { word: "ζωγράφισα", stem: "ζωγράφ", suffix: "ισα" },
