@@ -29,6 +29,9 @@ import φαρμακείοAudio from "../../assets/sounds/13/φαρμακείο.m
 import φασισμόςAudio from "../../assets/sounds/13/φασισμός.mp3";
 import χάρτινοςAudio from "../../assets/sounds/13/χάρτινος.mp3";
 import χρωματισμόςAudio from "../../assets/sounds/13/χρωματισμός.mp3";
+import ανάλυσηAudio from "../../assets/sounds/13/example-ανάλυση.mp3";
+import θαλασσινοςAudio from "../../assets/sounds/13/example-θαλασσινός.mp3";
+import μεταλλικοςAudio from "../../assets/sounds/13/example-μεταλλικός.mp3";
 
 const Game13 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
@@ -48,6 +51,9 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
   const wordAudioMap = useMemo(
     () => ({
       αμεσότητα: αμεσότηταAudio,
+      ανάλυση: ανάλυσηAudio,
+      θαλασσινός: θαλασσινοςAudio,
+      μεταλλικός: μεταλλικοςAudio,
       γλυκύτητα: γλυκύτηταAudio,
       γνησιότητα: γνησιότηταAudio,
       εξήγηση: εξήγησηAudio,
@@ -191,17 +197,29 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
     // Check if this is the last example
     const isLastExample = question.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample;
 
-    // For non-example questions, play the word audio for the result
-    if (!question.isExample) {
-      const wordAudio = wordAudioMap[question.result];
-      if (wordAudio && wordAudioRef.current) {
-        wordAudioRef.current.src = wordAudio;
-        wordAudioRef.current.play().catch((error) => {
-          console.error("Error playing word audio:", error);
-        });
+    // Play word audio for all questions (examples and non-examples)
+    const wordAudio = wordAudioMap[question.result];
+    if (wordAudio && wordAudioRef.current) {
+      wordAudioRef.current.src = wordAudio;
+      if (isLastExample) {
+        setWasAnswerSubmitted(true);
       }
+      wordAudioRef.current.play().catch((error) => {
+        console.error("Error playing word audio:", error);
+      });
+    } else if (isLastExample) {
+      // No audio but last example - play practice end directly
+      setTimeout(() => {
+        if (practiceEndAudioRef.current) {
+          practiceEndAudioRef.current.play().catch((error) => {
+            console.error("Error playing end of practice audio:", error);
+          });
+        }
+      }, 1000);
+    }
 
-      // Track the result
+    // Track the result for non-example questions
+    if (!question.isExample) {
       setGameResults((prev) => [
         ...prev,
         {
@@ -212,27 +230,10 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
           seconds: secondsForQuestion,
         },
       ]);
+    }
 
-      // Auto advance after 4 seconds
-      setTimeout(() => {
-        nextQuestion();
-      }, 4000);
-    } else if (isLastExample) {
-      // For the last example, play practice end audio after a short delay
-      setTimeout(() => {
-        if (practiceEndAudioRef.current) {
-          practiceEndAudioRef.current
-            .play()
-            .then(() => {
-              console.log("Practice end audio started playing after last example");
-            })
-            .catch((error) => {
-              console.error("Error playing end of practice audio:", error);
-            });
-        }
-      }, 1000);
-    } else {
-      // For other examples, auto advance after 4 seconds
+    // Auto advance after 4 seconds (except last example, which advances via practice end audio)
+    if (!isLastExample) {
       setTimeout(() => {
         nextQuestion();
       }, 4000);

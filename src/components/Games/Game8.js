@@ -11,6 +11,14 @@ import titleInstructionsAudio from "../../assets/sounds/08/title-instructions.mp
 import exampleKataponoAudio from "../../assets/sounds/08/example-καταπονώ.mp3";
 import exampleDiametroAudio from "../../assets/sounds/08/example-διαμετρώ.mp3";
 import anatrepontasAudio from "../../assets/sounds/08/ανατρέποντας.mp3";
+import anagennisiAudio from "../../assets/sounds/08/αναγέννηση.mp3";
+import antimetopizo from "../../assets/sounds/08/αντιμετωπίζω.mp3";
+import katametriAudio from "../../assets/sounds/08/καταμέτρηση.mp3";
+import ipovlepondasAudio from "../../assets/sounds/08/υποβλέποντας.mp3";
+import iperfortonoAudio from "../../assets/sounds/08/υπερφορτώνω.mp3";
+import paratravixaAudio from "../../assets/sounds/08/παρατράβηξα.mp3";
+import iperaspizoAudio from "../../assets/sounds/08/υπερασπίζω.mp3";
+import kataskopevoAudio from "../../assets/sounds/08/κατασκοπεύω.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
@@ -30,12 +38,28 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
   const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
   const [wasAnswerSubmitted, setWasAnswerSubmitted] = useState(false);
 
-  // Map words to their audio files (only for examples)
+  // Map words to their audio files
   const wordAudioMap = useMemo(
     () => ({
       καταπονώ: exampleKataponoAudio,
       διαμετρώ: exampleDiametroAudio,
       ανατρέποντας: anatrepontasAudio,
+      αναγέννηση: anagennisiAudio,
+      καταμέτρηση: katametriAudio,
+      αντιμετωπίζω: antimetopizo,
+      συγχρονίζω: null,
+      συμμαθητής: null,
+      συμπολίτης: null,
+      υποβλέποντας: ipovlepondasAudio,
+      συντρίβοντας: null,
+      υπερφορτώνω: iperfortonoAudio,
+      παρατράβηξα: paratravixaAudio,
+      υπερασπίζω: iperaspizoAudio,
+      κατασκοπεύω: kataskopevoAudio,
+      υπερφυσικός: null,
+      δυσφημίζω: null,
+      δυσλειτουργικός: null,
+      αντικαπνιστής: null,
     }),
     []
   );

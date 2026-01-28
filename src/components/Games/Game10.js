@@ -7,8 +7,9 @@ import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
 import { game10Words } from "../Data/Game10Data";
 import useAudio from "../../hooks/useAudio";
-// TODO: Replace with Game 10 specific audio when client sends it
-import titleInstructionsAudio from "../../assets/sounds/03/title-instructions.mp3";
+
+import titleAudio from "../../assets/sounds/10/title.mp3";
+import instructionsAudio from "../../assets/sounds/10/instructions.mp3";
 
 // Import word audio files
 import exampleAntistrofosAudio from "../../assets/sounds/10/example-αντίστροφος.mp3";
@@ -24,7 +25,7 @@ import paraplevrosAudio from "../../assets/sounds/10/παράπλευρος.mp3"
 import katapiestikiAudio from "../../assets/sounds/10/καταπιεστική.mp3";
 import dystropiaAudio from "../../assets/sounds/10/δυστροπία.mp3";
 import dystyxisaAudio from "../../assets/sounds/10/δυστύχησα.mp3";
-import anadasonomaiAudio from "../../assets/sounds/10/αναδασωώνομαι.mp3";
+import anadasonomaiAudio from "../../assets/sounds/10/αναδασώνομαι.mp3";
 import ypotimisiAudio from "../../assets/sounds/10/υποτίμηση.mp3";
 import diafotismosAudio from "../../assets/sounds/10/διαφωτισμός.mp3";
 import dysarmonikoAudio from "../../assets/sounds/10/δυσαρμονικό.mp3";
@@ -89,8 +90,13 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
   const currentWord = words[currentWordIndex];
 
-  // Initial title-instructions audio
-  const { audioRef: titleAudioRef } = useAudio(titleInstructionsAudio, {
+  // Initial title audio
+  const { audioRef: titleAudioRef } = useAudio(titleAudio, {
+    playOnMount: false,
+  });
+
+  // Initial instructions audio
+  const { audioRef: instructionsAudioRef } = useAudio(instructionsAudio, {
     playOnMount: false,
   });
 
@@ -104,9 +110,31 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     playOnMount: false,
   });
 
-  // Listen for title audio ended
+  // Listen for title audio ended, then play instructions
   useEffect(() => {
     const audio = titleAudioRef.current;
+    const handleEnded = () => {
+      if (instructionsAudioRef.current) {
+        instructionsAudioRef.current.play().catch((error) => {
+          console.error("Error playing instructions audio:", error);
+          setIsInitialAudioPlaying(false);
+        });
+      } else {
+        setIsInitialAudioPlaying(false);
+      }
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef, instructionsAudioRef]);
+
+  // Listen for instructions audio ended
+  useEffect(() => {
+    const audio = instructionsAudioRef.current;
     const handleEnded = () => {
       setIsInitialAudioPlaying(false);
     };
@@ -117,7 +145,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [titleAudioRef]);
+  }, [instructionsAudioRef]);
 
   // Listen for word audio ended
   useEffect(() => {
@@ -568,7 +596,8 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
                     </svg>
                   </Button>
                 </div>
-                <audio ref={titleAudioRef} src={titleInstructionsAudio} />
+                <audio ref={titleAudioRef} src={titleAudio} />
+                <audio ref={instructionsAudioRef} src={instructionsAudio} />
                 <audio ref={wordAudioRef} src={currentWordAudio} />
               </Card.Body>
             </Card>

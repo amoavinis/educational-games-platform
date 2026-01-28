@@ -69,10 +69,10 @@ export const game4Questions = [
     options: ["ιστός", "ωμένος", "ισμένος"],
   },
   {
-    stem: "αγαπη",
-    correctSuffix: "μένος",
+    stem: "αγαπ",
+    correctSuffix: "ημένος",
     word: "αγαπημένος",
-    options: ["τός", "μένος", "σιμος"],
+    options: ["ητός", "μένος", "ήσιμος"],
   },
   {
     stem: "φορτ",

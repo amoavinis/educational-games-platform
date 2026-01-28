@@ -23,7 +23,7 @@ import ηλεκτρισμόAudio from "../../assets/sounds/14/ηλεκτρισμ
 import καταδικασμένοςAudio from "../../assets/sounds/14/καταδικασμένος.mp3";
 import κουρασμένηAudio from "../../assets/sounds/14/κουρασμένη.mp3";
 import λιμεναρχείοAudio from "../../assets/sounds/14/λιμεναρχείο.mp3";
-import μαρμάρινοςAudio from "../../assets/sounds/14/μαρμάρινος.mp3";
+import μαρμάρινοAudio from "../../assets/sounds/14/μαρμάρινο.mp3";
 import πικράAudio from "../../assets/sounds/14/πικρά.mp3";
 import χρήσιμοAudio from "../../assets/sounds/14/χρήσιμο.mp3";
 
@@ -43,7 +43,7 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
   // Map sentences to their audio files (extract key words from sentences)
   const sentenceAudioMap = useMemo(
     () => ({
-      "Το άγαλμα είναι μαρμάρ____.": μαρμάρινοςAudio,
+      "Το άγαλμα είναι μαρμάρ____.": μαρμάρινοAudio,
       "Η λάμπα ανάβει με ηλεκτρ______.": ηλεκτρισμόAudio,
       "Ο Κώστας δουλεύει στο λιμεναρχ________.": λιμεναρχείοAudio,
       "Τα αμύγδαλα ήταν πικρ________.": πικράAudio,

@@ -9,6 +9,7 @@ import { game12Questions } from "../Data/Game12Data";
 import useAudio from "../../hooks/useAudio";
 import titleAudio from "../../assets/sounds/12/title.mp3";
 import instructionsAudio from "../../assets/sounds/12/instructions.mp3";
+import demoVideo from "../../assets/video/DEMO 12.mp4";
 // Word audio imports
 import exampleMariaAudio from "../../assets/sounds/12/example-Μαρία χτενιζόταν.mp3";
 import examplePaidiaAudio from "../../assets/sounds/12/example-παιδιά έπαιξαν.mp3";
@@ -23,11 +24,14 @@ import plirothikanAudio from "../../assets/sounds/12/πληρώθηκαν.mp3";
 import elegchthikanAudio from "../../assets/sounds/12/ελέγχθηκαν.mp3";
 import bariomounAudio from "../../assets/sounds/12/βαριόμουν.mp3";
 import archizeiAudio from "../../assets/sounds/12/αρχίζει.mp3";
+import kleistikeAudio from "../../assets/sounds/12/κλείστηκε.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
+  const [gameStarted, setGameStarted] = useState(false);
+  const [isVideoEnded, setIsVideoEnded] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [gameState, setGameState] = useState("playing"); // 'playing' or 'results'
@@ -43,7 +47,6 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   // Map question indices to their audio files
   const questionAudioMap = useMemo(
     () => ({
-      0: null,
       1: exampleMariaAudio, // Η Μαρία χτενιζόταν
       2: examplePaidiaAudio, // παιδιά έπαιξαν
       3: grafoumeAudio, // γράφουμε
@@ -51,7 +54,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
       5: fagameAudio, // φάγαμε
       6: gennithikeAudio, // γεννήθηκε
       7: kryfikaAudio, // κρύφτηκα
-      8: null,
+      8: kleistikeAudio, // κλείστηκε
       9: gemiseAudio, // γέμισε
       10: pantrefikaAudio, // παντρευτήκατε
       11: plirothikanAudio, // πληρώθηκαν
@@ -203,7 +206,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
     }
 
     // Play word audio if available for this question
-    const audioFile = questionAudioMap[currentQuestion];
+    const audioFile = questionAudioMap[currentQuestion + 1];
     if (audioFile && wordAudioRef.current) {
       wordAudioRef.current.src = audioFile;
       wordAudioRef.current.play().catch((error) => {
@@ -238,9 +241,9 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-  // Play title audio on mount
+  // Play title audio when game starts (after video screen)
   useEffect(() => {
-    if (!hasPlayedInitialAudio) {
+    if (gameStarted && !hasPlayedInitialAudio) {
       const timer = setTimeout(() => {
         if (titleAudioRef.current) {
           titleAudioRef.current
@@ -258,7 +261,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
 
       return () => clearTimeout(timer);
     }
-  }, [hasPlayedInitialAudio, titleAudioRef]);
+  }, [gameStarted, hasPlayedInitialAudio, titleAudioRef]);
 
   // Listen for title audio ended, then play instructions
   useEffect(() => {
@@ -279,7 +282,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [titleAudioRef, instructionsAudioRef]);
+  }, [gameStarted, titleAudioRef, instructionsAudioRef]);
 
   // Listen for instructions audio ended
   useEffect(() => {
@@ -294,7 +297,7 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [instructionsAudioRef]);
+  }, [gameStarted, instructionsAudioRef]);
 
   // Start timing when question loads
   useEffect(() => {
@@ -314,6 +317,47 @@ const Game12 = ({ gameId, schoolId, studentId, classId }) => {
   }, [gameState]);
 
   const question = questions[currentQuestion];
+
+  // Show video demo screen before game begins
+  if (!gameStarted) {
+    return (
+      <Container fluid className="game-container">
+        <Row className="game-row-centered">
+          <Col md={12} lg={10}>
+            <Card className="main-card">
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+                <h3 className="mb-0">Βίντεο επεξήγησης</h3>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <div className="mb-4">
+                  <video width="100%" style={{ maxWidth: "1000px", borderRadius: "8px" }} onEnded={() => setIsVideoEnded(true)} autoPlay controls>
+                    <source src={demoVideo} type="video/mp4" />
+                  </video>
+                </div>
+                <div className="d-flex justify-content-center">
+                  <Button
+                    variant="success"
+                    size="lg"
+                    onClick={() => setGameStarted(true)}
+                    disabled={!isVideoEnded}
+                    className="px-5 py-3"
+                    style={{
+                      fontSize: "1.5rem",
+                      fontWeight: "bold",
+                      opacity: !isVideoEnded ? 0.6 : 1,
+                      cursor: !isVideoEnded ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    ΠΑΜΕ!
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
 
   if (gameState === "results") {
     return (

@@ -10,12 +10,38 @@ import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/03/title-instructions.mp3";
 
 // Import word audio files
+import grafeasAudio from "../../assets/sounds/03/γραφέας.mp3";
 import grafioAudio from "../../assets/sounds/03/γραφείο.mp3";
 import grafistasAudio from "../../assets/sounds/03/γραφίστας.mp3";
 import grafikosAudio from "../../assets/sounds/03/γραφικός.mp3";
 import kleidonoAudio from "../../assets/sounds/03/κλειδώνω.mp3";
 import kleidomenos from "../../assets/sounds/03/κλειδωμένος.mp3";
 import organonoAudio from "../../assets/sounds/03/οργανώνω.mp3";
+import grafidaAudio from "../../assets/sounds/03/γραφίδα.mp3";
+import grafikotitaAudio from "../../assets/sounds/03/γραφικότητα.mp3";
+import organotikosAudio from "../../assets/sounds/03/οργανωτικός.mp3";
+import organotisAudio from "../../assets/sounds/03/οργανωτής.mp3";
+import organomenosAudio from "../../assets/sounds/03/οργανωμένος.mp3";
+import klidiAudio from "../../assets/sounds/03/κλειδί.mp3";
+import klidosiAudio from "../../assets/sounds/03/κλείδωση.mp3";
+import skupizoAudio from "../../assets/sounds/03/σκουπίζω.mp3";
+import skupidiAudio from "../../assets/sounds/03/σκουπίδι.mp3";
+import skupistosAudio from "../../assets/sounds/03/σκουπιστός.mp3";
+import skupismenosAudio from "../../assets/sounds/03/σκουπισμένος.mp3";
+import potizoAudio from "../../assets/sounds/03/ποτίζω.mp3";
+import potismaAudio from "../../assets/sounds/03/πότισμα.mp3";
+import potistiriAudio from "../../assets/sounds/03/ποτιστήρι.mp3";
+import xipnoAudio from "../../assets/sounds/03/ξυπνώ.mp3";
+import xipnisaAudio from "../../assets/sounds/03/ξύπνησα.mp3";
+import xipnondasAudio from "../../assets/sounds/03/ξυπνώντας.mp3";
+import xipnitiriAudio from "../../assets/sounds/03/ξυπνητήρι.mp3";
+import xipnitosAudio from "../../assets/sounds/03/ξυπνητός.mp3";
+import xipnimaAudio from "../../assets/sounds/03/ξύπνημα.mp3";
+import magirevoAudio from "../../assets/sounds/03/μαγειρεύω.mp3";
+import magiremenosAudio from "../../assets/sounds/03/μαγειρεμένος.mp3";
+import magirissaAudio from "../../assets/sounds/03/μαγείρισσα.mp3";
+import magirikosAudio from "../../assets/sounds/03/μαγειρικός.mp3";
+import magirioAudio from "../../assets/sounds/03/μαγειρείο.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const Game3 = ({ gameId, schoolId, studentId, classId }) => {
@@ -28,36 +54,36 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       γραφείο: grafioAudio,
       γραφίστας: grafistasAudio,
       γραφικός: grafikosAudio,
-      γραφέας: null,
-      γραφίδα: null,
-      γραφικότητα: null,
+      γραφέας: grafeasAudio,
+      γραφίδα: grafidaAudio,
+      γραφικότητα: grafikotitaAudio,
       οργανώνω: organonoAudio,
-      οργανωτικός: null,
-      οργανωτής: null,
-      οργανωμένος: null,
+      οργανωτικός: organotikosAudio,
+      οργανωτής: organotisAudio,
+      οργανωμένος: organomenosAudio,
       κλειδώνω: kleidonoAudio,
-      κλειδί: null,
+      κλειδί: klidiAudio,
       κλειδωμένος: kleidomenos,
-      κλείδωση: null,
-      σκουπίζω: null,
-      σκουπίδι: null,
-      σκουπιστός: null,
-      σκουπισμένος: null,
-      ποτίζω: null,
-      πότισμα: null,
+      κλείδωση: klidosiAudio,
+      σκουπίζω: skupizoAudio,
+      σκουπίδι: skupidiAudio,
+      σκουπιστός: skupistosAudio,
+      σκουπισμένος: skupismenosAudio,
+      ποτίζω: potizoAudio,
+      πότισμα: potismaAudio,
       ποτίστρα: null,
-      ποτιστήρι: null,
-      ξυπνώ: null,
-      ξύπνησα: null,
-      ξυπνώντας: null,
-      ξυπνητήρι: null,
-      ξυπνητός: null,
-      ξύπνημα: null,
-      μαγειρεύω: null,
-      μαγειρεμένος: null,
-      μαγείρισσα: null,
-      μαγειρικός: null,
-      μαγειρείο: null,
+      ποτιστήρι: potistiriAudio,
+      ξυπνώ: xipnoAudio,
+      ξύπνησα: xipnisaAudio,
+      ξυπνώντας: xipnondasAudio,
+      ξυπνητήρι: xipnitiriAudio,
+      ξυπνητός: xipnitosAudio,
+      ξύπνημα: xipnimaAudio,
+      μαγειρεύω: magirevoAudio,
+      μαγειρεμένος: magiremenosAudio,
+      μαγείρισσα: magirissaAudio,
+      μαγειρικός: magirikosAudio,
+      μαγειρείο: magirioAudio,
     }),
     []
   );
