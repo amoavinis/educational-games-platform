@@ -21,18 +21,6 @@ export const game10Words = [
     isExample: true,
   },
   {
-    word: "επιχρωματισμένος",
-    prefix: "επι",
-    stem: "χρωματισμεν",
-    suffix: "ος",
-  },
-  {
-    word: "δυσλεξικός",
-    prefix: "δυσ",
-    stem: "λεξικ",
-    suffix: "ός",
-  },
-  {
     word: "υπερφόρτωση",
     prefix: "υπερ",
     stem: "φόρτ",

@@ -15,8 +15,6 @@ import instructionsAudio from "../../assets/sounds/10/instructions.mp3";
 import exampleAntistrofosAudio from "../../assets/sounds/10/example-αντίστροφος.mp3";
 import exampleKatastrefoAudio from "../../assets/sounds/10/example-καταστρέφω.mp3";
 import exampleEpilegoAudio from "../../assets/sounds/10/example-επιλέγω.mp3";
-// import epixromatismenosAudio from "../../assets/sounds/10/επιχρωματισμένος.mp3"; // Missing
-// import dyslexikosAudio from "../../assets/sounds/10/δυσλεξικός.mp3"; // Missing
 import yperfortoshAudio from "../../assets/sounds/10/υπερφόρτωση.mp3";
 import antistathmisiAudio from "../../assets/sounds/10/αντιστάθμιση.mp3";
 import epikentronoAudio from "../../assets/sounds/10/επικεντρώνω.mp3";
@@ -28,7 +26,7 @@ import dystyxisaAudio from "../../assets/sounds/10/δυστύχησα.mp3";
 import anadasonomaiAudio from "../../assets/sounds/10/αναδασώνομαι.mp3";
 import ypotimisiAudio from "../../assets/sounds/10/υποτίμηση.mp3";
 import diafotismosAudio from "../../assets/sounds/10/διαφωτισμός.mp3";
-import dysarmonikoAudio from "../../assets/sounds/10/δυσαρμονικό.mp3";
+import dysarmonikosAudio from "../../assets/sounds/10/δυσαρμονικός.mp3";
 import yptertonizoAudio from "../../assets/sounds/10/υπερτονίζω.mp3";
 import antistoixoAudio from "../../assets/sounds/10/αντιστοιχώ.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
@@ -44,8 +42,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       αντίστροφος: exampleAntistrofosAudio,
       καταστρέφω: exampleKatastrefoAudio,
       επιλέγω: exampleEpilegoAudio,
-      επιχρωματισμένος: null, // Missing audio file
-      δυσλεξικός: null, // Missing audio file
       υπερφόρτωση: yperfortoshAudio,
       αντιστάθμιση: antistathmisiAudio,
       επικεντρώνω: epikentronoAudio,
@@ -57,7 +53,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       αναδασώνομαι: anadasonomaiAudio,
       υποτίμηση: ypotimisiAudio,
       διαφωτισμός: diafotismosAudio,
-      δυσαρμονικό: dysarmonikoAudio,
+      δυσαρμονικός: dysarmonikosAudio,
       υπερτονίζω: yptertonizoAudio,
       αντιστοιχώ: antistoixoAudio,
     }),

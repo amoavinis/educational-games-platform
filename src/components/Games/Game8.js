@@ -19,6 +19,7 @@ import iperfortonoAudio from "../../assets/sounds/08/υπερφορτώνω.mp3"
 import paratravixaAudio from "../../assets/sounds/08/παρατράβηξα.mp3";
 import iperaspizoAudio from "../../assets/sounds/08/υπερασπίζω.mp3";
 import kataskopevoAudio from "../../assets/sounds/08/κατασκοπεύω.mp3";
+import ypositismosAudio from "../../assets/sounds/08/υποσιτισμός.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
@@ -47,19 +48,12 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
       αναγέννηση: anagennisiAudio,
       καταμέτρηση: katametriAudio,
       αντιμετωπίζω: antimetopizo,
-      συγχρονίζω: null,
-      συμμαθητής: null,
-      συμπολίτης: null,
       υποβλέποντας: ipovlepondasAudio,
-      συντρίβοντας: null,
       υπερφορτώνω: iperfortonoAudio,
       παρατράβηξα: paratravixaAudio,
       υπερασπίζω: iperaspizoAudio,
       κατασκοπεύω: kataskopevoAudio,
-      υπερφυσικός: null,
-      δυσφημίζω: null,
-      δυσλειτουργικός: null,
-      αντικαπνιστής: null,
+      υποσιτισμός: ypositismosAudio,
     }),
     []
   );
