@@ -38,12 +38,12 @@ export const game6Questions = [
     word: "υποχρέωση",
     options: ["υπο", "συν", "εξ"],
   },
-  {
+  /* {
     stem: "στράτηγος",
     correctPrefix: "υπο",
     word: "υποστράτηγος",
     options: ["αντι", "υπο", "μετα"],
-  },
+  }, */
   {
     stem: "δραση",
     correctPrefix: "αντί",

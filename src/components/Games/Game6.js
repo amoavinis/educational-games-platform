@@ -35,7 +35,7 @@ import yperogkoAudio from "../../assets/sounds/06/υπέρογκος.mp3";
 import yperpidoAudio from "../../assets/sounds/06/υπερπηδώ.mp3";
 import yperfysikosAudio from "../../assets/sounds/06/υπερφυσικός.mp3";
 import ypodouloAudio from "../../assets/sounds/06/υπόδουλος.mp3";
-import ypostratigoAudio from "../../assets/sounds/06/υποστράτηγος.mp3";
+// import ypostratigoAudio from "../../assets/sounds/06/υποστράτηγος.mp3";
 import ypotropiAudio from "../../assets/sounds/06/υποτροπή.mp3";
 import ypoxreosiAudio from "../../assets/sounds/06/υποχρέωση.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
@@ -78,7 +78,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
       υπόδουλος: ypodouloAudio,
       υποτροπή: ypotropiAudio,
       υποχρέωση: ypoxreosiAudio,
-      υποστράτηγος: ypostratigoAudio,
+      // υποστράτηγος: ypostratigoAudio,
       αντίδραση: antidrasiAudio,
       αντίλαλος: antilaloAudio,
       αντίδωρο: antidoroAudio,
