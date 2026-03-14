@@ -506,6 +506,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
 
                 {!isMarqueeActive && (
                   <Row className="g-3 mb-4">
+                    <Col xs={3}></Col>
                     {question.options.map((option, index) => {
                       let variant = "outline-primary";
                       let customStyle = {};
@@ -527,7 +528,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                       }
 
                       return (
-                        <Col key={index} xs={4}>
+                        <Col key={index} xs={3}>
                           <Button
                             variant={variant}
                             style={customStyle}
@@ -541,6 +542,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                         </Col>
                       );
                     })}
+                    <Col xs={3}></Col>
                   </Row>
                 )}
               </div>
