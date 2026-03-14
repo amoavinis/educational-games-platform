@@ -314,7 +314,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   return (
     <Container fluid className="game-container">
       <audio ref={audioRef} src={audioSrc} />
-      <Row className="game-row-centered">
+      <Row className="game-row-centered" onClick={isShape === "circle" ? handleShapeClick : undefined}>
         <Col md={10} lg={8}>
           {gameStarted && (
             <div className="mb-3">
@@ -365,7 +365,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
                 <h5>{getInstructionText()}</h5>
               </div>
 
-              {gameStarted && <div style={getShapeStyle()} onClick={isShape === "circle" ? handleShapeClick : undefined}></div>}
+              {gameStarted && <div style={getShapeStyle()} ></div>}
 
               {gameState === "next" && (
                 <Button variant="primary" size="lg" onClick={continueToNextRound} className="mt-3">

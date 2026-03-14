@@ -2,12 +2,14 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
 import { game3Words } from "../Data/Game3Data";
 import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/03/title-instructions.mp3";
+import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
 // Import word audio files
 import grafeasAudio from "../../assets/sounds/03/γραφέας.mp3";
@@ -85,7 +87,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       μαγειρικός: magirikosAudio,
       μαγειρείο: magirioAudio,
     }),
-    []
+    [],
   );
 
   // Game state
@@ -111,6 +113,8 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const timeoutRef = useRef(null);
   const [playerClickedAudioButton, setPlayerClickedAudioButton] = useState(false);
 
+  const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
+
   const currentWord = words[currentWordIndex];
 
   // Initial title-instructions audio
@@ -122,6 +126,8 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const { audioRef: wordAudioRef } = useAudio(currentWordAudio, {
     playOnMount: false,
   });
+
+  const { audioRef: practiceEndAudioRef } = useAudio(practiceEnd, { playOnMount: false });
 
   // Listen for title audio ended
   useEffect(() => {
@@ -152,7 +158,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [wordAudioRef, currentWordAudio]);
+  }, [wordAudioRef]);
 
   // Check if can proceed (both audio played and timeout ended)
   useEffect(() => {
@@ -160,6 +166,15 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       setCanProceed(true);
     }
   }, [hasPlayedWordAudio, timeoutEnded]);
+
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    const handleEnded = () => setWaitingForPracticeEnd(false);
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => audio.removeEventListener("ended", handleEnded);
+    }
+  }, [practiceEndAudioRef, gameStarted]);
 
   // Initialize game stats
   useEffect(() => {
@@ -349,41 +364,41 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     const fullHighlightDuration = 10000;
     const word = words[wordIndex];
 
-    // Set up word audio or clear if none available
     const audioFile = word && wordAudioMap[word.word] ? wordAudioMap[word.word] : null;
     setCurrentWordAudio(audioFile);
 
-    // Reset states for new word
     setIsWordAudioPlaying(false);
     setHasPlayedWordAudio(false);
     setTimeoutEnded(false);
     setCanProceed(false);
-
-    // Show word in black initially
     setHighlightStage("none");
 
-    // Trigger highlighting animation when word first appears
     setTimeout(() => {
       performHighlighting();
     }, 100);
 
-    // Start the timeout timer
     timeoutRef.current = setTimeout(() => {
       setTimeoutEnded(true);
-      // Trigger highlighting animation when timeout ends
       performHighlighting();
 
-      // Only play audio when timeout ends if audio exists for this word
       if (audioFile && wordAudioRef.current) {
         setIsWordAudioPlaying(true);
         wordAudioRef.current.play().catch((error) => {
           console.error("Error playing word audio:", error);
           setIsWordAudioPlaying(false);
-          // If play fails, still enable the button
           setHasPlayedWordAudio(true);
         });
+
+        // NEW LOGIC: Trigger end of practice ONLY here (the automatic flow)
+        const isLastExample = word?.isExample && !words[wordIndex + 1]?.isExample;
+        if (isLastExample) {
+          setWaitingForPracticeEnd(true);
+          // Play instructions after a short delay so it doesn't overlap the word
+          setTimeout(() => {
+            practiceEndAudioRef.current?.play();
+          }, 3000);
+        }
       } else {
-        // No audio for this word, mark as played so button can be enabled
         setHasPlayedWordAudio(true);
       }
     }, fullHighlightDuration);
@@ -443,7 +458,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       result.push(
         <span key="root" style={{ color: "blue" }}>
           {word.substring(0, rootEnd)}
-        </span>
+        </span>,
       );
     } else {
       result.push(word.substring(0, rootEnd));
@@ -454,7 +469,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       result.push(
         <span key="suffix" style={{ color: "green" }}>
           {word.substring(rootEnd)}
-        </span>
+        </span>,
       );
     } else {
       result.push(word.substring(rootEnd));
@@ -494,10 +509,14 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [gameCompleted]);
 
-  // Start screen
-  if (!gameStarted) {
-    return (
-      <Container fluid className="game-container">
+  return (
+    <Container fluid className="game-container">
+      {/* MOVE AUDIO TAGS HERE - BEFORE ANY IF STATEMENTS */}
+      <audio ref={titleAudioRef} src={titleInstructionsAudio} />
+      <audio ref={wordAudioRef} src={currentWordAudio} />
+      <audio ref={practiceEndAudioRef} src={practiceEnd} />
+
+      {!gameStarted ? (
         <Row className="game-row-centered">
           <Col md={12} lg={10}>
             <Card className="main-card">
@@ -531,22 +550,18 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                     </svg>
                   </Button>
                 </div>
-                <audio ref={titleAudioRef} src={titleInstructionsAudio} />
-                <audio ref={wordAudioRef} src={currentWordAudio} />
               </Card.Body>
             </Card>
           </Col>
         </Row>
-      </Container>
-    );
-  }
-
-  // Game completed screen
-  if (gameCompleted) {
-    return (
-      <Container fluid className="game-container">
+      ) : gameCompleted ? (
         <Row className="game-row-centered">
           <Col md={12} lg={10}>
+            <QuestionProgressLights
+              totalQuestions={gameStats.totalRounds}
+              currentQuestion={gameStats.totalRounds}
+              answeredQuestions={gameStats.rounds.map((r) => true)}
+            />
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
@@ -559,71 +574,74 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
             </Card>
           </Col>
         </Row>
-      </Container>
-    );
-  }
-
-  // Game screen
-  if (!currentWord) {
-    return null; // Safety check
-  }
-
-  return (
-    <Container fluid className="game-container">
-      <Row className="game-row-centered">
-        <Col md={12} lg={10}>
-          {currentWord.isExample && (
-            <div className="d-flex justify-content-center">
-              <span className="example-badge">📚 Παράδειγμα</span>
-            </div>
-          )}
-          <Card className="main-card">
-            <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
-            </Card.Header>
-            <Card.Body className="text-center">
-              <div
-                className="display-4 font-weight-bold p-4"
-                style={{
-                  minHeight: "150px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {highlightWord()}
+      ) : currentWord ? (
+        <Row className="game-row-centered">
+          <Col md={12} lg={10}>
+            {!currentWord.isExample && (
+              <QuestionProgressLights
+                totalQuestions={words.filter((w) => !w.isExample).length}
+                currentQuestion={words.slice(0, currentWordIndex).filter((w) => !w.isExample).length}
+                answeredQuestions={gameStats.rounds.map((r) => true)}
+              />
+            )}
+            {currentWord.isExample && (
+              <div className="d-flex justify-content-center">
+                <span className="example-badge">📚 Παράδειγμα</span>
               </div>
-              <div className="d-flex justify-content-center align-items-center">
-                <Button
-                  variant="light"
-                  size="lg"
-                  onClick={playWordAudio}
-                  disabled={!currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio}
-                  className="rounded-circle"
+            )}
+            <Card className="main-card">
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+                <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <div
+                  className="display-4 font-weight-bold p-4"
                   style={{
-                    width: "80px",
-                    height: "80px",
+                    minHeight: "150px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: "white",
-                    border: "2px solid #6c757d",
-                    opacity: !currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
                   }}
                 >
-                  <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
-                </Button>
-              </div>
-              <div className="d-flex justify-content-center mt-3">
-                <Button variant="success" size="lg" onClick={handleNextQuestion} disabled={!canProceed} style={{ minWidth: "200px" }}>
-                  Επόμενη Λέξη
-                </Button>
-              </div>
-              <audio ref={wordAudioRef} src={currentWordAudio} />
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+                  {highlightWord()}
+                </div>
+                <div className="d-flex justify-content-center align-items-center">
+                  <Button
+                    variant="light"
+                    size="lg"
+                    onClick={playWordAudio}
+                    disabled={!currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio}
+                    className="rounded-circle"
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "white",
+                      border: "2px solid #6c757d",
+                      opacity: !currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
+                    }}
+                  >
+                    <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
+                  </Button>
+                </div>
+                <div className="d-flex justify-content-center mt-3">
+                  <Button
+                    variant="success"
+                    size="lg"
+                    onClick={handleNextQuestion}
+                    disabled={!canProceed || waitingForPracticeEnd}
+                    style={{ minWidth: "200px" }}
+                  >
+                    Επόμενη Λέξη
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      ) : null}
     </Container>
   );
 };

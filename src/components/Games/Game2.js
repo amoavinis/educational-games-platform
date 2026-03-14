@@ -44,7 +44,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
       καθαρίζω: exampleIzoAudio,
       κλειδώνω: exampleOnoAudio,
     }),
-    []
+    [],
   );
 
   // Initial title-instructions audio (plays on load)
@@ -85,14 +85,28 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [hasPlayedInitialAudio, titleAudioRef]);
 
-  const currentWord = words[currentWordIndex];
-
   // Listen for title audio ended
   useEffect(() => {
     const audio = titleAudioRef.current;
     const handleEnded = () => {
       setIsInitialAudioPlaying(false);
+    };
 
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [titleAudioRef]);
+
+  const currentWord = words[currentWordIndex];
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      setIsWordAudioPlaying(false);
       const wordIdx = words.findIndex((w) => w.word === currentWord.word);
       if (currentWord.isExample && !words[wordIdx + 1]?.isExample) {
         setWaitingForPracticeEnd(true);
@@ -116,7 +130,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
         audio.removeEventListener("ended", handleEnded);
       };
     }
-  }, [currentWord.isExample, currentWord.word, practiceEndAudioRef, titleAudioRef, words]);
+  }, [currentWord.isExample, currentWord.word, practiceEndAudioRef, wordAudioRef, words]);
 
   useEffect(() => {
     const audio = practiceEndAudioRef.current;
@@ -131,21 +145,6 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
       audio.removeEventListener("ended", handleEnded);
     };
   }, [practiceEndAudioRef]);
-
-  // Listen for word audio ended
-  useEffect(() => {
-    const audio = wordAudioRef.current;
-    const handleEnded = () => {
-      setIsWordAudioPlaying(false);
-    };
-
-    if (audio) {
-      audio.addEventListener("ended", handleEnded);
-      return () => {
-        audio.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [wordAudioRef]);
 
   // Initialize game stats and start time
   useEffect(() => {

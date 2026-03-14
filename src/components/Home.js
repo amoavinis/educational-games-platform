@@ -104,13 +104,13 @@ const Home = () => {
         studentId: selectedStudentId,
         studentName: name,
         classId: classId,
-        fromNavigation: true
+        fromNavigation: true,
       },
     });
   };
 
   return (
-    <Container style={{paddingBottom: 20}}>
+    <Container style={{ paddingBottom: 20 }}>
       <audio ref={audioRef} src={audioSrc} />
       <h1>Παιχνίδια</h1>
 
@@ -136,11 +136,14 @@ const Home = () => {
       )}
 
       <Row xs={2} sm={2} md={4} lg={4} xl={4} className="g-4">
-        {games.map((game) => (
+        {games.map((game, index) => (
           <Col key={game.id}>
             <Card onClick={() => handleCardClick(game)} className="game-card h-100" style={{ backgroundColor: game.color }}>
               <Card.Body className="d-flex align-items-center justify-content-center">
-                <Card.Title className="text-center">{game.name}</Card.Title>
+                <Card.Title className="text-center">
+                  {index !== 0 && index}
+                  {index !== 0 && ")"} {game.name}
+                </Card.Title>
               </Card.Body>
             </Card>
           </Col>
