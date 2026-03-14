@@ -4,7 +4,6 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
-import "../../styles/Game3.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
 import { game3Words } from "../Data/Game3Data";
@@ -121,10 +120,11 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const [hasPlayedWordAudio, setHasPlayedWordAudio] = useState(false);
   const [timeoutEnded, setTimeoutEnded] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
-  const timeoutRef = useRef(null);
-  const [playerClickedAudioButton, setPlayerClickedAudioButton] = useState(false);
 
   const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
+  const timeoutRef = useRef(null);
+
+  const [playerClickedAudioButton, setPlayerClickedAudioButton] = useState(false);
 
   const currentWord = words[currentWordIndex];
 
@@ -177,15 +177,6 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       setCanProceed(true);
     }
   }, [hasPlayedWordAudio, timeoutEnded]);
-
-  useEffect(() => {
-    const audio = practiceEndAudioRef.current;
-    const handleEnded = () => setWaitingForPracticeEnd(false);
-    if (audio) {
-      audio.addEventListener("ended", handleEnded);
-      return () => audio.removeEventListener("ended", handleEnded);
-    }
-  }, [practiceEndAudioRef, gameStarted]);
 
   // Initialize game stats
   useEffect(() => {
@@ -338,12 +329,30 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   // Handle next question button click
   const handleNextQuestion = () => {
     if (canProceed) {
-      // Clear the timeout if it exists
+      // 1. Clear the auto-play timeout so audio doesn't trigger late
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-      nextWord(currentWordIndex);
+
+      // 2. Determine if this is the final example before the real test begins
+      const isLastExample = currentWord.isExample && currentWordIndex < words.length - 1 && !words[currentWordIndex + 1].isExample;
+
+      if (isLastExample) {
+        // 3. Enter 'waiting' state and play the "End of Practice" instructions
+        setWaitingForPracticeEnd(true);
+        if (practiceEndAudioRef.current) {
+          practiceEndAudioRef.current.play().catch((error) => {
+            console.error("Error playing practice end audio:", error);
+            // Fallback: If audio fails, just move to the next word
+            setWaitingForPracticeEnd(false);
+            nextWord(currentWordIndex);
+          });
+        }
+      } else {
+        // 4. If it's a standard word, just move on immediately
+        nextWord(currentWordIndex);
+      }
     }
   };
 
@@ -371,7 +380,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   // Start highlighting sequence for current word
-  const startWordHighlighting = (wordIndex) => {
+  const startWordHighlighting = useCallback((wordIndex) => {
     const fullHighlightDuration = 10000;
     const word = words[wordIndex];
 
@@ -399,24 +408,14 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
           setIsWordAudioPlaying(false);
           setHasPlayedWordAudio(true);
         });
-
-        // NEW LOGIC: Trigger end of practice ONLY here (the automatic flow)
-        const isLastExample = word?.isExample && !words[wordIndex + 1]?.isExample;
-        if (isLastExample) {
-          setWaitingForPracticeEnd(true);
-          // Play instructions after a short delay so it doesn't overlap the word
-          setTimeout(() => {
-            practiceEndAudioRef.current?.play();
-          }, 3000);
-        }
       } else {
         setHasPlayedWordAudio(true);
       }
     }, fullHighlightDuration);
-  };
+  }, [wordAudioMap, wordAudioRef, words]);
 
   // Move to next word
-  const nextWord = (currentIndex) => {
+  const nextWord = useCallback((currentIndex) => {
     // Record result for non-example words only
     const wordToRecord = words[currentIndex];
     if (wordToRecord && !wordToRecord.isExample) {
@@ -447,7 +446,17 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
         stopRecording();
       }, 100);
     }
-  };
+  }, [playerClickedAudioButton, startWordHighlighting, stopRecording, words]);
+
+  useEffect(() => {
+    const audio = practiceEndAudioRef.current;
+    const handleEnded = () => {
+      setWaitingForPracticeEnd(false);
+      nextWord(currentWordIndex);
+    };
+    audio?.addEventListener("ended", handleEnded);
+    return () => audio?.removeEventListener("ended", handleEnded);
+  }, [practiceEndAudioRef, currentWordIndex, nextWord]);
 
   // Function to highlight text parts
   const highlightWord = () => {

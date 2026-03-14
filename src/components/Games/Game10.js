@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
@@ -32,6 +33,16 @@ import antistoixoAudio from "../../assets/sounds/10/αντιστοιχώ.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEndAudio from "../../assets/sounds/general/end-of-practice.mp3";
 
+const RecordingIndicator = () => (
+  <div className="recording-wave">
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+  </div>
+);
+
 const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = useMemo(() => game10Words, []);
@@ -57,7 +68,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       υπερτονίζω: yptertonizoAudio,
       αντιστοιχώ: antistoixoAudio,
     }),
-    []
+    [],
   );
 
   // Game state
@@ -165,8 +176,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       setCanProceed(true);
     }
   }, [hasPlayedWordAudio, timeoutEnded]);
-
-  
 
   // Initialize game stats
   useEffect(() => {
@@ -327,10 +336,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       }
 
       // Check if this is the last example (current word is example and next word is not)
-      const isLastExample =
-        currentWord.isExample &&
-        currentWordIndex < words.length - 1 &&
-        !words[currentWordIndex + 1].isExample;
+      const isLastExample = currentWord.isExample && currentWordIndex < words.length - 1 && !words[currentWordIndex + 1].isExample;
 
       if (isLastExample) {
         // Play practice end audio and wait for it to finish
@@ -375,85 +381,91 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   // Start highlighting sequence for current word
-  const startWordHighlighting = useCallback((wordIndex) => {
-    const word = words[wordIndex];
+  const startWordHighlighting = useCallback(
+    (wordIndex) => {
+      const word = words[wordIndex];
 
-    // Set up word audio or clear if none available
-    const audioFile = word && wordAudioMap[word.word] ? wordAudioMap[word.word] : null;
-    setCurrentWordAudio(audioFile);
+      // Set up word audio or clear if none available
+      const audioFile = word && wordAudioMap[word.word] ? wordAudioMap[word.word] : null;
+      setCurrentWordAudio(audioFile);
 
-    // Reset states for new word
-    setIsWordAudioPlaying(false);
-    setHasPlayedWordAudio(false);
-    setTimeoutEnded(false);
-    setCanProceed(false);
+      // Reset states for new word
+      setIsWordAudioPlaying(false);
+      setHasPlayedWordAudio(false);
+      setTimeoutEnded(false);
+      setCanProceed(false);
 
-    // Show word in black initially
-    setHighlightStage("none");
+      // Show word in black initially
+      setHighlightStage("none");
 
-    // Trigger highlighting animation when word first appears
-    setTimeout(() => {
-      performHighlighting();
-    }, 100);
+      // Trigger highlighting animation when word first appears
+      setTimeout(() => {
+        performHighlighting();
+      }, 100);
 
-    const fullDuration = 10000;
+      const fullDuration = 10000;
 
-    // Start the timeout timer
-    timeoutRef.current = setTimeout(() => {
-      setTimeoutEnded(true);
-      // Trigger highlighting animation when timeout ends
-      performHighlighting();
+      // Start the timeout timer
+      timeoutRef.current = setTimeout(() => {
+        setTimeoutEnded(true);
+        // Trigger highlighting animation when timeout ends
+        performHighlighting();
 
-      // Only play audio when timeout ends if audio exists for this word
-      if (audioFile && wordAudioRef.current) {
-        setIsWordAudioPlaying(true);
-        wordAudioRef.current.play().catch((error) => {
-          console.error("Error playing word audio:", error);
-          setIsWordAudioPlaying(false);
-          // If play fails, still enable the button
+        // Only play audio when timeout ends if audio exists for this word
+        if (audioFile && wordAudioRef.current) {
+          setIsWordAudioPlaying(true);
+          wordAudioRef.current.play().catch((error) => {
+            console.error("Error playing word audio:", error);
+            setIsWordAudioPlaying(false);
+            // If play fails, still enable the button
+            setHasPlayedWordAudio(true);
+          });
+        } else {
+          // No audio for this word, mark as played so button can be enabled
           setHasPlayedWordAudio(true);
-        });
-      } else {
-        // No audio for this word, mark as played so button can be enabled
-        setHasPlayedWordAudio(true);
-      }
-    }, fullDuration);
-  }, [wordAudioMap, wordAudioRef, words]);
+        }
+      }, fullDuration);
+    },
+    [wordAudioMap, wordAudioRef, words],
+  );
 
   // Move to next word
-  const nextWord = useCallback((currentIndex) => {
-    // Record result for non-example words (use current word before updating index)
-    const wordToRecord = words[currentIndex];
-    if (wordToRecord && !wordToRecord.isExample) {
-      setGameStats((prev) => ({
-        ...prev,
-        rounds: [
-          ...prev.rounds,
-          {
-            question: wordToRecord.word,
-            playerClickedAudioButton: playerClickedAudioButton,
-          },
-        ],
-      }));
-    }
+  const nextWord = useCallback(
+    (currentIndex) => {
+      // Record result for non-example words (use current word before updating index)
+      const wordToRecord = words[currentIndex];
+      if (wordToRecord && !wordToRecord.isExample) {
+        setGameStats((prev) => ({
+          ...prev,
+          rounds: [
+            ...prev.rounds,
+            {
+              question: wordToRecord.word,
+              playerClickedAudioButton: playerClickedAudioButton,
+            },
+          ],
+        }));
+      }
 
-    // Reset the audio button flag for the next word
-    setPlayerClickedAudioButton(false);
+      // Reset the audio button flag for the next word
+      setPlayerClickedAudioButton(false);
 
-    if (currentIndex < words.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentWordIndex(nextIndex);
-      setHighlightStage("prefix");
-      setTimeout(() => startWordHighlighting(nextIndex), 100);
-    } else {
-      // Game completed
-      setGameCompleted(true);
-      // Stop recording after a slight delay to ensure proper cleanup
-      setTimeout(() => {
-        stopRecording();
-      }, 100);
-    }
-  }, [playerClickedAudioButton, startWordHighlighting, stopRecording, words]);
+      if (currentIndex < words.length - 1) {
+        const nextIndex = currentIndex + 1;
+        setCurrentWordIndex(nextIndex);
+        setHighlightStage("prefix");
+        setTimeout(() => startWordHighlighting(nextIndex), 100);
+      } else {
+        // Game completed
+        setGameCompleted(true);
+        // Stop recording after a slight delay to ensure proper cleanup
+        setTimeout(() => {
+          stopRecording();
+        }, 100);
+      }
+    },
+    [playerClickedAudioButton, startWordHighlighting, stopRecording, words],
+  );
 
   // Listen for practice end audio ended
   useEffect(() => {
@@ -493,7 +505,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       result.push(
         <span key="prefix" style={{ color: "blue" }}>
           {word.substring(0, prefixEnd)}
-        </span>
+        </span>,
       );
     } else {
       result.push(word.substring(0, prefixEnd));
@@ -504,7 +516,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       result.push(
         <span key="stem" style={{ color: "red" }}>
           {word.substring(prefixEnd, stemEnd)}
-        </span>
+        </span>,
       );
     } else {
       result.push(word.substring(prefixEnd, stemEnd));
@@ -515,7 +527,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       result.push(
         <span key="suffix" style={{ color: "green" }}>
           {word.substring(stemEnd)}
-        </span>
+        </span>,
       );
     } else {
       result.push(word.substring(stemEnd));
@@ -609,6 +621,11 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       <Container fluid className="game-container">
         <Row className="game-row-centered">
           <Col md={12} lg={10}>
+            <QuestionProgressLights
+              totalQuestions={gameStats.totalRounds}
+              currentQuestion={gameStats.totalRounds}
+              answeredQuestions={gameStats.rounds.map((r) => true)}
+            />
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
                 <h3 className="mb-0">Μπράβο! Τελείωσες την άσκηση!</h3>
@@ -634,6 +651,15 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     <Container fluid className="game-container">
       <Row className="game-row-centered">
         <Col md={12} lg={10}>
+          {isRecording && <RecordingIndicator />}
+
+          {!currentWord.isExample && (
+            <QuestionProgressLights
+              totalQuestions={words.filter((w) => !w.isExample).length}
+              currentQuestion={words.slice(0, currentWordIndex).filter((w) => !w.isExample).length}
+              answeredQuestions={gameStats.rounds.map((r) => true)}
+            />
+          )}
           {currentWord.isExample && (
             <div className="d-flex justify-content-center">
               <span className="example-badge">📚 Παράδειγμα</span>
