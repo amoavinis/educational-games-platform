@@ -7,10 +7,9 @@ import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { game14Questions } from "../Data/Game14Data";
 import useAudio from "../../hooks/useAudio";
+import demoVideo from "../../assets/video/DEMO 14.mp4";
 
 // Import audio files
-import titleAudio from "../../assets/sounds/14/title.mp3";
-import instructionsAudio from "../../assets/sounds/14/instructions.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
@@ -34,9 +33,11 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
   const [gameState, setGameState] = useState("playing"); // 'playing' or 'results'
   const [gameResults, setGameResults] = useState([]);
   const [questionStartTime, setQuestionStartTime] = useState(null);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
-  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [wasAnswerSubmitted, setWasAnswerSubmitted] = useState(false);
+
+  const [gameStarted, setGameStarted] = useState(false);
+  const [isVideoEnded, setIsVideoEnded] = useState(false);
 
   const questions = useMemo(() => game14Questions, []);
 
@@ -58,16 +59,6 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
     }),
     []
   );
-
-  // Title audio
-  const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleAudio, {
-    playOnMount: false,
-  });
-
-  // Instructions audio
-  const { audioRef: instructionsAudioRef, audioSrc: instructionsAudioSrc } = useAudio(instructionsAudio, {
-    playOnMount: false,
-  });
 
   const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
     playOnMount: false,
@@ -126,9 +117,11 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
       if (wasAnswerSubmitted && question.isExample && currentQuestion < questions.length - 1 && !questions[currentQuestion + 1].isExample) {
         setTimeout(() => {
           if (practiceEndAudioRef.current) {
+            setIsAudioPlaying(true);
             practiceEndAudioRef.current
               .play()
               .then(() => {
+                setIsAudioPlaying(false);
                 console.log("Practice end audio started playing");
               })
               .catch((error) => {
@@ -191,7 +184,8 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
     const wordAudio = sentenceAudioMap[question.sentence];
     if (wordAudio && wordAudioRef.current) {
       wordAudioRef.current.src = wordAudio;
-      wordAudioRef.current.play().catch((error) => {
+      setIsAudioPlaying(true);
+      wordAudioRef.current.play().then(() => { setIsAudioPlaying(false); }).catch((error) => {
         console.error("Error playing word audio:", error);
       });
     }
@@ -233,63 +227,6 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-  // Play title audio on mount
-  useEffect(() => {
-    if (!hasPlayedInitialAudio) {
-      const timer = setTimeout(() => {
-        if (titleAudioRef.current) {
-          titleAudioRef.current
-            .play()
-            .then(() => {
-              setHasPlayedInitialAudio(true);
-            })
-            .catch((error) => {
-              console.error("Error playing title audio:", error);
-              setIsAudioPlaying(false);
-              setHasPlayedInitialAudio(true);
-            });
-        }
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [hasPlayedInitialAudio, titleAudioRef]);
-
-  // Listen for title audio ended, then play instructions audio
-  useEffect(() => {
-    const audio = titleAudioRef.current;
-    const handleEnded = () => {
-      if (instructionsAudioRef.current) {
-        instructionsAudioRef.current.play().catch((error) => {
-          console.error("Error playing instructions audio:", error);
-          setIsAudioPlaying(false);
-        });
-      }
-    };
-
-    if (audio) {
-      audio.addEventListener("ended", handleEnded);
-      return () => {
-        audio.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [titleAudioRef, instructionsAudioRef]);
-
-  // Listen for instructions audio ended
-  useEffect(() => {
-    const audio = instructionsAudioRef.current;
-    const handleEnded = () => {
-      setIsAudioPlaying(false);
-    };
-
-    if (audio) {
-      audio.addEventListener("ended", handleEnded);
-      return () => {
-        audio.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [instructionsAudioRef]);
-
   // Start timing when question loads and audio is done
   useEffect(() => {
     if (gameState === "playing" && !isAudioPlaying) {
@@ -301,11 +238,53 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
   useEffect(() => {
     if (gameState === "results") {
       const audio = new Audio(bravoAudio);
-      audio.play().catch((error) => {
+      setIsAudioPlaying(true);
+      audio.play().then(() => { setIsAudioPlaying(false) }).catch((error) => {
         console.error("Error playing bravo audio:", error);
       });
     }
   }, [gameState]);
+
+  // Show start screen before game begins
+  if (!gameStarted) {
+    return (
+      <Container fluid className="game-container">
+        <Row className="game-row-centered">
+          <Col md={12} lg={10}>
+            <Card className="main-card">
+              <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+                <h3 className="mb-0">Βίντεο επεξήγησης</h3>
+              </Card.Header>
+              <Card.Body className="text-center">
+                <div className="mb-4">
+                  <video width="100%" style={{ maxWidth: "1000px", borderRadius: "8px" }} onEnded={() => setIsVideoEnded(true)} autoPlay controls>
+                    <source src={demoVideo} type="video/mp4" />
+                  </video>
+                </div>
+                <div className="d-flex justify-content-center">
+                  <Button
+                    variant="success"
+                    size="lg"
+                    onClick={() => setGameStarted(true)}
+                    disabled={!isVideoEnded}
+                    className="px-5 py-3"
+                    style={{
+                      fontSize: "1.5rem",
+                      fontWeight: "bold",
+                      opacity: !isVideoEnded ? 0.6 : 1,
+                      cursor: !isVideoEnded ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    ΠΑΜΕ!
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
 
   const question = questions[currentQuestion];
 
@@ -338,8 +317,6 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
   return (
     <Container fluid className="game-container">
       {/* Audio elements */}
-      <audio ref={titleAudioRef} src={titleAudioSrc} />
-      <audio ref={instructionsAudioRef} src={instructionsAudioSrc} />
       <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
       <audio ref={wordAudioRef} src={wordAudioSrc} />
 
@@ -400,7 +377,7 @@ const Game14 = ({ gameId, schoolId, studentId, classId }) => {
                         className="py-3 w-100"
                       >
                         {option}
-                        {showIcon && <span style={{marginLeft: 10}}>{showIcon}</span>}
+                        {showIcon && <span style={{ marginLeft: 10 }}>{showIcon}</span>}
                       </Button>
                     </Col>
                   );

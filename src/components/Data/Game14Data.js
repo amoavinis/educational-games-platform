@@ -1,11 +1,11 @@
 export const game14Questions = [
-  {
+  /* {
     sentence: "Αυτό το παιδί είναι καλ__.",
     options: ["-ή", "-ό", "-ός"],
     correct: "-ό",
     explanation: 'Το επίθετο "καλό" στο ουδέτερο γένος παίρνει την κατάληξη -ό',
     isExample: true,
-  },
+  }, */
   {
     sentence: "Η τάξη είναι χωρισ_____ στα δύο.",
     options: ["-μένη", "-τή", "-ιά"],
