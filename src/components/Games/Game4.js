@@ -147,21 +147,34 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
     if (questions[currentQuestion]) {
       const word = questions[currentQuestion].word;
       const audioFile = wordAudioMap[word];
+      const audioEl = wordAudioRef.current;
 
-      if (audioFile) {
+      if (audioFile && audioEl) {
+        // Update state (keeps existing behavior)
         setCurrentWordAudio(audioFile);
 
-        // Wait for React to update the audio element, then play
-        setTimeout(() => {
-          if (wordAudioRef.current) {
-            wordAudioRef.current.play().catch((error) => {
-              console.error("Error playing word audio:", error);
-            });
-          }
-        }, 150);
+        // Immediately set src and start loading if it's a new file
+        if (audioEl.src !== audioFile) {
+          audioEl.src = audioFile;
+          audioEl.load(); // ensures loading begins now
+        }
+
+        // Play when ready (or immediately if already loaded)
+        const attemptPlay = () => {
+          audioEl.play().catch(error => {
+            console.error("Error playing word audio:", error);
+          });
+        };
+
+        if (audioEl.readyState >= 3) { // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA
+          attemptPlay();
+        } else {
+          // Use { once: true } so it auto-removes after firing
+          audioEl.addEventListener('canplaythrough', attemptPlay, { once: true });
+        }
       }
     }
-  }, [currentQuestion, questions, wordAudioMap, wordAudioRef]);
+  }, [currentQuestion, questions, wordAudioMap, wordAudioRef, setCurrentWordAudio]);
 
   // Start question timer when question changes
   useEffect(() => {

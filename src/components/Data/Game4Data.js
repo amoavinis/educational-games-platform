@@ -72,7 +72,7 @@ export const game4Questions = [
     stem: "αγαπ",
     correctSuffix: "ημένος",
     word: "αγαπημένος",
-    options: ["ητός", "μένος", "ήσιμος"],
+    options: ["ητός", "ημένος", "ήσιμος"],
   },
   {
     stem: "φορτ",
@@ -108,7 +108,7 @@ export const game4Questions = [
     stem: "δικαι",
     correctSuffix: "οσύνη",
     word: "δικαιοσύνη",
-    options: ["ότητα", "οσύνη", "ωσύνη"],
+    options: ["ότητα", "οσύνη", "οτύνη"],
   },
   {
     stem: "καλ",
@@ -120,6 +120,6 @@ export const game4Questions = [
     stem: "εγκυμ",
     correctSuffix: "οσύνη",
     word: "εγκυμοσύνη",
-    options: ["ωσύνη", "ότητα", "οσύνη"],
+    options: ["οτύνη", "ότητα", "οσύνη"],
   },
 ];
