@@ -17,7 +17,7 @@ export const game9Words = [
   { word: "επιτήρηση", prefix: "επι", stem: "τηρ", suffix: "ηση", task: "suffix" },
   { word: "παραμερίζω", prefix: "παρα", stem: "μερ", suffix: "ίζω", task: "suffix" },
   { word: "υπεραναλυτικός", prefix: "υπερ", stem: "αναλυτ", suffix: "ικός", task: "suffix" },
-  { word: "δυσαρέσκεια", prefix: "δυσ", stem: "αρεσκ", suffix: "εια", task: "suffix" },
+  // { word: "δυσαρέσκεια", prefix: "δυσ", stem: "αρεσκ", suffix: "εια", task: "suffix" },
   { word: "αντιχαιρετισμός", prefix: "αντι", stem: "χαιρετ", suffix: "ισμός", task: "suffix" },
   { word: "ανασκόπηση", prefix: "ανα", stem: "σκοπ", suffix: "ηση", task: "suffix" },
 ];

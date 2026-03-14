@@ -232,11 +232,11 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
       ]);
     }
 
-    // Auto advance after 4 seconds (except last example, which advances via practice end audio)
+    // Auto advance after 4.5 seconds (except last example, which advances via practice end audio)
     if (!isLastExample) {
       setTimeout(() => {
         nextQuestion();
-      }, 4000);
+      }, 4500);
     }
   };
 

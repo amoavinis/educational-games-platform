@@ -47,7 +47,7 @@ export const game13Questions = [
   {
     instruction: "ΕΠΙΘΕΤΟ",
     baseWord: "χαρτί",
-    options: ["-ινος", "-ενιος", "-ικος"],
+    options: ["-ινος", "-ενιος", "-ομενος"],
     correct: "-ινος",
     result: "χάρτινος",
   },

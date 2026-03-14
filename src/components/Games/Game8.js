@@ -262,10 +262,10 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
       setWasAnswerSubmitted(true);
       // Don't auto-advance, wait for practice end audio to finish
     } else {
-      // Auto advance after 4 seconds
+      // Auto advance after 4.5 seconds
       setTimeout(() => {
         handleNext();
-      }, 4000);
+      }, 4500);
     }
   };
 

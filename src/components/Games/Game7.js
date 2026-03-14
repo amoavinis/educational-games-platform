@@ -10,7 +10,7 @@ import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/07/title-instructions.mp3";
 import exampleDiastasiAudio from "../../assets/sounds/07/example-διάσταση.mp3";
 import exampleKatagalanosAudio from "../../assets/sounds/07/example-καταγάλανος.mp3";
-import exampleParapinoAudio from "../../assets/sounds/07/example-καταγάλανος.mp3";
+import exampleParapinoAudio from "../../assets/sounds/07/example-παραπίνω.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
@@ -362,22 +362,6 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-  const returnToPool = (wordData, fromColumn) => {
-    setColumns((prev) => ({
-      ...prev,
-      [fromColumn]: prev[fromColumn].filter((w) => w.id !== wordData.id),
-    }));
-
-    setWordPool((prev) => [
-      ...prev,
-      {
-        id: wordData.id,
-        word: wordData.word,
-        prefix: wordData.prefix,
-      },
-    ]);
-  };
-
   // Submit game results function
   const submitGameResults = async () => {
     if (!studentId || !classId) {
@@ -448,9 +432,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
     };
 
     const handleWordClick = () => {
-      if (!isDraggable) {
-        returnToPool(wordData, wordData.placedPrefix);
-      } else {
+      if (isDraggable) {
         // Play audio when clicking on draggable word
         playAudio(wordData.word);
       }
