@@ -4,6 +4,7 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import "../../styles/Game.css";
+import "../../styles/Game3.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
 import { game3Words } from "../Data/Game3Data";
@@ -46,6 +47,16 @@ import magirikosAudio from "../../assets/sounds/03/μαγειρικός.mp3";
 import magirioAudio from "../../assets/sounds/03/μαγειρείο.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
+const RecordingIndicator = () => (
+  <div className="recording-wave">
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+  </div>
+);
+
 const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const words = useMemo(() => game3Words, []);
@@ -73,7 +84,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       σκουπισμένος: skupismenosAudio,
       ποτίζω: potizoAudio,
       πότισμα: potismaAudio,
-      ποτίστρα: null,
+      // ποτίστρα: null,
       ποτιστήρι: potistiriAudio,
       ξυπνώ: xipnoAudio,
       ξύπνησα: xipnisaAudio,
@@ -577,6 +588,8 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       ) : currentWord ? (
         <Row className="game-row-centered">
           <Col md={12} lg={10}>
+            {isRecording && <RecordingIndicator />}
+
             {!currentWord.isExample && (
               <QuestionProgressLights
                 totalQuestions={words.filter((w) => !w.isExample).length}
