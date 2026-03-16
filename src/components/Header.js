@@ -64,7 +64,7 @@ const Header = () => {
                 Χρήστες
               </Nav.Link>
             )}
-            {role === 1 && (
+            {/* {role === 1 && (
               <Nav.Link
                 as={Link}
                 to="/material-management"
@@ -73,7 +73,7 @@ const Header = () => {
               >
                 Επεξεργασία Υλικού
               </Nav.Link>
-            )}
+            )} */}
             <Nav.Link
               as={Link}
               to="/students"

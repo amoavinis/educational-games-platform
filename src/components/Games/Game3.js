@@ -48,11 +48,22 @@ import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 
 const RecordingIndicator = () => (
   <div className="recording-wave">
+    <div className="wave-bars-left">
+    <span className="wave-bar"></span>
+    <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
+    </div>
+    <div className="microphone-icon">
+      <svg width="24" height="24" fill="#ff4d4d" viewBox="0 0 16 16">
+        <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V14h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-1.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z" />
+        <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0v5zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3z" />
+      </svg>
+    </div>
+    <div className="wave-bars-right">
     <span className="wave-bar"></span>
     <span className="wave-bar"></span>
     <span className="wave-bar"></span>
-    <span className="wave-bar"></span>
-    <span className="wave-bar"></span>
+    </div>
   </div>
 );
 

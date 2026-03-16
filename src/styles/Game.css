@@ -178,9 +178,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  height: 30px;
+  gap: 12px;
+  height: 40px;
   margin-bottom: 10px;
+}
+
+.wave-bars-left,
+.wave-bars-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.microphone-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
 }
 
 .wave-bar {
@@ -196,8 +210,12 @@
   50% { height: 30px; }
 }
 
-/* Stagger the bars */
-.wave-bar:nth-child(2) { animation-delay: 0.1s; }
-.wave-bar:nth-child(3) { animation-delay: 0.2s; }
-.wave-bar:nth-child(4) { animation-delay: 0.3s; }
-.wave-bar:nth-child(5) { animation-delay: 0.4s; }
+/* Stagger the bars on the left side */
+.wave-bars-left .wave-bar:nth-child(1) { animation-delay: 0s; }
+.wave-bars-left .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.wave-bars-left .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+
+/* Mirror the animation on the right side */
+.wave-bars-right .wave-bar:nth-child(1) { animation-delay: 0.2s; }
+.wave-bars-right .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.wave-bars-right .wave-bar:nth-child(3) { animation-delay: 0s; }
