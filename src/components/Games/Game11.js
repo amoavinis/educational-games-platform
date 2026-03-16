@@ -1,5 +1,5 @@
 // Game 11
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
@@ -20,16 +20,42 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const words = useMemo(() => {
     const examples = level11Words.filter((w) => w.isExample);
         const nonExamples = level11Words.filter((w) => !w.isExample);
-    
+
         // Shuffle non-examples using Fisher-Yates algorithm
         const shuffled = [...nonExamples];
         for (let i = shuffled.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
-    
+
         return [...examples, ...shuffled];
   }, []);
+
+  // Color shades for each suffix column
+  const getSuffixColor = (suffix) => {
+    const colors = {
+      ων: "#FFF8DC", // Cornsilk - Very light cream
+      ω: "#FFEB3B", // Material Design Yellow
+      ουμε: "#FFD700", // Gold
+      ετε: "#FFA500", // Orange - warm yellow-orange
+      ηκαμε: "#FF6B6B", // Coral
+      ηκατε: "#87CEEB", // Sky blue
+    };
+    return colors[suffix] || "#FFF8DC";
+  };
+
+  // Get border color (darker version of background)
+  const getSuffixBorderColor = (suffix) => {
+    const colors = {
+      ων: "#DDD8B8", // Darker cornsilk
+      ω: "#F9C842", // Darker material yellow
+      ουμε: "#E6C200", // Darker gold
+      ετε: "#E6941A", // Darker orange
+      ηκαμε: "#E65555", // Darker coral
+      ηκατε: "#6BB5D9", // Darker sky blue
+    };
+    return colors[suffix] || "#DDD8B8";
+  };
 
   const [wordPool, setWordPool] = useState([]);
   const [columns, setColumns] = useState({
@@ -45,6 +71,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   const [gameResults, setGameResults] = useState([]);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(true);
+  const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
   const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
@@ -75,6 +102,15 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   });
 
   const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
+    playOnMount: false,
+  });
+
+  // Word-specific audio (plays on word click or drag start)
+  const {
+    audioRef: wordAudioRef,
+    audioSrc: wordAudioSrc,
+    play: playWordAudio,
+  } = useAudio(currentWordAudio, {
     playOnMount: false,
   });
 
@@ -171,6 +207,37 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
       audio.removeEventListener("ended", handleEnded);
     };
   }, [practiceEndAudioRef]);
+
+  // Listen for word audio ended
+  useEffect(() => {
+    const audio = wordAudioRef.current;
+    const handleEnded = () => {
+      // Audio ended, cleanup handled by useAudio hook
+    };
+
+    if (audio) {
+      audio.addEventListener("ended", handleEnded);
+      return () => {
+        audio.removeEventListener("ended", handleEnded);
+      };
+    }
+  }, [wordAudioRef]);
+
+  // Function to play word audio
+  const playAudio = React.useCallback(
+    (word) => {
+      const audioFile = wordAudioMap[word];
+      if (audioFile) {
+        setCurrentWordAudio(audioFile);
+        setTimeout(() => {
+          playWordAudio().catch((error) => {
+            console.error("Error playing word audio:", error);
+          });
+        }, 100);
+      }
+    },
+    [wordAudioMap, playWordAudio]
+  );
 
   const handleDragStart = (e, wordData) => {
     // Block input while initial audio is playing or waiting for practice end
@@ -434,18 +501,39 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   const WordCard = ({ wordData, isDraggable = true }) => {
-    const canInteract = !isAudioPlaying;
+    // Get styling based on placement
+    const getCardStyle = () => {
+      if (!isDraggable && wordData.placedSuffix) {
+        // Card is placed in a column - apply suffix colors
+        return {
+          backgroundColor: getSuffixColor(wordData.placedSuffix),
+          border: `2px solid ${getSuffixBorderColor(wordData.placedSuffix)}`,
+          color: "black",
+        };
+      }
+      // Default styling for cards in word pool
+      return {};
+    };
+
+    const handleWordClick = () => {
+      if (isDraggable) {
+        // Play audio when clicking on draggable word
+        playAudio(wordData.word);
+      }
+    };
 
     return (
       <div
-        className={`word-card ${isDraggable && canInteract ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""} ${
-          isAudioPlaying ? "audio-playing" : ""
-        }`}
-        draggable={isDraggable && canInteract}
-        onDragStart={isDraggable && canInteract ? (e) => handleDragStart(e, wordData) : undefined}
-        onDragEnd={isDraggable && canInteract ? handleDragEnd : undefined}
-        onClick={!isDraggable && canInteract ? () => returnToPool(wordData, wordData.placedSuffix) : undefined}
-        style={{ cursor: isAudioPlaying ? "not-allowed" : isDraggable ? "grab" : "pointer" }}
+        className={`word-card ${isDraggable ? "draggable" : ""} ${wordData.isExample ? "example-word" : ""}`}
+        style={{
+          ...getCardStyle(),
+          opacity: isDraggable && isAudioPlaying ? 0.6 : 1,
+          cursor: isDraggable && isAudioPlaying ? "not-allowed" : isDraggable ? "grab" : "pointer",
+        }}
+        draggable={isDraggable && !isAudioPlaying}
+        onDragStart={isDraggable ? (e) => handleDragStart(e, wordData) : undefined}
+        onDragEnd={isDraggable ? handleDragEnd : undefined}
+        onClick={handleWordClick}
       >
         {wordData.isExample && <div className="example-badge-drag">Παράδειγμα</div>}
         {wordData.word}
@@ -454,8 +542,24 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
   };
 
   const SuffixColumn = ({ suffix, words }) => (
-    <Card className={`suffix-column`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, suffix)}>
-      <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
+    <Card
+      className={`suffix-column`}
+      style={{
+        border: `3px solid ${getSuffixBorderColor(suffix)}`,
+        backgroundColor: `${getSuffixColor(suffix)}20`, // 20% opacity background
+      }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={(e) => handleDrop(e, suffix)}
+    >
+      <Card.Header
+        className="text-center rounded-top-1"
+        style={{
+          backgroundColor: getSuffixColor(suffix),
+          color: "black",
+          borderBottom: `2px solid ${getSuffixBorderColor(suffix)}`,
+        }}
+      >
         {getSuffixTitle(suffix)}
       </Card.Header>
       <Card.Body className="column-body column-body-1012" onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
@@ -547,6 +651,7 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
       <audio ref={titleAudioRef} src={titleAudioSrc} />
       <audio ref={instructionsAudioRef} src={instructionsAudioSrc} />
       <audio ref={practiceEndAudioRef} src={practiceEndAudioSrc} />
+      <audio ref={wordAudioRef} src={wordAudioSrc} />
     </Container>
   );
 };

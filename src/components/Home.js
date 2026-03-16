@@ -140,7 +140,7 @@ const Home = () => {
           <Col key={game.id}>
             <Card onClick={() => handleCardClick(game)} className="game-card h-100" style={{ backgroundColor: game.color }}>
               <Card.Body className="d-flex align-items-center justify-content-center">
-                <Card.Title className="text-center">
+                <Card.Title className="text-center mb-0">
                   {index !== 0 && index}
                   {index !== 0 && ")"} {game.name}
                 </Card.Title>

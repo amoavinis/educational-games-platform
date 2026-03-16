@@ -207,6 +207,13 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
     };
   }, [practiceEndAudioRef]);
 
+  // Set question start time when question changes (after initial audio)
+  useEffect(() => {
+    if (!isInitialAudioPlaying && questionStartTime === null && currentQuestion > 0) {
+      setQuestionStartTime(Date.now());
+    }
+  }, [currentQuestion, isInitialAudioPlaying, questionStartTime]);
+
   // Auto-play word audio when question changes (after initial audio ends)
   useEffect(() => {
     if (!isInitialAudioPlaying && selectedAnswer === null && !isWordAudioPlaying) {

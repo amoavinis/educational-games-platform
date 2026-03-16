@@ -190,7 +190,6 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
         }, 100);
       } else {
         setGameCompleted(true);
-        submitGameResults();
       }
     };
 
@@ -198,7 +197,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
     return () => {
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [practiceEndAudioRef, currentQuestion, questions, submitGameResults, marqueeRef]);
+  }, [practiceEndAudioRef, currentQuestion, questions, marqueeRef]);
 
   // Play title audio on mount
   useEffect(() => {
@@ -383,15 +382,16 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
     }
   };
 
-  // Use effect to play bravo audio when game completes
+  // Submit results and play bravo audio when game completes
   useEffect(() => {
-    if (gameCompleted) {
+    if (gameCompleted && gameResults.length > 0) {
+      submitGameResults();
       const audio = new Audio(bravoAudio);
       audio.play().catch((error) => {
         console.error("Error playing bravo audio:", error);
       });
     }
-  }, [gameCompleted]);
+  }, [gameCompleted, gameResults, submitGameResults]);
 
   const question = questions[currentQuestion];
 
@@ -409,16 +409,6 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
       }
     }
   }, [selectedAnswer]);
-
-  // Play bravo audio when game completes
-  useEffect(() => {
-    if (gameCompleted) {
-      const audio = new Audio(bravoAudio);
-      audio.play().catch((error) => {
-        console.error("Error playing bravo audio:", error);
-      });
-    }
-  }, [gameCompleted]);
 
   if (gameCompleted) {
     return (
