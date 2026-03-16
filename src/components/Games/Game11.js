@@ -1,5 +1,5 @@
 // Game 11
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Game.css";
@@ -427,22 +427,6 @@ const Game11 = ({ gameId, schoolId, studentId, classId }) => {
         setColumns(newColumns);
       }
     }
-  };
-
-  const returnToPool = (wordData, fromColumn) => {
-    setColumns((prev) => ({
-      ...prev,
-      [fromColumn]: prev[fromColumn].filter((w) => w.id !== wordData.id),
-    }));
-
-    setWordPool((prev) => [
-      ...prev,
-      {
-        id: wordData.id,
-        word: wordData.word,
-        suffix: wordData.suffix,
-      },
-    ]);
   };
 
   // Submit game results function
