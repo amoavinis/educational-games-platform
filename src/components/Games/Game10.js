@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
+import CustomWordSlider from "../CustomWordSlider";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
@@ -36,8 +37,8 @@ import practiceEndAudio from "../../assets/sounds/general/end-of-practice.mp3";
 const RecordingIndicator = () => (
   <div className="recording-wave">
     <div className="wave-bars-left">
-    <span className="wave-bar"></span>
-    <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
       <span className="wave-bar"></span>
     </div>
     <div className="microphone-icon">
@@ -47,9 +48,9 @@ const RecordingIndicator = () => (
       </svg>
     </div>
     <div className="wave-bars-right">
-    <span className="wave-bar"></span>
-    <span className="wave-bar"></span>
-    <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
     </div>
   </div>
 );
@@ -87,7 +88,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'prefix', 'stem', 'suffix', 'full'
+  const [sliderHighlight, setSliderHighlight] = useState({ sectionIndex: -1, subPosition: "start" });
   const [gameCompleted, setGameCompleted] = useState(false);
   const [audioDownloadURL, setAudioDownloadURL] = useState(null);
   const [gameStats, setGameStats] = useState({
@@ -332,8 +333,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
         console.error("Error playing word audio:", error);
         setIsWordAudioPlaying(false);
       });
-      // Trigger highlighting animation when audio plays
-      performHighlighting();
     }
   };
 
@@ -365,25 +364,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     }
   };
 
-  // Perform highlighting animation
-  const performHighlighting = () => {
-    const duration = 1200;
-
-    setHighlightStage("prefix");
-    setTimeout(() => {
-      setHighlightStage("stem");
-      setTimeout(() => {
-        setHighlightStage("suffix");
-        setTimeout(() => {
-          setHighlightStage("full");
-          setTimeout(() => {
-            setHighlightStage("none"); // Reset to black
-          }, 2.5 * duration);
-        }, duration);
-      }, duration);
-    }, duration);
-  };
-
   // Start game
   const startGame = async () => {
     await startRecording();
@@ -391,7 +371,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     startWordHighlighting(0);
   };
 
-  // Start highlighting sequence for current word
+  // Start word display and audio sequence
   const startWordHighlighting = useCallback(
     (wordIndex) => {
       const word = words[wordIndex];
@@ -406,21 +386,11 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       setTimeoutEnded(false);
       setCanProceed(false);
 
-      // Show word in black initially
-      setHighlightStage("none");
-
-      // Trigger highlighting animation when word first appears
-      setTimeout(() => {
-        performHighlighting();
-      }, 100);
-
       const fullDuration = 10000;
 
       // Start the timeout timer
       timeoutRef.current = setTimeout(() => {
         setTimeoutEnded(true);
-        // Trigger highlighting animation when timeout ends
-        performHighlighting();
 
         // Only play audio when timeout ends if audio exists for this word
         if (audioFile && wordAudioRef.current) {
@@ -460,11 +430,12 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
       // Reset the audio button flag for the next word
       setPlayerClickedAudioButton(false);
+      // Reset slider highlighting
+      setSliderHighlight({ sectionIndex: -1, subPosition: "start" });
 
       if (currentIndex < words.length - 1) {
         const nextIndex = currentIndex + 1;
         setCurrentWordIndex(nextIndex);
-        setHighlightStage("prefix");
         setTimeout(() => startWordHighlighting(nextIndex), 100);
       } else {
         // Game completed
@@ -495,24 +466,61 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [practiceEndAudioRef, currentWordIndex, nextWord]);
 
-  // Function to highlight text parts
+  // Handle slider change
+  const handleSliderChange = (sectionIndex, subPosition) => {
+    setSliderHighlight({ sectionIndex, subPosition });
+  };
+
+  // Get word sections for slider
+  const wordSections = useMemo(() => {
+    if (!currentWord) return [];
+    const { word, prefix, stem } = currentWord;
+    const prefixEnd = prefix.length;
+    const stemEnd = prefixEnd + stem.length;
+    return [
+      { text: prefix, color: "blue" },
+      { text: stem, color: "red" },
+      { text: word.substring(stemEnd), color: "green" },
+    ];
+  }, [currentWord]);
+
+  // Function to highlight text parts based on slider position
   const highlightWord = () => {
     if (!currentWord) return "";
 
     const { word, prefix, stem } = currentWord;
-
-    if (highlightStage === "none") {
-      return word;
-    }
-
-    // Find positions
     const prefixEnd = prefix.length;
     const stemEnd = prefixEnd + stem.length;
 
     let result = [];
 
-    // Prefix highlighting
-    if (highlightStage === "prefix" || highlightStage === "full") {
+    // Determine highlighting based on slider position
+    let highlightPrefix = false;
+    let highlightStem = false;
+    let highlightSuffix = false;
+
+    if (sliderHighlight.sectionIndex === 0) {
+      // In prefix section
+      if (sliderHighlight.subPosition === "middle" || sliderHighlight.subPosition === "end") {
+        highlightPrefix = true;
+      }
+    } else if (sliderHighlight.sectionIndex === 1) {
+      // In stem section
+      highlightPrefix = true;
+      if (sliderHighlight.subPosition === "middle" || sliderHighlight.subPosition === "end") {
+        highlightStem = true;
+      }
+    } else if (sliderHighlight.sectionIndex === 2) {
+      // In suffix section
+      highlightPrefix = true;
+      highlightStem = true;
+      if (sliderHighlight.subPosition === "middle" || sliderHighlight.subPosition === "end") {
+        highlightSuffix = true;
+      }
+    }
+
+    // Apply highlighting
+    if (highlightPrefix) {
       result.push(
         <span key="prefix" style={{ color: "blue" }}>
           {word.substring(0, prefixEnd)}
@@ -522,8 +530,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       result.push(word.substring(0, prefixEnd));
     }
 
-    // Stem highlighting
-    if (highlightStage === "stem" || highlightStage === "full") {
+    if (highlightStem) {
       result.push(
         <span key="stem" style={{ color: "red" }}>
           {word.substring(prefixEnd, stemEnd)}
@@ -533,8 +540,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       result.push(word.substring(prefixEnd, stemEnd));
     }
 
-    // Suffix highlighting
-    if (highlightStage === "suffix" || highlightStage === "full") {
+    if (highlightSuffix) {
       result.push(
         <span key="suffix" style={{ color: "green" }}>
           {word.substring(stemEnd)}
@@ -681,16 +687,23 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
               <h4 className="mb-0 game-title-header">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
             </Card.Header>
             <Card.Body className="text-center">
-              <div
-                className="display-4 font-weight-bold mb-1 p-4"
-                style={{
-                  minHeight: "150px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {highlightWord()}
+              <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                <div style={{ display: "inline-flex", flexDirection: "column", gap: "10px" }}>
+                  <div
+                    className="display-4 font-weight-bold"
+                    style={{
+                      minHeight: "150px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "1rem",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {highlightWord()}
+                  </div>
+                  <CustomWordSlider sections={wordSections} onSliderChange={handleSliderChange} />
+                </div>
               </div>
               <div className="d-flex justify-content-center align-items-center">
                 <Button

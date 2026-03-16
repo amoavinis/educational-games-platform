@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
+import CustomWordSlider from "../CustomWordSlider";
 import "../../styles/Game.css";
 import { addReport } from "../../services/reports";
 import { uploadAudioRecording } from "../../services/audioStorage";
@@ -49,8 +50,8 @@ import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 const RecordingIndicator = () => (
   <div className="recording-wave">
     <div className="wave-bars-left">
-    <span className="wave-bar"></span>
-    <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
       <span className="wave-bar"></span>
     </div>
     <div className="microphone-icon">
@@ -60,9 +61,9 @@ const RecordingIndicator = () => (
       </svg>
     </div>
     <div className="wave-bars-right">
-    <span className="wave-bar"></span>
-    <span className="wave-bar"></span>
-    <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
+      <span className="wave-bar"></span>
     </div>
   </div>
 );
@@ -116,7 +117,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [highlightStage, setHighlightStage] = useState("none"); // 'none', 'root', 'suffix', 'full'
+  const [sliderHighlight, setSliderHighlight] = useState({ sectionIndex: -1, subPosition: "start" });
   const [gameCompleted, setGameCompleted] = useState(false);
   const [audioDownloadURL, setAudioDownloadURL] = useState(null);
   const [gameStats, setGameStats] = useState({
@@ -332,8 +333,6 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
         console.error("Error playing word audio:", error);
         setIsWordAudioPlaying(false);
       });
-      // Trigger highlighting animation when audio plays
-      performHighlighting();
     }
   };
 
@@ -374,23 +373,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     startWordHighlighting(0);
   };
 
-  // Perform highlighting animation
-  const performHighlighting = () => {
-    const duration = 1200;
-    setHighlightStage("root");
-
-    setTimeout(() => {
-      setHighlightStage("suffix");
-      setTimeout(() => {
-        setHighlightStage("full");
-        setTimeout(() => {
-          setHighlightStage("none"); // Reset to black
-        }, 1.5 * duration);
-      }, duration);
-    }, duration);
-  };
-
-  // Start highlighting sequence for current word
+  // Start word display and audio sequence
   const startWordHighlighting = useCallback((wordIndex) => {
     const fullHighlightDuration = 10000;
     const word = words[wordIndex];
@@ -402,15 +385,9 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     setHasPlayedWordAudio(false);
     setTimeoutEnded(false);
     setCanProceed(false);
-    setHighlightStage("none");
-
-    setTimeout(() => {
-      performHighlighting();
-    }, 100);
 
     timeoutRef.current = setTimeout(() => {
       setTimeoutEnded(true);
-      performHighlighting();
 
       if (audioFile && wordAudioRef.current) {
         setIsWordAudioPlaying(true);
@@ -444,11 +421,12 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
 
     // Reset the audio button flag for the next word
     setPlayerClickedAudioButton(false);
+    // Reset slider highlighting
+    setSliderHighlight({ sectionIndex: -1, subPosition: "start" });
 
     if (currentIndex < words.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentWordIndex(nextIndex);
-      setHighlightStage("none");
       setTimeout(() => startWordHighlighting(nextIndex), 100);
     } else {
       // Game completed
@@ -469,23 +447,49 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     return () => audio?.removeEventListener("ended", handleEnded);
   }, [practiceEndAudioRef, currentWordIndex, nextWord]);
 
-  // Function to highlight text parts
+  // Handle slider change
+  const handleSliderChange = (sectionIndex, subPosition) => {
+    setSliderHighlight({ sectionIndex, subPosition });
+  };
+
+  // Get word sections for slider
+  const wordSections = useMemo(() => {
+    if (!currentWord) return [];
+    const { word, root } = currentWord;
+    return [
+      { text: root, color: "blue" },
+      { text: word.substring(root.length), color: "green" },
+    ];
+  }, [currentWord]);
+
+  // Function to highlight text parts based on slider position
   const highlightWord = () => {
     if (!currentWord) return "";
 
     const { word, root } = currentWord;
-
-    if (highlightStage === "none") {
-      return word;
-    }
-
-    // Find positions
     const rootEnd = root.length;
 
     let result = [];
 
-    // Root highlighting
-    if (highlightStage === "root" || highlightStage === "full") {
+    // Determine highlighting based on slider position
+    let highlightRoot = false;
+    let highlightSuffix = false;
+
+    if (sliderHighlight.sectionIndex === 0) {
+      // In root section
+      if (sliderHighlight.subPosition === "middle" || sliderHighlight.subPosition === "end") {
+        highlightRoot = true;
+      }
+    } else if (sliderHighlight.sectionIndex === 1) {
+      // In suffix section
+      highlightRoot = true;
+      if (sliderHighlight.subPosition === "middle" || sliderHighlight.subPosition === "end") {
+        highlightSuffix = true;
+      }
+    }
+
+    // Apply highlighting
+    if (highlightRoot) {
       result.push(
         <span key="root" style={{ color: "blue" }}>
           {word.substring(0, rootEnd)}
@@ -495,8 +499,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       result.push(word.substring(0, rootEnd));
     }
 
-    // Suffix highlighting
-    if (highlightStage === "suffix" || highlightStage === "full") {
+    if (highlightSuffix) {
       result.push(
         <span key="suffix" style={{ color: "green" }}>
           {word.substring(rootEnd)}
@@ -627,16 +630,23 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                 <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
               </Card.Header>
               <Card.Body className="text-center">
-                <div
-                  className="display-4 font-weight-bold p-4"
-                  style={{
-                    minHeight: "150px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {highlightWord()}
+                <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                  <div style={{ display: "inline-flex", flexDirection: "column", gap: "10px" }}>
+                    <div
+                      className="display-4 font-weight-bold"
+                      style={{
+                        minHeight: "150px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "1rem",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {highlightWord()}
+                    </div>
+                    <CustomWordSlider sections={wordSections} onSliderChange={handleSliderChange} />
+                  </div>
                 </div>
                 <div className="d-flex justify-content-center align-items-center">
                   <Button
