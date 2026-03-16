@@ -202,14 +202,26 @@ const Reports = () => {
     // Check if this is game 3 or 10 (audio button tracking games)
     const isAudioButtonGame = parseInt(selectedGame) === 3 || parseInt(selectedGame) === 10;
 
-    const questionGroupHeaders = ["", "", "", "", ""];
-    const detailedHeaders = [
-      "Κωδικός Μαθητή",
-      "Ημερομηνία/Ώρα",
-      "Φύλο",
-      "Ημερομηνία Γέννησης",
-      "Διάγνωση",
-    ];
+    // Check if this is game 7 or 11 (games with total time instead of per-question time)
+    const isTotalTimeGame = parseInt(selectedGame) === 7 || parseInt(selectedGame) === 11;
+
+    const questionGroupHeaders = isTotalTimeGame ? ["", "", "", "", "", ""] : ["", "", "", "", ""];
+    const detailedHeaders = isTotalTimeGame
+      ? [
+          "Κωδικός Μαθητή",
+          "Ημερομηνία/Ώρα",
+          "Φύλο",
+          "Ημερομηνία Γέννησης",
+          "Διάγνωση",
+          "Συνολικός Χρόνος (δευτ.)",
+        ]
+      : [
+          "Κωδικός Μαθητή",
+          "Ημερομηνία/Ώρα",
+          "Φύλο",
+          "Ημερομηνία Γέννησης",
+          "Διάγνωση",
+        ];
 
     for (let i = 1; i <= maxQuestions; i++) {
       if (isReactionTimeGame) {
@@ -259,6 +271,12 @@ const Reports = () => {
           ? "Όχι"
           : "-",
       ];
+
+      // Add total time for games 7 and 11
+      if (isTotalTimeGame) {
+        row.push(report.parsedResults?.totalTime !== undefined ? report.parsedResults.totalTime : "");
+      }
+
       const questions = report.parsedResults?.questions || [];
       for (let i = 0; i < maxQuestions; i++) {
         const question = questions[i];
@@ -319,7 +337,8 @@ const Reports = () => {
 
     // Κάνουμε τις πρώτες σειρές να συγχωνευτούν σε κάθε group
     const columnsPerQuestion = isReactionTimeGame ? 3 : (isAudioButtonGame ? 6 : 5);
-    for (let i = 5; i < 5 + maxQuestions * columnsPerQuestion; i += columnsPerQuestion) {
+    const startColumn = isTotalTimeGame ? 6 : 5; // Games 7 and 11 have an extra column for total time
+    for (let i = startColumn; i < startColumn + maxQuestions * columnsPerQuestion; i += columnsPerQuestion) {
       ws["!merges"] = ws["!merges"] || [];
       ws["!merges"].push({ s: { r: 2, c: i }, e: { r: 2, c: i + columnsPerQuestion - 1 } });
     }
