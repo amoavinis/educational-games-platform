@@ -20,6 +20,7 @@
     "indexes": "firebase/firestore.indexes.json"
   },
   "hosting": {
+    "site": "educational-games-platform",
     "public": "build",
     "ignore": [
       "firebase.json",
