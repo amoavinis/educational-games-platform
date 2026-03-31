@@ -29,7 +29,7 @@ import klidiAudio from "../../assets/sounds/03/κλειδί.mp3";
 import klidosiAudio from "../../assets/sounds/03/κλείδωση.mp3";
 import skupizoAudio from "../../assets/sounds/03/σκουπίζω.mp3";
 import skupidiAudio from "../../assets/sounds/03/σκουπίδι.mp3";
-import skupistosAudio from "../../assets/sounds/03/σκουπιστός.mp3";
+// import skupistosAudio from "../../assets/sounds/03/σκουπιστός.mp3";
 import skupismenosAudio from "../../assets/sounds/03/σκουπισμένος.mp3";
 import potizoAudio from "../../assets/sounds/03/ποτίζω.mp3";
 import potismaAudio from "../../assets/sounds/03/πότισμα.mp3";
@@ -91,7 +91,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       κλείδωση: klidosiAudio,
       σκουπίζω: skupizoAudio,
       σκουπίδι: skupidiAudio,
-      σκουπιστός: skupistosAudio,
+      // σκουπιστός: skupistosAudio,
       σκουπισμένος: skupismenosAudio,
       ποτίζω: potizoAudio,
       πότισμα: potismaAudio,
@@ -129,13 +129,9 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
-  const [hasPlayedWordAudio, setHasPlayedWordAudio] = useState(false);
-  const [timeoutEnded, setTimeoutEnded] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
-
   const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
-  const timeoutRef = useRef(null);
-
+  const prevSliderSectionRef = useRef(null);
   const [playerClickedAudioButton, setPlayerClickedAudioButton] = useState(false);
 
   const currentWord = words[currentWordIndex];
@@ -172,7 +168,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
     const audio = wordAudioRef.current;
     const handleEnded = () => {
       setIsWordAudioPlaying(false);
-      setHasPlayedWordAudio(true);
+      setCanProceed(true);
     };
 
     if (audio) {
@@ -182,13 +178,6 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
       };
     }
   }, [wordAudioRef]);
-
-  // Check if can proceed (both audio played and timeout ended)
-  useEffect(() => {
-    if (hasPlayedWordAudio && timeoutEnded) {
-      setCanProceed(true);
-    }
-  }, [hasPlayedWordAudio, timeoutEnded]);
 
   // Initialize game stats
   useEffect(() => {
@@ -326,7 +315,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Play word audio when speaker button clicked
   const playWordAudio = () => {
-    if (currentWordAudio && wordAudioRef.current && !isWordAudioPlaying && !hasPlayedWordAudio) {
+    if (currentWordAudio && wordAudioRef.current && !isWordAudioPlaying) {
       setPlayerClickedAudioButton(true);
       setIsWordAudioPlaying(true);
       wordAudioRef.current.play().catch((error) => {
@@ -339,17 +328,11 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   // Handle next question button click
   const handleNextQuestion = () => {
     if (canProceed) {
-      // 1. Clear the auto-play timeout so audio doesn't trigger late
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-
-      // 2. Determine if this is the final example before the real test begins
+      // 1. Determine if this is the final example before the real test begins
       const isLastExample = currentWord.isExample && currentWordIndex < words.length - 1 && !words[currentWordIndex + 1].isExample;
 
       if (isLastExample) {
-        // 3. Enter 'waiting' state and play the "End of Practice" instructions
+        // 2. Enter 'waiting' state and play the "End of Practice" instructions
         setWaitingForPracticeEnd(true);
         if (practiceEndAudioRef.current) {
           practiceEndAudioRef.current.play().catch((error) => {
@@ -360,7 +343,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
           });
         }
       } else {
-        // 4. If it's a standard word, just move on immediately
+        // 3. If it's a standard word, just move on immediately
         nextWord(currentWordIndex);
       }
     }
@@ -370,72 +353,60 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   const startGame = async () => {
     await startRecording();
     setGameStarted(true);
-    startWordHighlighting(0);
+    setWordAudioCb(0);
   };
 
   // Start word display and audio sequence
-  const startWordHighlighting = useCallback((wordIndex) => {
-    const fullHighlightDuration = 10000;
-    const word = words[wordIndex];
+  const setWordAudioCb = useCallback(
+    (wordIndex) => {
+      const word = words[wordIndex];
 
-    const audioFile = word && wordAudioMap[word.word] ? wordAudioMap[word.word] : null;
-    setCurrentWordAudio(audioFile);
+      const audioFile = word && wordAudioMap[word.word] ? wordAudioMap[word.word] : null;
+      setCurrentWordAudio(audioFile);
 
-    setIsWordAudioPlaying(false);
-    setHasPlayedWordAudio(false);
-    setTimeoutEnded(false);
-    setCanProceed(false);
-
-    timeoutRef.current = setTimeout(() => {
-      setTimeoutEnded(true);
-
-      if (audioFile && wordAudioRef.current) {
-        setIsWordAudioPlaying(true);
-        wordAudioRef.current.play().catch((error) => {
-          console.error("Error playing word audio:", error);
-          setIsWordAudioPlaying(false);
-          setHasPlayedWordAudio(true);
-        });
-      } else {
-        setHasPlayedWordAudio(true);
-      }
-    }, fullHighlightDuration);
-  }, [wordAudioMap, wordAudioRef, words]);
+      setIsWordAudioPlaying(false);
+      setCanProceed(false);
+    },
+    [wordAudioMap, words],
+  );
 
   // Move to next word
-  const nextWord = useCallback((currentIndex) => {
-    // Record result for non-example words only
-    const wordToRecord = words[currentIndex];
-    if (wordToRecord && !wordToRecord.isExample) {
-      setGameStats((prev) => ({
-        ...prev,
-        rounds: [
-          ...prev.rounds,
-          {
-            question: wordToRecord.word,
-            playerClickedAudioButton: playerClickedAudioButton,
-          },
-        ],
-      }));
-    }
+  const nextWord = useCallback(
+    (currentIndex) => {
+      // Record result for non-example words only
+      const wordToRecord = words[currentIndex];
+      if (wordToRecord && !wordToRecord.isExample) {
+        setGameStats((prev) => ({
+          ...prev,
+          rounds: [
+            ...prev.rounds,
+            {
+              question: wordToRecord.word,
+              playerClickedAudioButton: playerClickedAudioButton,
+            },
+          ],
+        }));
+      }
 
-    // Reset the audio button flag for the next word
-    setPlayerClickedAudioButton(false);
-    // Reset slider highlighting
-    setSliderHighlight({ sectionIndex: -1, subPosition: "start" });
+      // Reset the audio button flag for the next word
+      setPlayerClickedAudioButton(false);
+      // Reset slider highlighting
+      setSliderHighlight({ sectionIndex: -1, subPosition: "start" });
 
-    if (currentIndex < words.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentWordIndex(nextIndex);
-      setTimeout(() => startWordHighlighting(nextIndex), 100);
-    } else {
-      // Game completed
-      setGameCompleted(true);
-      setTimeout(() => {
-        stopRecording();
-      }, 100);
-    }
-  }, [playerClickedAudioButton, startWordHighlighting, stopRecording, words]);
+      if (currentIndex < words.length - 1) {
+        const nextIndex = currentIndex + 1;
+        setCurrentWordIndex(nextIndex);
+        setTimeout(() => setWordAudioCb(nextIndex), 100);
+      } else {
+        // Game completed
+        setGameCompleted(true);
+        setTimeout(() => {
+          stopRecording();
+        }, 100);
+      }
+    },
+    [playerClickedAudioButton, setWordAudioCb, stopRecording, words],
+  );
 
   useEffect(() => {
     const audio = practiceEndAudioRef.current;
@@ -450,6 +421,24 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
   // Handle slider change
   const handleSliderChange = (sectionIndex, subPosition) => {
     setSliderHighlight({ sectionIndex, subPosition });
+
+    const isAtEnd = sectionIndex === 1 && subPosition === "end";
+    const wasAtEnd = prevSliderSectionRef.current === "end";
+    prevSliderSectionRef.current = isAtEnd ? "end" : null;
+    const enteredEnd = isAtEnd && !wasAtEnd;
+
+    if (enteredEnd) {
+      if (currentWordAudio && wordAudioRef.current) {
+        setIsWordAudioPlaying(true);
+        wordAudioRef.current.play().catch((error) => {
+          console.error("Error playing word audio:", error);
+          setIsWordAudioPlaying(false);
+          setCanProceed(true);
+        });
+      } else {
+        setCanProceed(true);
+      }
+    }
   };
 
   // Get word sections for slider
@@ -653,7 +642,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                     variant="light"
                     size="lg"
                     onClick={playWordAudio}
-                    disabled={!currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio}
+                    disabled={!currentWordAudio || isWordAudioPlaying}
                     className="rounded-circle"
                     style={{
                       width: "80px",
@@ -663,7 +652,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                       justifyContent: "center",
                       backgroundColor: "white",
                       border: "2px solid #6c757d",
-                      opacity: !currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
+                      opacity: !currentWordAudio || isWordAudioPlaying ? 0.6 : 1,
                     }}
                   >
                     <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
@@ -674,7 +663,7 @@ const Game3 = ({ gameId, schoolId, studentId, classId }) => {
                     variant="success"
                     size="lg"
                     onClick={handleNextQuestion}
-                    disabled={!canProceed || waitingForPracticeEnd}
+                    disabled={!canProceed || waitingForPracticeEnd || isWordAudioPlaying}
                     style={{ minWidth: "200px" }}
                   >
                     Επόμενη Λέξη

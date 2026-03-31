@@ -81,11 +81,11 @@ export const game3Words = [
     root: "σκουπ",
     suffix: "ίδι",
   },
-  {
+  /* {
     word: "σκουπιστός",
     root: "σκουπ",
     suffix: "ιστός",
-  },
+  }, */
   {
     word: "σκουπισμένος",
     root: "σκουπ",

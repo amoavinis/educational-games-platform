@@ -100,10 +100,8 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
-  const [hasPlayedWordAudio, setHasPlayedWordAudio] = useState(false);
-  const [timeoutEnded, setTimeoutEnded] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
-  const timeoutRef = useRef(null);
+  const prevSliderSectionRef = useRef(null);
   const [playerClickedAudioButton, setPlayerClickedAudioButton] = useState(false);
   const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
@@ -171,7 +169,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     const audio = wordAudioRef.current;
     const handleEnded = () => {
       setIsWordAudioPlaying(false);
-      setHasPlayedWordAudio(true);
+      setCanProceed(true);
     };
 
     if (audio) {
@@ -181,13 +179,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       };
     }
   }, [wordAudioRef, currentWordAudio]);
-
-  // Check if can proceed (both audio played and timeout ended)
-  useEffect(() => {
-    if (timeoutEnded && hasPlayedWordAudio) {
-      setCanProceed(true);
-    }
-  }, [hasPlayedWordAudio, timeoutEnded]);
 
   // Initialize game stats
   useEffect(() => {
@@ -326,7 +317,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Play word audio when speaker button clicked
   const playWordAudio = () => {
-    if (currentWordAudio && wordAudioRef.current && !isWordAudioPlaying && !hasPlayedWordAudio) {
+    if (currentWordAudio && wordAudioRef.current && !isWordAudioPlaying) {
       setPlayerClickedAudioButton(true);
       setIsWordAudioPlaying(true);
       wordAudioRef.current.play().catch((error) => {
@@ -339,17 +330,11 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   // Handle next question button click
   const handleNextQuestion = () => {
     if (canProceed) {
-      // Clear the timeout if it exists
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-
-      // Check if this is the last example (current word is example and next word is not)
+      // 1. Check if this is the last example (current word is example and next word is not)
       const isLastExample = currentWord.isExample && currentWordIndex < words.length - 1 && !words[currentWordIndex + 1].isExample;
 
       if (isLastExample) {
-        // Play practice end audio and wait for it to finish
+        // 2. Play practice end audio and wait for it to finish
         setWaitingForPracticeEnd(true);
         if (practiceEndAudioRef.current) {
           practiceEndAudioRef.current.play().catch((error) => {
@@ -359,6 +344,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
           });
         }
       } else {
+        // 3. If it's a standard word, just move on immediately
         nextWord(currentWordIndex);
       }
     }
@@ -368,11 +354,11 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const startGame = async () => {
     await startRecording();
     setGameStarted(true);
-    startWordHighlighting(0);
+    setWordAudioCb(0);
   };
 
   // Start word display and audio sequence
-  const startWordHighlighting = useCallback(
+  const setWordAudioCb = useCallback(
     (wordIndex) => {
       const word = words[wordIndex];
 
@@ -382,32 +368,9 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
       // Reset states for new word
       setIsWordAudioPlaying(false);
-      setHasPlayedWordAudio(false);
-      setTimeoutEnded(false);
       setCanProceed(false);
-
-      const fullDuration = 10000;
-
-      // Start the timeout timer
-      timeoutRef.current = setTimeout(() => {
-        setTimeoutEnded(true);
-
-        // Only play audio when timeout ends if audio exists for this word
-        if (audioFile && wordAudioRef.current) {
-          setIsWordAudioPlaying(true);
-          wordAudioRef.current.play().catch((error) => {
-            console.error("Error playing word audio:", error);
-            setIsWordAudioPlaying(false);
-            // If play fails, still enable the button
-            setHasPlayedWordAudio(true);
-          });
-        } else {
-          // No audio for this word, mark as played so button can be enabled
-          setHasPlayedWordAudio(true);
-        }
-      }, fullDuration);
     },
-    [wordAudioMap, wordAudioRef, words],
+    [wordAudioMap, words],
   );
 
   // Move to next word
@@ -436,7 +399,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
       if (currentIndex < words.length - 1) {
         const nextIndex = currentIndex + 1;
         setCurrentWordIndex(nextIndex);
-        setTimeout(() => startWordHighlighting(nextIndex), 100);
+        setTimeout(() => setWordAudioCb(nextIndex), 100);
       } else {
         // Game completed
         setGameCompleted(true);
@@ -446,7 +409,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
         }, 100);
       }
     },
-    [playerClickedAudioButton, startWordHighlighting, stopRecording, words],
+    [playerClickedAudioButton, setWordAudioCb, stopRecording, words],
   );
 
   // Listen for practice end audio ended
@@ -469,6 +432,24 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   // Handle slider change
   const handleSliderChange = (sectionIndex, subPosition) => {
     setSliderHighlight({ sectionIndex, subPosition });
+
+    const isAtEnd = sectionIndex === 2 && subPosition === "end";
+    const wasAtEnd = prevSliderSectionRef.current === "end";
+    prevSliderSectionRef.current = isAtEnd ? "end" : null;
+    const enteredEnd = isAtEnd && !wasAtEnd;
+
+    if (enteredEnd) {
+      if (currentWordAudio && wordAudioRef.current) {
+        setIsWordAudioPlaying(true);
+        wordAudioRef.current.play().catch((error) => {
+          console.error("Error playing word audio:", error);
+          setIsWordAudioPlaying(false);
+          setCanProceed(true);
+        });
+      } else {
+        setCanProceed(true);
+      }
+    }
   };
 
   // Get word sections for slider
@@ -710,7 +691,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
                   variant="light"
                   size="lg"
                   onClick={playWordAudio}
-                  disabled={!currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio}
+                  disabled={!currentWordAudio || isWordAudioPlaying}
                   className="rounded-circle"
                   style={{
                     width: "80px",
@@ -720,14 +701,20 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
                     justifyContent: "center",
                     backgroundColor: "white",
                     border: "2px solid #6c757d",
-                    opacity: !currentWordAudio || isWordAudioPlaying || hasPlayedWordAudio ? 0.6 : 1,
+                    opacity: !currentWordAudio || isWordAudioPlaying ? 0.6 : 1,
                   }}
                 >
                   <i className="bi bi-volume-up" style={{ fontSize: "30px", color: "#6c757d" }}></i>
                 </Button>
               </div>
               <div className="d-flex justify-content-center mt-3">
-                <Button variant="success" size="lg" onClick={handleNextQuestion} disabled={!canProceed || waitingForPracticeEnd} style={{ minWidth: "200px" }}>
+                <Button
+                  variant="success"
+                  size="lg"
+                  onClick={handleNextQuestion}
+                  disabled={!canProceed || waitingForPracticeEnd || isWordAudioPlaying}
+                  style={{ minWidth: "200px" }}
+                >
                   Επόμενη Λέξη
                 </Button>
               </div>
