@@ -10,9 +10,6 @@ import { uploadAudioRecording } from "../../services/audioStorage";
 import { game10Words } from "../Data/Game10Data";
 import useAudio from "../../hooks/useAudio";
 
-import titleAudio from "../../assets/sounds/10/title.mp3";
-import instructionsAudio from "../../assets/sounds/10/instructions.mp3";
-
 // Import word audio files
 import exampleAntistrofosAudio from "../../assets/sounds/10/example-αντίστροφος.mp3";
 import exampleKatastrefoAudio from "../../assets/sounds/10/example-καταστρέφω.mp3";
@@ -33,6 +30,7 @@ import yptertonizoAudio from "../../assets/sounds/10/υπερτονίζω.mp3";
 import antistoixoAudio from "../../assets/sounds/10/αντιστοιχώ.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEndAudio from "../../assets/sounds/general/end-of-practice.mp3";
+import demoVideo from "../../assets/video/DEMO 10.mp4";
 
 const RecordingIndicator = () => (
   <div className="recording-wave">
@@ -85,6 +83,7 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
 
   // Game state
   const [gameStarted, setGameStarted] = useState(false);
+  const [isVideoEnded, setIsVideoEnded] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -96,8 +95,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     totalRounds: 0,
   });
   const [resultsSubmitted, setResultsSubmitted] = useState(false);
-  const [isInitialAudioPlaying, setIsInitialAudioPlaying] = useState(false);
-  const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
   const [currentWordAudio, setCurrentWordAudio] = useState(null);
   const [isWordAudioPlaying, setIsWordAudioPlaying] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
@@ -106,16 +103,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
   const currentWord = words[currentWordIndex];
-
-  // Initial title audio
-  const { audioRef: titleAudioRef } = useAudio(titleAudio, {
-    playOnMount: false,
-  });
-
-  // Initial instructions audio
-  const { audioRef: instructionsAudioRef } = useAudio(instructionsAudio, {
-    playOnMount: false,
-  });
 
   // Word-specific audio
   const { audioRef: wordAudioRef } = useAudio(currentWordAudio, {
@@ -126,43 +113,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
   const { audioRef: practiceEndAudioRef } = useAudio(practiceEndAudio, {
     playOnMount: false,
   });
-
-  // Listen for title audio ended, then play instructions
-  useEffect(() => {
-    const audio = titleAudioRef.current;
-    const handleEnded = () => {
-      if (instructionsAudioRef.current) {
-        instructionsAudioRef.current.play().catch((error) => {
-          console.error("Error playing instructions audio:", error);
-          setIsInitialAudioPlaying(false);
-        });
-      } else {
-        setIsInitialAudioPlaying(false);
-      }
-    };
-
-    if (audio) {
-      audio.addEventListener("ended", handleEnded);
-      return () => {
-        audio.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [titleAudioRef, instructionsAudioRef]);
-
-  // Listen for instructions audio ended
-  useEffect(() => {
-    const audio = instructionsAudioRef.current;
-    const handleEnded = () => {
-      setIsInitialAudioPlaying(false);
-    };
-
-    if (audio) {
-      audio.addEventListener("ended", handleEnded);
-      return () => {
-        audio.removeEventListener("ended", handleEnded);
-      };
-    }
-  }, [instructionsAudioRef]);
 
   // Listen for word audio ended
   useEffect(() => {
@@ -476,27 +426,27 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     let result = [];
 
     // Determine highlighting based on slider position
-    let highlightPrefix = false;
-    let highlightStem = false;
-    let highlightSuffix = false;
+    let highlightPrefix = true;
+    let highlightStem = true;
+    let highlightSuffix = true;
 
     if (sliderHighlight.sectionIndex === 0) {
       // In prefix section
       if (sliderHighlight.subPosition === "middle" || sliderHighlight.subPosition === "end") {
-        highlightPrefix = true;
+        highlightPrefix = false;
       }
     } else if (sliderHighlight.sectionIndex === 1) {
       // In stem section
-      highlightPrefix = true;
+      highlightPrefix = false;
       if (sliderHighlight.subPosition === "middle" || sliderHighlight.subPosition === "end") {
-        highlightStem = true;
+        highlightStem = false;
       }
     } else if (sliderHighlight.sectionIndex === 2) {
       // In suffix section
-      highlightPrefix = true;
-      highlightStem = true;
+      highlightPrefix = false;
+      highlightStem = false;
       if (sliderHighlight.subPosition === "middle" || sliderHighlight.subPosition === "end") {
-        highlightSuffix = true;
+        highlightSuffix = false;
       }
     }
 
@@ -534,27 +484,6 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
     return result;
   };
 
-  // Play title-instructions audio on mount
-  useEffect(() => {
-    if (!gameStarted && !hasPlayedInitialAudio && titleAudioRef.current) {
-      setIsInitialAudioPlaying(true);
-      const timer = setTimeout(() => {
-        titleAudioRef.current
-          .play()
-          .then(() => {
-            setHasPlayedInitialAudio(true);
-          })
-          .catch((error) => {
-            console.error("Error playing title audio:", error);
-            setIsInitialAudioPlaying(false);
-            setHasPlayedInitialAudio(true);
-          });
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [gameStarted, hasPlayedInitialAudio, titleAudioRef]);
-
   // Play bravo audio when game completes
   useEffect(() => {
     if (gameCompleted) {
@@ -573,37 +502,31 @@ const Game10 = ({ gameId, schoolId, studentId, classId }) => {
           <Col md={12} lg={10}>
             <Card className="main-card">
               <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-                <h4 className="mb-0">Διαβάζω την κάθε λέξη όσο καλύτερα μπορώ</h4>
+                <h3 className="mb-0">Βίντεο επεξήγησης</h3>
               </Card.Header>
               <Card.Body className="text-center">
+                <div className="mb-4">
+                  <video width="100%" style={{ maxWidth: "1000px", borderRadius: "8px" }} onEnded={() => setIsVideoEnded(true)} autoPlay controls>
+                    <source src={demoVideo} type="video/mp4" />
+                  </video>
+                </div>
                 <div className="d-flex justify-content-center">
                   <Button
-                    variant="dark"
+                    variant="success"
                     size="lg"
                     onClick={startGame}
-                    disabled={isInitialAudioPlaying}
-                    className="mb-4 rounded-circle"
+                    disabled={!isVideoEnded}
+                    className="px-5 py-3"
                     style={{
-                      width: "100px",
-                      height: "100px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "2rem",
-                      backgroundColor: isInitialAudioPlaying ? "#666666" : "#000000",
-                      border: "none",
-                      opacity: isInitialAudioPlaying ? 0.6 : 1,
-                      cursor: isInitialAudioPlaying ? "not-allowed" : "pointer",
+                      fontSize: "1.5rem",
+                      fontWeight: "bold",
+                      opacity: !isVideoEnded ? 0.6 : 1,
+                      cursor: !isVideoEnded ? "not-allowed" : "pointer",
                     }}
                   >
-                    <svg width="40" height="40" fill="white" viewBox="0 0 16 16">
-                      <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V14h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-1.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z" />
-                      <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0v5zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3z" />
-                    </svg>
+                    ΠΑΜΕ!
                   </Button>
                 </div>
-                <audio ref={titleAudioRef} src={titleAudio} />
-                <audio ref={instructionsAudioRef} src={instructionsAudio} />
                 <audio ref={wordAudioRef} src={currentWordAudio} />
               </Card.Body>
             </Card>
