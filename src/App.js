@@ -9,6 +9,7 @@ import PrivateRoute from "./components/Auth/PrivateRoute";
 import Login from "./components/Auth/Login";
 import Home from "./components/Home";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/App.css";
 import Students from "./components/Students/Students";
@@ -26,7 +27,7 @@ const AppWrapper = () => {
   return (
     <>
       {showHeader && <Header />}
-      <Container style={{height: "calc(100vh - 56px - 1.5rem)"}}>
+      <Container style={{height: "calc(100vh - 56px - 1.5rem - 50px)"}}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -87,6 +88,7 @@ const AppWrapper = () => {
           />
         </Routes>
       </Container>
+      {showHeader && <Footer />}
     </>
   );
 };
