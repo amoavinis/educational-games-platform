@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { canStudentPlayGame } from "../../services/gameAttempts";
 import "../../styles/Game.css";
+import Footer from "../Footer";
 import Game1 from "./Game1";
 import Game2 from "./Game2";
 import Game3 from "./Game3";
@@ -175,6 +176,7 @@ const GameScreen = () => {
         {gameId === 15 && <Game15 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
         {gameId === 16 && <Game16 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
       </div>
+      <Footer />
     </div>
   );
 };

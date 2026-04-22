@@ -27,7 +27,7 @@ const AppWrapper = () => {
   return (
     <>
       {showHeader && <Header />}
-      <Container style={{height: "calc(100vh - 56px - 1.5rem - 50px)"}}>
+      <Container style={{height: showHeader ? "calc(100vh - 56px - 1.5rem - 50px)" : "calc(100vh - 50px)"}}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -88,7 +88,7 @@ const AppWrapper = () => {
           />
         </Routes>
       </Container>
-      {showHeader && <Footer />}
+      <Footer />
     </>
   );
 };
