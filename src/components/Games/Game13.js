@@ -420,7 +420,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">Διαλέγω το κατάλληλο επίθημα και φτιάχνω…</h4>
+              <h4 className="mb-0 game-title-header">Διαλέγω τη σωστή κατάληξη και φτιάχνω...</h4>
             </Card.Header>
             <Card.Body>
               {/* Visual flow diagram */}
@@ -455,7 +455,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
                 </div>
               </div>
 
-              <Row className="justify-content-center mb-4">
+              <Row className="justify-content-center mb-4 answer-options">
                 {question.options.map((option, index) => {
                   let variant = "outline-primary";
                   let customStyle = {};
@@ -477,7 +477,7 @@ const Game13 = ({ gameId, schoolId, studentId, classId }) => {
                   }
 
                   return (
-                    <Col key={index} xs={4} className="mb-3 d-flex justify-content-center">
+                    <Col key={index} xs={12} className="mb-3 d-flex justify-content-center">
                       <Button
                         onClick={() => handleAnswerSelect(option)}
                         disabled={selectedAnswer !== null || isAudioPlaying}

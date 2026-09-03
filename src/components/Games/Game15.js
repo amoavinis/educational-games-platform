@@ -460,7 +460,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">Διαλέγω το κατάλληλο επίθημα όσο πιο γρήγορα μπορώ</h4>
+              <h4 className="mb-0 game-title-header">Διαλέγω τη σωστή κατάληξη όσο πιο γρήγορα μπορώ</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="rounded mb-4">
@@ -495,8 +495,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                 </div>
 
                 {!isMarqueeActive && (
-                  <Row className="g-3 mb-4">
-                    <Col xs={3}></Col>
+                  <Row className="g-3 mb-4 answer-options">
                     {question.options.map((option, index) => {
                       let variant = "outline-primary";
                       let customStyle = {};
@@ -518,7 +517,7 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                       }
 
                       return (
-                        <Col key={index} xs={3}>
+                        <Col key={index} xs={12}>
                           <Button
                             variant={variant}
                             style={customStyle}
@@ -532,7 +531,6 @@ const Game15 = ({ gameId, schoolId, studentId: propStudentId, classId }) => {
                         </Col>
                       );
                     })}
-                    <Col xs={3}></Col>
                   </Row>
                 )}
               </div>
