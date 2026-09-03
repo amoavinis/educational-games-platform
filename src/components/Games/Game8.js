@@ -329,7 +329,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
                   <div className="display-4 font-weight-bold mb-3">{currentQ.word}</div>
                 </div>
 
-                <Row className="mb-4 w-100">
+                <Row className="mb-4 answer-options">
                   {currentQ.choices.map((choice, index) => {
                     let variant = "outline-primary";
                     let customStyle = {};
@@ -347,7 +347,7 @@ const Game8 = ({ gameId, schoolId, studentId, classId }) => {
                     }
 
                     return (
-                      <Col key={index} xs={4} className="mb-3">
+                      <Col key={index} xs={12} className="mb-3">
                         <Button
                           className="w-100 py-3"
                           variant={variant}

@@ -437,7 +437,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                 </div>
               </div>
 
-              <Row className="g-3 mb-4 align-items-center">
+              <Row className="g-3 mb-4 align-items-center answer-options">
                 {currentQ.options.map((option, index) => {
                   let variant = "outline-primary";
                   let customStyle = {};
@@ -459,7 +459,7 @@ const WordPrefixGame = ({ gameId, schoolId, studentId, classId }) => {
                   }
 
                   return (
-                    <Col key={index} xs={4}>
+                    <Col key={index} xs={12}>
                       <Button
                         variant={variant}
                         style={customStyle}
