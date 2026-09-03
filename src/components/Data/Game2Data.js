@@ -1,6 +1,7 @@
 export const game2Words = [
   { word: "καθαρίζω", stem: "καθαρ", suffix: "ίζω", isExample: true }, // Example question
   { word: "κλειδώνω", stem: "κλειδ", suffix: "ώνω", isExample: true }, // Example question
+  { word: "ξυπνώντας", stem: "ξυπν", suffix: "ώντας", isExample: true }, // Example question
   { word: "σκαλίζω", stem: "σκαλ", suffix: "ίζω" },
   { word: "σκάλισα", stem: "σκάλ", suffix: "ισα" },
   { word: "σκάλισμα", stem: "σκάλ", suffix: "ισμα" },
@@ -18,7 +19,6 @@ export const game2Words = [
   { word: "ξυπνώ", stem: "ξυπν", suffix: "ώ" },
   { word: "ξύπνησα", stem: "ξύπν", suffix: "ησα" },
   { word: "ξυπνητός", stem: "ξυπν", suffix: "ητός" },
-  { word: "ξυπνώντας", stem: "ξυπν", suffix: "ώντας" },
   { word: "ξυπνητήρι", stem: "ξυπν", suffix: "ητήρι" },
   { word: "ξύπνημα", stem: "ξύπν", suffix: "ημα" },
   { word: "φαρμακώνω", stem: "φαρμακ", suffix: "ώνω" },
