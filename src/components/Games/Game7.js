@@ -8,9 +8,6 @@ import { addReport } from "../../services/reports";
 import { game7Words } from "../Data/Game7Data";
 import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/07/title-instructions.mp3";
-import exampleDiastasiAudio from "../../assets/sounds/07/example-διάσταση.mp3";
-import exampleKatagalanosAudio from "../../assets/sounds/07/example-καταγάλανος.mp3";
-import exampleParapinoAudio from "../../assets/sounds/07/example-παραπίνω.mp3";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
@@ -33,10 +30,10 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   // Yellow color shades for each prefix column
   const getPrefixColor = (prefix) => {
     const colors = {
-      κατα: "#FFF8DC", // Cornsilk - Very light cream yellow
-      ανα: "#FFEB3B", // Material Design Yellow
-      παρα: "#FFD700", // Gold
-      δια: "#FFA500", // Orange - warm yellow-orange
+      ανα: "#FFF8DC", // Cornsilk - Very light cream yellow
+      αντι: "#FFEB3B", // Material Design Yellow
+      υπο: "#FFD700", // Gold
+      υπερ: "#FFA500", // Orange - warm yellow-orange
     };
     return colors[prefix] || "#FFF8DC";
   };
@@ -44,20 +41,20 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   // Get border color (darker version of background)
   const getPrefixBorderColor = (prefix) => {
     const colors = {
-      κατα: "#DDD8B8", // Darker cornsilk
-      ανα: "#F9C842", // Darker material yellow
-      παρα: "#E6C200", // Darker gold
-      δια: "#E6941A", // Darker orange
+      ανα: "#DDD8B8", // Darker cornsilk
+      αντι: "#F9C842", // Darker material yellow
+      υπο: "#E6C200", // Darker gold
+      υπερ: "#E6941A", // Darker orange
     };
     return colors[prefix] || "#DDD8B8";
   };
 
   const [wordPool, setWordPool] = useState([]);
   const [columns, setColumns] = useState({
-    κατα: [],
     ανα: [],
-    παρα: [],
-    δια: [],
+    αντι: [],
+    υπο: [],
+    υπερ: [],
   });
   const [wordAttempts, setWordAttempts] = useState({}); // Track attempts per word
   const [gameStartTime, setGameStartTime] = useState(null);
@@ -68,15 +65,8 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
   const [hasPlayedInitialAudio, setHasPlayedInitialAudio] = useState(false);
   const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
-  // Map words to their audio files (only διασταση available currently)
-  const wordAudioMap = React.useMemo(
-    () => ({
-      διάσταση: exampleDiastasiAudio,
-      καταγάλανος: exampleKatagalanosAudio,
-      παραπίνω: exampleParapinoAudio
-    }),
-    []
-  );
+  // Map words to their audio files (no recordings for the new example words yet)
+  const wordAudioMap = React.useMemo(() => ({}), []);
 
   // Initial title-instructions audio (plays on load)
   const { audioRef: titleAudioRef, audioSrc: titleAudioSrc } = useAudio(titleInstructionsAudio, {
@@ -180,7 +170,7 @@ const GreekWordSortingGame = ({ gameId, schoolId, studentId, classId }) => {
     const exampleWords = words.filter((w) => w.isExample);
     // Show all example words initially
     setWordPool(exampleWords);
-    setColumns({ κατα: [], ανα: [], παρα: [], δια: [] });
+    setColumns({ ανα: [], αντι: [], υπο: [], υπερ: [] });
     setWordAttempts({});
     setGameStartTime(Date.now());
     setGameResults([]);
