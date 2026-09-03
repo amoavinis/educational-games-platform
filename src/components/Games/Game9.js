@@ -358,7 +358,7 @@ const Game9 = ({ gameId, schoolId, studentId, classId }) => {
   }, [currentQuestion, gameCompleted]);
 
   const getTaskTitle = () => {
-    return currentWord.task === "prefix" ? "Βρίσκω και χρωματίζω το πρόθημα της λέξης" : "Βρίσκω και χρωματίζω το επίθημα της λέξης";
+    return currentWord.task === "prefix" ? "Βρίσκω και χρωματίζω το ΠΡΟΘΗΜΑ της λέξης" : "Βρίσκω και χρωματίζω το ΕΠΙΘΗΜΑ της λέξης";
   };
 
   // Play bravo audio when game completes
