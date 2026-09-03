@@ -26,8 +26,15 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   const [timeoutId, setTimeoutId] = useState(null);
   const [resultsSubmitted, setResultsSubmitted] = useState(false);
   const [counterInterval, setCounterInterval] = useState(null);
+  // The game stays locked until the spoken instructions have finished
+  const [instructionsFinished, setInstructionsFinished] = useState(false);
 
   const totalRounds = 5;
+
+  // If the instructions cannot be played at all, do not lock the student out
+  const handleInstructionsError = useCallback(() => {
+    setInstructionsFinished(true);
+  }, []);
 
   // Use the audio hook with automatic URL change detection
   const {
@@ -36,7 +43,20 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
     stop: stopTitleAudio,
   } = useAudio(titleInstructionsAudio, {
     playOnMount: true,
+    onPlayError: handleInstructionsError,
   });
+
+  // Unlock the game once the instructions have been heard in full
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => setInstructionsFinished(true);
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [audioRef]);
 
   // Bravo audio ref
   const bravoAudioRef = useRef(null);
@@ -142,15 +162,15 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
     setTimeoutId(timeout);
   }, [resetLiveCounter, startLiveCounter]);
 
-  // Handle clicking anywhere to start the game
+  // Handle clicking anywhere to start the game (only after the instructions have finished)
   const handleInitialClick = useCallback(() => {
-    if (gameState === "initial") {
+    if (gameState === "initial" && instructionsFinished) {
       stopTitleAudio();
       setGameState("waiting");
       setGameStarted(true);
       startNewRound();
     }
-  }, [gameState, stopTitleAudio, startNewRound]);
+  }, [gameState, instructionsFinished, stopTitleAudio, startNewRound]);
 
   // Complete the game and generate report
   const completeGame = useCallback((finalTimes) => {
@@ -217,13 +237,13 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
     }
   }, [gameState, startNewRound]);
 
-  // Add click event listener for initial start
+  // Add click event listener for initial start, but not before the instructions are over
   useEffect(() => {
-    if (gameState === "initial") {
+    if (gameState === "initial" && instructionsFinished) {
       document.addEventListener("click", handleInitialClick);
       return () => document.removeEventListener("click", handleInitialClick);
     }
-  }, [gameState, handleInitialClick]);
+  }, [gameState, instructionsFinished, handleInitialClick]);
 
   // Cleanup timeout and counter on unmount
   useEffect(() => {
@@ -273,7 +293,7 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   const getInstructionText = () => {
     switch (gameState) {
       case "initial":
-        return "Κάνε κλικ οπουδήποτε για ξεκινήσεις";
+        return instructionsFinished ? "Κάνε κλικ οπουδήποτε για ξεκινήσεις" : "Άκουσε πρώτα την εκφώνηση…";
       case "waiting":
         return "Περίμενε να γίνει κύκλος…";
       case "ready":
@@ -355,9 +375,11 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
                     ></span>
                     ), πάτα όσο πιο γρηγορα μπορείς το αριστερό κλικ στο ποντίκι.
                   </p>
-                  <p className="mb-4">
-                    <strong>Ξεκινάμε;</strong>
-                  </p>
+                  {instructionsFinished && (
+                    <p className="mb-4">
+                      <strong>Ξεκινάμε;</strong>
+                    </p>
+                  )}
                 </div>
               )}
 
