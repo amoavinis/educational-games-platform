@@ -361,7 +361,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">Ακούω και διαλέγω το σωστό επίθημα</h4>
+              <h4 className="mb-0 game-title-header">Διαλέγω τη σωστή κατάληξη</h4>
             </Card.Header>
             <Card.Body className="text-center">
               <div className="mb-4"></div>
@@ -393,7 +393,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
                 </div>
               </div>
 
-              <Row className="g-3 mb-4">
+              <Row className="g-3 mb-4 answer-options">
                 {currentQ.options.map((option, index) => {
                   let variant = "outline-primary";
                   let customStyle = {};
@@ -411,7 +411,7 @@ const Game4 = ({ gameId, schoolId, studentId, classId }) => {
                   }
 
                   return (
-                    <Col key={index} xs={4}>
+                    <Col key={index} xs={12}>
                       <Button
                         variant={variant}
                         style={customStyle}
