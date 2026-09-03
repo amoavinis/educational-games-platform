@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, getUserRoleFromClaims } from "../../services/firebase";
-import { Form, Button, Container, Card, Alert } from "react-bootstrap";
+import { Form, Button, Container, Card, Alert, InputGroup } from "react-bootstrap";
 import { getUsers, setDisplayName } from "../../services/users";
 import { getSchoolById } from "../../services/schools";
 
@@ -11,6 +11,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -90,12 +91,23 @@ const Login = () => {
               </Form.Group>
               <Form.Group id="password" className="mb-3">
                 <Form.Label>Κωδικός πρόσβασης</Form.Label>
-                <Form.Control
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <InputGroup>
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Απόκρυψη κωδικού" : "Εμφάνιση κωδικού"}
+                    title={showPassword ? "Απόκρυψη κωδικού" : "Εμφάνιση κωδικού"}
+                  >
+                    <i className={showPassword ? "bi bi-eye-slash" : "bi bi-eye"}></i>
+                  </Button>
+                </InputGroup>
               </Form.Group>
               <Button disabled={loading} className="w-100" type="submit">
                 {loading ? "Συνδέεστε..." : "Σύνδεση"}
