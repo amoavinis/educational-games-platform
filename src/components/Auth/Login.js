@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, getUserRoleFromClaims } from "../../services/firebase";
 import { Form, Button, Container, Card, Alert, InputGroup } from "react-bootstrap";
-import { getUsers, setDisplayName } from "../../services/users";
+import { getUsers, setDisplayName, setExerciseSet } from "../../services/users";
 import { getSchoolById } from "../../services/schools";
 
 const Login = () => {
@@ -37,13 +37,15 @@ const Login = () => {
 
         if (schools.length > 0) {
           localStorage.setItem("school", schools[0].uid);
+          setExerciseSet(schools[0].exerciseSet);
         }
       } else if (role === 2) {
         localStorage.setItem("school", userCredential.user.uid);
-        
+
         const schoolDoc = await getSchoolById(userCredential.user.uid);
-        
+
         displayName = schoolDoc.data().name;
+        setExerciseSet(schoolDoc.data().exerciseSet);
       }
       setDisplayName(displayName);
 

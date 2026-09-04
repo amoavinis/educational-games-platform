@@ -1,4 +1,5 @@
 import { getAuth } from "firebase/auth";
+import { normalizeExerciseSet } from "../components/games";
 
 export function setDisplayName(name) {
   return localStorage.setItem("userDisplayName", name);
@@ -6,6 +7,16 @@ export function setDisplayName(name) {
 
 export function getDisplayName() {
   return localStorage.getItem("userDisplayName");
+}
+
+// Exercise set of the account currently being viewed. For a school user this is
+// their own set; for an admin it follows the school selected on the home screen.
+export function setExerciseSet(exerciseSet) {
+  return localStorage.setItem("exerciseSet", normalizeExerciseSet(exerciseSet));
+}
+
+export function getExerciseSet() {
+  return normalizeExerciseSet(localStorage.getItem("exerciseSet"));
 }
 
 export const getUsers = async () => {

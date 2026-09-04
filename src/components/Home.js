@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Form, Row, Col, Card, Modal, Button } from "react-bootstrap";
-import { getUsers } from "../services/users";
+import { Container, Form, Row, Col, Card, Modal, Button, Alert } from "react-bootstrap";
+import { getUsers, getExerciseSet, setExerciseSet as storeExerciseSet } from "../services/users";
+import { getSchoolById } from "../services/schools";
 import { getStudents } from "../services/students";
 import { canStudentPlayGame } from "../services/gameAttempts";
 import "../styles/Home.css";
-import { games as allGames } from "./games";
+import { getGamesForSet } from "./games";
 import welcomeAudio from "../assets/sounds/general/welcome.mp3";
 import useAudio from "../hooks/useAudio";
 
@@ -19,8 +20,10 @@ const Home = () => {
   const [selectedGame, setSelectedGame] = useState(null);
   const [students, setStudents] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState("");
+  const [exerciseSet, setExerciseSet] = useState(getExerciseSet());
 
-  const games = allGames;
+  // Only the exercises belonging to this account's set are playable
+  const games = useMemo(() => getGamesForSet(exerciseSet), [exerciseSet]);
 
   // Check if welcome audio should play
   const hasPlayedWelcome = sessionStorage.getItem("welcomeAudioPlayed");
@@ -38,21 +41,39 @@ const Home = () => {
   useEffect(() => {
     let isMounted = true;
 
+    const applyExerciseSet = (set) => {
+      storeExerciseSet(set);
+      setExerciseSet(getExerciseSet());
+    };
+
     const loadData = async () => {
       // Load schools for admins
       if (role === 1) {
         try {
           setLoading(true);
           let schoolsData = await getUsers();
-          schoolsData = schoolsData.map((s) => ({ id: s.uid, name: s.name }));
+          schoolsData = schoolsData.map((s) => ({ id: s.uid, name: s.name, exerciseSet: s.exerciseSet }));
           if (isMounted) {
+            const currentSchoolId = localStorage.getItem("school");
             setSchools(schoolsData);
-            setSelectedSchool(localStorage.getItem("school"));
+            setSelectedSchool(currentSchoolId);
+            // An admin sees the set of whichever school is selected
+            applyExerciseSet(schoolsData.find((s) => s.id === currentSchoolId)?.exerciseSet);
             setLoading(false);
           }
         } catch (err) {
           console.error("Failed to load schools:", err);
           if (isMounted) setLoading(false);
+        }
+      } else {
+        // A school user always sees their own set, re-read so admin changes apply without re-login
+        try {
+          const schoolDoc = await getSchoolById(localStorage.getItem("school"));
+          if (isMounted && schoolDoc.exists()) {
+            applyExerciseSet(schoolDoc.data().exerciseSet);
+          }
+        } catch (err) {
+          console.error("Failed to load exercise set:", err);
         }
       }
 
@@ -78,6 +99,8 @@ const Home = () => {
     const schoolId = e.target.value;
     setSelectedSchool(schoolId);
     localStorage.setItem("school", schoolId);
+    storeExerciseSet(schools.find((s) => s.id === schoolId)?.exerciseSet);
+    setExerciseSet(getExerciseSet());
   };
 
   const handleCardClick = (game) => {
@@ -133,6 +156,10 @@ const Home = () => {
             </Col>
           </Row>
         </Form.Group>
+      )}
+
+      {games.length === 0 && (
+        <Alert variant="info">Δεν υπάρχουν διαθέσιμες ασκήσεις για το σετ {exerciseSet} αυτή τη στιγμή.</Alert>
       )}
 
       <Row xs={2} sm={2} md={4} lg={4} xl={4} className="g-4">

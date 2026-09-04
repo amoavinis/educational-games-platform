@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Alert } from "react-bootstrap";
 import { getUsers, createUser, updateUser, deleteUser } from "../../services/users";
+import { normalizeExerciseSet } from "../games";
 import UserEditor from "./UserEditor";
 
 const Users = () => {
@@ -74,6 +75,7 @@ const Users = () => {
             <th>Email</th>
             <th>Όνομα</th>
             <th>Ρόλος</th>
+            <th>Σετ ασκήσεων</th>
             <th>Ενέργειες</th>
           </tr>
         </thead>
@@ -83,6 +85,7 @@ const Users = () => {
               <td>{user.email}</td>
               <td>{user.name}</td>
               <td>{user.role === 1 ? "Διαχειριστής" : "Χρήστης"}</td>
+              <td>{`Σετ ${normalizeExerciseSet(user.exerciseSet)}`}</td>
               <td>
                 <Button
                   variant="info"

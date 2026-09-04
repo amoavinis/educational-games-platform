@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { canStudentPlayGame } from "../../services/gameAttempts";
+import { getExerciseSet } from "../../services/users";
+import { isGameInSet } from "../games";
 import "../../styles/Game.css";
 import Footer from "../Footer";
 import Game1 from "./Game1";
@@ -20,6 +22,27 @@ import Game14 from "./Game14";
 import Game15 from "./Game15";
 import Game16 from "./Game16";
 
+// Every playable exercise, keyed by its game id. Set B (17-31) is added here as
+// each component lands; the set a user may reach is decided by games.js.
+const gameComponents = {
+  1: Game1,
+  2: Game2,
+  3: Game3,
+  4: Game4,
+  5: Game5,
+  6: Game6,
+  7: Game7,
+  8: Game8,
+  9: Game9,
+  10: Game10,
+  11: Game11,
+  12: Game12,
+  13: Game13,
+  14: Game14,
+  15: Game15,
+  16: Game16,
+};
+
 const GameScreen = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,6 +56,9 @@ const GameScreen = () => {
   // const studentName = routerState?.studentName || sessionStorage.getItem('gameStudentName'); // Available if needed
   const gameId = parseInt(location.pathname.split("/").pop().split("game")[1]);
   const schoolId = localStorage.getItem("school");
+  const CurrentGame = gameComponents[gameId];
+  // Guards direct URL access to an exercise outside the account's set
+  const gameAllowed = Boolean(CurrentGame) && isGameInSet(gameId, getExerciseSet());
 
   // Store in sessionStorage for page refresh scenarios
   useEffect(() => {
@@ -95,6 +121,13 @@ const GameScreen = () => {
       return;
     }
 
+    // Safety check: the exercise must exist and belong to this account's set
+    if (!gameAllowed) {
+      console.warn(`Game ${gameId} is not available for this account, redirecting to home`);
+      navigate("/");
+      return;
+    }
+
     // Check if student can play this game (has less than 2 attempts)
     const checkGameAttempts = async () => {
       const canPlay = await canStudentPlayGame(studentId, gameId);
@@ -121,7 +154,7 @@ const GameScreen = () => {
       }
       exitFullscreen();
     };
-  }, [studentId, classId, gameId, navigate, fromNavigation]);
+  }, [studentId, classId, gameId, navigate, fromNavigation, gameAllowed]);
 
   // If attempts exceeded, show blocking screen
   if (attemptsExceeded) {
@@ -159,22 +192,7 @@ const GameScreen = () => {
       </button>
 
       <div className="game-body-fullscreen">
-        {gameId === 1 && <Game1 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 2 && <Game2 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 3 && <Game3 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 4 && <Game4 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 5 && <Game5 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 6 && <Game6 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 7 && <Game7 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 8 && <Game8 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 9 && <Game9 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 10 && <Game10 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 11 && <Game11 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 12 && <Game12 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 13 && <Game13 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 14 && <Game14 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 15 && <Game15 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
-        {gameId === 16 && <Game16 gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
+        {CurrentGame && gameAllowed && <CurrentGame gameId={gameId} schoolId={schoolId} studentId={studentId} classId={classId} />}
       </div>
       <Footer />
     </div>

@@ -110,6 +110,20 @@ exports.getStudentsWithClasses = functions.https.onRequest(
     },
 );
 
+const EXERCISE_SETS = ["A", "B"];
+const DEFAULT_EXERCISE_SET = "A";
+
+/**
+ * normalizeExerciseSet
+ * Falls back to the default set for anything unknown, so accounts created
+ * before exercise sets existed keep working.
+ * @param {string} set - The requested exercise set
+ * @return {string} A valid exercise set
+ */
+function normalizeExerciseSet(set) {
+  return EXERCISE_SETS.includes(set) ? set : DEFAULT_EXERCISE_SET;
+}
+
 /**
  * checkAdmin
  * @param {object} req - The HTTP request
@@ -187,7 +201,7 @@ async (req, res) => {
 
   try {
     // Create user
-    const {email, password, name} = req.body;
+    const {email, password, name, exerciseSet} = req.body;
     const userRecord = await admin.auth().createUser({
       email,
       password,
@@ -203,6 +217,7 @@ async (req, res) => {
       admin.firestore().collection("schools").doc(userRecord.uid).set({
         email,
         name,
+        exerciseSet: normalizeExerciseSet(exerciseSet),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       }),
     ]);
@@ -254,7 +269,7 @@ async (req, res) => {
     }
 
     // Process update
-    const {email, password, name} = req.body;
+    const {email, password, name, exerciseSet} = req.body;
     const updateData = {email, name};
     if (password) {
       updateData.password = password;
@@ -267,6 +282,7 @@ async (req, res) => {
       }),
       admin.firestore().collection("schools").doc(id).update({
         name: name,
+        exerciseSet: normalizeExerciseSet(exerciseSet),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }),
     ]);
