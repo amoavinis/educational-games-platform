@@ -36,6 +36,7 @@ const games = [
   { id: 22, name: "Ποια λέξη λείπει;", description: "", color: `hsl(150, 80%, 70%)`, sets: ["B"] },
   { id: 23, name: "Πού ταιριάζει;", description: "", color: `hsl(175, 80%, 70%)`, sets: ["B"] },
   { id: 24, name: "Φτιάξε τη σωστή φράση", description: "", color: `hsl(200, 80%, 70%)`, sets: ["B"] },
+  { id: 25, name: "Κυνήγι διπλής όψης", description: "", color: `hsl(225, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {
