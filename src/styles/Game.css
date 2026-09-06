@@ -230,3 +230,8 @@
 .answer-options .btn {
   width: 100%;
 }
+
+/* Απαντήσεις με μεγάλο κείμενο (ολόκληρες φράσεις αντί για καταλήξεις) */
+.answer-options.answer-options-wide {
+  max-width: 640px;
+}

@@ -30,6 +30,7 @@ const games = [
   // Το χρώμα κάθε άσκησης είναι ίδιο με το αντίστοιχό της στο Σετ Α.
   { id: 17, name: "Βρες τη λέξη", description: "", color: `hsl(25, 80%, 70%)`, sets: ["B"] },
   { id: 18, name: "Βρες τον διαφορετικό", description: "", color: `hsl(50, 80%, 70%)`, sets: ["B"] },
+  { id: 19, name: "Σημασιο-μανία", description: "", color: `hsl(75, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {
