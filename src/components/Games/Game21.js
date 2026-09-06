@@ -3,12 +3,26 @@ import { Button, Card, Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import QuestionProgressLights from "../QuestionProgressLights";
 import { addReport } from "../../services/reports";
-import { game20Items } from "../Data/Game20Data";
+import { game21Items, game21Answers } from "../Data/Game21Data";
 import useAudio from "../../hooks/useAudio";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
-const Game20 = ({ gameId, schoolId, studentId, classId }) => {
+// Υπογραμμίζει τη λέξη που κρίνει ο μαθητής, όπως στο υλικό
+const underline = (sentence, word) => {
+  const start = sentence.indexOf(word);
+  if (start === -1) return sentence;
+
+  return (
+    <>
+      {sentence.slice(0, start)}
+      <u>{word}</u>
+      {sentence.slice(start + word.length)}
+    </>
+  );
+};
+
+const Game21 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -21,7 +35,7 @@ const Game20 = ({ gameId, schoolId, studentId, classId }) => {
   const [questionStartTime, setQuestionStartTime] = useState(null);
   const [waitingForPracticeEnd, setWaitingForPracticeEnd] = useState(false);
 
-  const items = useMemo(() => game20Items, []);
+  const items = useMemo(() => game21Items, []);
   const currentItem = items[currentIndex];
 
   const { audioRef: practiceEndAudioRef, audioSrc: practiceEndAudioSrc } = useAudio(practiceEnd, {
@@ -129,7 +143,7 @@ const Game20 = ({ gameId, schoolId, studentId, classId }) => {
 
     const results = {
       datetime: datetime,
-      gameName: "SentenceCompletionGame",
+      gameName: "LiteralOrMetaphorGame",
       questions: gameData.gameStats.rounds,
     };
 
@@ -201,17 +215,15 @@ const Game20 = ({ gameId, schoolId, studentId, classId }) => {
           )}
           <Card className="main-card">
             <Card.Header className="text-center" style={{ backgroundColor: "#2F4F4F", color: "white" }}>
-              <h4 className="mb-0 game-title-header">Επιλέγω τη λέξη που ταιριάζει</h4>
+              <h4 className="mb-0 game-title-header">Διαβάζω την πρόταση και διαλέγω αν υπάρχει κυριολεξία ή μεταφορά</h4>
             </Card.Header>
             <Card.Body>
               <div className="p-4 bg-light rounded mb-4 text-center">
-                <div className="display-6 font-weight-bold">
-                  {selectedAnswer ? currentItem.sentence.replace("...", ` ${currentItem.correct}.`) : currentItem.sentence}
-                </div>
+                <div className="display-6 font-weight-bold">{underline(currentItem.sentence, currentItem.underlined)}</div>
               </div>
 
               <Row className="g-3 mb-4 answer-options">
-                {currentItem.options.map((option, index) => {
+                {game21Answers.map((option, index) => {
                   let variant = "outline-primary";
                   let customStyle = {};
                   let showIcon = null;
@@ -264,4 +276,4 @@ const Game20 = ({ gameId, schoolId, studentId, classId }) => {
   );
 };
 
-export default Game20;
+export default Game21;

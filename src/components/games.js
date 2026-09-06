@@ -32,6 +32,7 @@ const games = [
   { id: 18, name: "Βρες τον διαφορετικό", description: "", color: `hsl(50, 80%, 70%)`, sets: ["B"] },
   { id: 19, name: "Σημασιο-μανία", description: "", color: `hsl(75, 80%, 70%)`, sets: ["B"] },
   { id: 20, name: "Διάλεξε το σωστό", description: "", color: `hsl(100, 80%, 70%)`, sets: ["B"] },
+  { id: 21, name: "Κυριολεξία ή μεταφορά;", description: "", color: `hsl(125, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {

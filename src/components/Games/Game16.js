@@ -293,9 +293,9 @@ const Game16 = ({ gameId, schoolId, studentId, classId }) => {
   const getInstructionText = () => {
     switch (gameState) {
       case "initial":
-        return instructionsFinished ? "Κάνε κλικ οπουδήποτε για ξεκινήσεις" : "Άκουσε πρώτα την εκφώνηση…";
+        return instructionsFinished ? "Κάνε κλικ οπουδήποτε για ξεκινήσεις" : "Άκουσε πρώτα την εκφώνηση...";
       case "waiting":
-        return "Περίμενε να γίνει κύκλος…";
+        return "Περίμενε να γίνει κύκλος...";
       case "ready":
         return "ΤΩΡΑ!";
       case "clicked":
