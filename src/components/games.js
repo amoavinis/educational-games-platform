@@ -34,6 +34,7 @@ const games = [
   { id: 20, name: "Διάλεξε το σωστό", description: "", color: `hsl(100, 80%, 70%)`, sets: ["B"] },
   { id: 21, name: "Κυριολεξία ή μεταφορά;", description: "", color: `hsl(125, 80%, 70%)`, sets: ["B"] },
   { id: 22, name: "Ποια λέξη λείπει;", description: "", color: `hsl(150, 80%, 70%)`, sets: ["B"] },
+  { id: 23, name: "Πού ταιριάζει;", description: "", color: `hsl(175, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {
