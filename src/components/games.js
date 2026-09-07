@@ -38,6 +38,7 @@ const games = [
   { id: 24, name: "Φτιάξε τη σωστή φράση", description: "", color: `hsl(200, 80%, 70%)`, sets: ["B"] },
   { id: 25, name: "Κυνήγι διπλής όψης", description: "", color: `hsl(225, 80%, 70%)`, sets: ["B"] },
   { id: 26, name: "Πες το αλλιώς", description: "", color: `hsl(250, 80%, 70%)`, sets: ["B"] },
+  { id: 27, name: "Τέσσερις κόσμοι", description: "", color: `hsl(275, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {
