@@ -29,7 +29,7 @@ const games = [
   // Set B — παιχνίδια 17-31
   // Το χρώμα κάθε άσκησης είναι ίδιο με το αντίστοιχό της στο Σετ Α.
   { id: 17, name: "Βρες τη λέξη", description: "", color: `hsl(25, 80%, 70%)`, sets: ["B"] },
-  { id: 18, name: "Βρες τον διαφορετικό", description: "", color: `hsl(50, 80%, 70%)`, sets: ["B"] },
+  { id: 18, name: "Βρες το διαφορετικό", description: "", color: `hsl(50, 80%, 70%)`, sets: ["B"] },
   { id: 19, name: "Σημασιο-μανία", description: "", color: `hsl(75, 80%, 70%)`, sets: ["B"] },
   { id: 20, name: "Διάλεξε το σωστό", description: "", color: `hsl(100, 80%, 70%)`, sets: ["B"] },
   { id: 21, name: "Κυριολεξία ή μεταφορά;", description: "", color: `hsl(125, 80%, 70%)`, sets: ["B"] },
@@ -37,6 +37,7 @@ const games = [
   { id: 23, name: "Πού ταιριάζει;", description: "", color: `hsl(175, 80%, 70%)`, sets: ["B"] },
   { id: 24, name: "Φτιάξε τη σωστή φράση", description: "", color: `hsl(200, 80%, 70%)`, sets: ["B"] },
   { id: 25, name: "Κυνήγι διπλής όψης", description: "", color: `hsl(225, 80%, 70%)`, sets: ["B"] },
+  { id: 26, name: "Πες το αλλιώς", description: "", color: `hsl(250, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {
