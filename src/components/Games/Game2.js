@@ -9,6 +9,7 @@ import useAudio from "../../hooks/useAudio";
 import titleInstructionsAudio from "../../assets/sounds/02/title-instructions.mp3";
 import exampleIzoAudio from "../../assets/sounds/02/example-ιζω.mp3";
 import exampleOnoAudio from "../../assets/sounds/02/example-ωνω.mp3";
+import exampleOntasAudio from "../../assets/sounds/02/example-ωντας.mp3"
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
@@ -43,6 +44,7 @@ const Game2 = ({ gameId, schoolId, studentId, classId }) => {
     () => ({
       καθαρίζω: exampleIzoAudio,
       κλειδώνω: exampleOnoAudio,
+      ξυπνώντας: exampleOntasAudio
     }),
     [],
   );
