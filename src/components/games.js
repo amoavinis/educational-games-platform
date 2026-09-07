@@ -40,6 +40,7 @@ const games = [
   { id: 26, name: "Πες το αλλιώς", description: "", color: `hsl(250, 80%, 70%)`, sets: ["B"] },
   { id: 27, name: "Τέσσερις κόσμοι", description: "", color: `hsl(275, 80%, 70%)`, sets: ["B"] },
   { id: 28, name: "Εξήγηση", description: "", color: `hsl(300, 80%, 70%)`, sets: ["B"] },
+  { id: 29, name: "Άρα τι;", description: "", color: `hsl(325, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {

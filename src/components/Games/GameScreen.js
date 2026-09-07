@@ -33,6 +33,7 @@ import Game25 from "./Game25";
 import Game26 from "./Game26";
 import Game27 from "./Game27";
 import Game28 from "./Game28";
+import Game29 from "./Game29";
 
 // Every playable exercise, keyed by its game id. Set B (17-31) is added here as
 // each component lands; the set a user may reach is decided by games.js.
@@ -65,6 +66,7 @@ const gameComponents = {
   26: Game26,
   27: Game27,
   28: Game28,
+  29: Game29,
 };
 
 const GameScreen = () => {
