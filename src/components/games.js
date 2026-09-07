@@ -41,6 +41,8 @@ const games = [
   { id: 27, name: "Τέσσερις κόσμοι", description: "", color: `hsl(275, 80%, 70%)`, sets: ["B"] },
   { id: 28, name: "Εξήγηση", description: "", color: `hsl(300, 80%, 70%)`, sets: ["B"] },
   { id: 29, name: "Άρα τι;", description: "", color: `hsl(325, 80%, 70%)`, sets: ["B"] },
+  { id: 30, name: "Γρήγορη απόφαση", description: "", color: `hsl(350, 80%, 70%)`, sets: ["B"] },
+  { id: 31, name: "Σωστό ή λάθος στα γρήγορα", description: "", color: `hsl(360, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {
