@@ -10,8 +10,6 @@ const app = express();
 app.use(cors({origin: true}));
 app.use(express.json());
 
-const bucket = admin.storage().bucket();
-
 exports.syncUserRoleToClaims = functions.firestore.onDocumentWritten(
     {
       document: "userRoles/{uid}",
@@ -464,6 +462,7 @@ exports.downloadFile = functions.https.onRequest(
         }
 
         // Create file reference
+        const bucket = admin.storage().bucket();
         const file = bucket.file(`audio-recordings/${filePath}`);
 
         // Verify file exists
