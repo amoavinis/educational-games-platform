@@ -39,6 +39,7 @@ const games = [
   { id: 25, name: "Κυνήγι διπλής όψης", description: "", color: `hsl(225, 80%, 70%)`, sets: ["B"] },
   { id: 26, name: "Πες το αλλιώς", description: "", color: `hsl(250, 80%, 70%)`, sets: ["B"] },
   { id: 27, name: "Τέσσερις κόσμοι", description: "", color: `hsl(275, 80%, 70%)`, sets: ["B"] },
+  { id: 28, name: "Εξήγηση", description: "", color: `hsl(300, 80%, 70%)`, sets: ["B"] },
 ];
 
 const getGamesForSet = (set) => {
