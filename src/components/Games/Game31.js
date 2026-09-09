@@ -8,11 +8,6 @@ import useAudio from "../../hooks/useAudio";
 import bravoAudio from "../../assets/sounds/general/bravo.mp3";
 import practiceEnd from "../../assets/sounds/general/end-of-practice.mp3";
 
-// Η εκφώνηση ζητάει ταχύτητα, οπότε το παιχνίδι προχωράει μόνο του.
-// Η αναμονή είναι όση χρειάζεται για να δει ο μαθητής την ανατροφοδότηση.
-const ADVANCE_DELAY_MS = 1500;
-const ADVANCE_AFTER_PRACTICE_MS = 500;
-
 const Game31 = ({ gameId, schoolId, studentId, classId }) => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -112,17 +107,6 @@ const Game31 = ({ gameId, schoolId, studentId, classId }) => {
       submitGameResults({ gameStats });
     }
   };
-
-  const isLastExample = currentItem.isExample && !items[currentIndex + 1]?.isExample;
-
-  // Το παιχνίδι προχωράει μόνο του, χωρίς κουμπί
-  useEffect(() => {
-    if (selectedAnswer === null || waitingForPracticeEnd || gameCompleted) return;
-
-    const timer = setTimeout(nextItem, isLastExample ? ADVANCE_AFTER_PRACTICE_MS : ADVANCE_DELAY_MS);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAnswer, waitingForPracticeEnd, gameCompleted]);
 
   // Submit game results function
   const submitGameResults = async (gameData) => {
@@ -262,6 +246,14 @@ const Game31 = ({ gameId, schoolId, studentId, classId }) => {
                   );
                 })}
               </Row>
+
+              {selectedAnswer && (
+                <div className="text-center">
+                  <Button variant="primary" size="lg" onClick={nextItem} disabled={waitingForPracticeEnd}>
+                    {currentIndex < items.length - 1 ? "Επόμενο" : "Ολοκλήρωση"}
+                  </Button>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>
